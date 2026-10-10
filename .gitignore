@@ -1,0 +1,47 @@
+# Python / Backend
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Environment Variables & Secrets (CRITICAL: NEVER COMMIT REAL CREDENTIALS)
+backend/.env
+.env
+*.env.local
+*.env.production
+
+# Node / Frontend
+frontend/node_modules/
+node_modules/
+frontend/dist/
+dist/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & Migration artifacts
+*.sqlite3
+*.db
+
+# Operating System & Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files & Logs
+*.log
+logs/
+tmp/
+scratch/
+.snapshots/
