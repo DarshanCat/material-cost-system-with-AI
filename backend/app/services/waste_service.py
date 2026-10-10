@@ -160,9 +160,15 @@ def approve_waste_disposition(db: Session, waste_id: int, actor_id: str, comment
         from_status=prev_status,
         to_status=waste.status,
         actor_id=actor_id,
-        comments=comments or "Waste disposition approved. (Note: Scrap / recovery ledger movements scheduled for Phase 4)",
+        comments=comments or "Waste disposition approved. Posted applicable entries to stock ledger.",
     )
     db.add(audit)
+    db.flush()
+
+    # Atomically post to append-only stock ledger
+    from app.services.ledger_service import post_waste_to_ledger
+    post_waste_to_ledger(db, waste, actor_id)
+
     db.commit()
     db.refresh(waste)
     return waste

@@ -6,19 +6,23 @@ The system manages inventory across **741 material items**, provides an immutabl
 
 ---
 
-## Current Status: Phase 3 Active (Material Entry & Transaction Validation)
+## Current Status: Phase 4 Active (Append-Only Live Inventory Ledger)
 
 - **Phase 1: Foundation & Application Shell** — Complete
 - **Phase 2: Master Data & Approval Workflows** — Complete
 - **Phase 3: Material Entry & Transaction Validation** — Complete
-  - Goods Receipt Notes (`grn_headers`, `grn_line_items`) for External Vendors, Internal VSPL, and Segregation Yard.
-  - Pre-GST rate enforcement for raw materials with tax separation.
-  - Material Issue Slips (`material_issue_headers`, `material_issue_line_items`) with heat number standardization (`H-102603-3721`).
-  - Scrap & Waste Disposition (`waste_disposition_headers`, `waste_disposition_line_items`) with recovery / outward classification.
-  - Duplicate detection engine preventing duplicate document numbers and double invoice processing.
-  - Decimal precision and suspect entry heuristic validation.
-  - Atomic All-or-Nothing Excel Import Engine (`/api/v1/excel-import`) with preview and zero partial commits.
-  - 29 automated Pytest tests passing.
+- **Phase 4: Append-Only Live Inventory Ledger** — Complete
+  - Append-Only Stock Ledger (`stock_ledger_entries`) with absolute immutability (zero `UPDATE` / `DELETE` endpoints).
+  - Derived Balance Calculation Engine (`SUM(quantity_delta)`) with point-in-time historical reconstruction.
+  - 4 Distinct Stock States: `UNINITIALIZED`, `IN_STOCK`, `OUT_OF_STOCK`, `NEGATIVE_STOCK`.
+  - Transactional posting coordinated directly with document approvals (GRN $\rightarrow$ Inward Receipt, Issue $\rightarrow$ Outward Issue, Waste $\rightarrow$ Scrap Outward/Recovery).
+  - Database-enforced idempotency via `UNIQUE(source_document_type, source_line_id)` preventing duplicate postings.
+  - Traceable compensating `REVERSAL` journal entries linked via `reversal_of_entry_id`.
+  - Configurable negative stock prevention (`settings.ALLOW_NEGATIVE_STOCK = False` default) and uninitialized stock protection.
+  - Baseline Opening Balance import engine for **12 October 2026** cutoff with preview validation and atomic commit.
+  - Physical Stock Audit Module (`physical_audit_headers`, `physical_audit_lines`) calculating system cutoff balances, recording physical counts, and posting signed variance adjustments.
+  - Interactive industrial ERP frontend views: Live Inventory Dashboard, Opening Balance View, Physical Audit Reconciliation.
+  - 35 automated Pytest tests passing with zero regressions.
 
 ---
 
@@ -45,7 +49,14 @@ VSPL-Material-Management-Costing/
 │   │   │       │   ├── uoms.py
 │   │   │       │   ├── items.py
 │   │   │       │   ├── vendors.py
-│   │   │       │   └── item_requests.py
+│   │   │       │   ├── item_requests.py
+│   │   │       │   ├── grn.py
+│   │   │       │   ├── issues.py
+│   │   │       │   ├── waste.py
+│   │   │       │   ├── excel_import.py
+│   │   │       │   ├── ledger.py
+│   │   │       │   ├── opening_balances.py
+│   │   │       │   └── physical_audits.py
 │   │   │       └── api.py
 │   │   ├── core/
 │   │   │   ├── config.py
@@ -59,30 +70,58 @@ VSPL-Material-Management-Costing/
 │   │   │   ├── uom.py
 │   │   │   ├── item.py
 │   │   │   ├── vendor.py
-│   │   │   └── item_request.py
+│   │   │   ├── item_request.py
+│   │   │   ├── grn.py
+│   │   │   ├── issue.py
+│   │   │   ├── waste.py
+│   │   │   ├── ledger.py
+│   │   │   └── physical_audit.py
 │   │   ├── schemas/
 │   │   │   ├── department.py
 │   │   │   ├── uom.py
 │   │   │   ├── item.py
 │   │   │   ├── vendor.py
 │   │   │   ├── item_request.py
-│   │   │   └── health.py
+│   │   │   ├── grn.py
+│   │   │   ├── issue.py
+│   │   │   ├── waste.py
+│   │   │   ├── excel_import.py
+│   │   │   ├── ledger.py
+│   │   │   ├── opening_balance.py
+│   │   │   └── physical_audit.py
 │   │   ├── services/
 │   │   │   ├── validators.py        # GSTIN & vendor normalization
-│   │   │   └── item_request_service.py # Workflow state machine
+│   │   │   ├── item_request_service.py # Workflow state machine
+│   │   │   ├── grn_service.py
+│   │   │   ├── issue_service.py
+│   │   │   ├── waste_service.py
+│   │   │   ├── excel_import_service.py
+│   │   │   ├── ledger_service.py    # Append-only journal & derived balances
+│   │   │   ├── opening_balance_service.py
+│   │   │   └── physical_audit_service.py
 │   │   └── main.py
 │   ├── migrations/
 │   │   ├── versions/
-│   │   │   └── 001_phase2_master_data.py # Master data & workflow tables
+│   │   │   ├── 001_phase2_master_data.py
+│   │   │   ├── 002_phase3_material_entry.py
+│   │   │   └── 003_phase4_stock_ledger.py
 │   │   ├── env.py
 │   │   └── script.py.mako
 │   ├── tests/
 │   │   ├── conftest.py              # Test database session & role fixtures
 │   │   ├── test_config.py
 │   │   ├── test_health.py
-│   │   ├── test_master_data.py      # Master data & code generation tests
-│   │   ├── test_vendors.py          # Vendor deduplication & GSTIN tests
-│   │   └── test_item_requests_workflow.py # Approval workflow & state tests
+│   │   ├── test_master_data.py
+│   │   ├── test_vendors.py
+│   │   ├── test_item_requests_workflow.py
+│   │   ├── test_grn.py
+│   │   ├── test_issues.py
+│   │   ├── test_waste.py
+│   │   ├── test_excel_import.py
+│   │   ├── test_ledger_posting.py
+│   │   ├── test_ledger_issues.py
+│   │   ├── test_opening_balances.py
+│   │   └── test_physical_audits.py
 │   ├── requirements.txt
 │   ├── .env.example
 │   └── alembic.ini
@@ -94,6 +133,13 @@ VSPL-Material-Management-Costing/
 │   │   │   ├── VendorMasterView.tsx
 │   │   │   ├── ItemRequestsView.tsx
 │   │   │   ├── ReferenceDataView.tsx
+│   │   │   ├── GRNManagementView.tsx
+│   │   │   ├── MaterialIssueView.tsx
+│   │   │   ├── WasteDispositionView.tsx
+│   │   │   ├── ExcelImportView.tsx
+│   │   │   ├── LiveInventoryDashboard.tsx
+│   │   │   ├── OpeningBalanceView.tsx
+│   │   │   ├── PhysicalAuditView.tsx
 │   │   │   ├── DiagnosticsView.tsx
 │   │   │   ├── Header.tsx
 │   │   │   ├── ModulePlaceholder.tsx

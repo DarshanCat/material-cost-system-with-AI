@@ -10,6 +10,9 @@ from app.api.v1.endpoints import (
     issues,
     waste,
     excel_import,
+    ledger,
+    opening_balances,
+    physical_audits,
 )
 
 api_router = APIRouter()
@@ -23,3 +26,6 @@ api_router.include_router(grn.router, prefix="/grn", tags=["Goods Receipt Note (
 api_router.include_router(issues.router, prefix="/issues", tags=["Material Issue"])
 api_router.include_router(waste.router, prefix="/waste", tags=["Waste Disposition"])
 api_router.include_router(excel_import.router, prefix="/excel-import", tags=["Excel Import Validation"])
+api_router.include_router(ledger.router, prefix="/ledger", tags=["Append-Only Stock Ledger"])
+api_router.include_router(opening_balances.router, prefix="/opening-balances", tags=["Opening Stock Balances"])
+api_router.include_router(physical_audits.router, prefix="/physical-audits", tags=["Physical Inventory Audits"])

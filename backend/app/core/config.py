@@ -52,6 +52,7 @@ class Settings(BaseSettings):
 
     # Business Constants (Mandatory per VSPL Business Rules)
     COSTING_START_DATE: str = "2026-10-12"
+    ALLOW_NEGATIVE_STOCK: bool = False  # Strict default per VSPL inventory governance
 
     model_config = SettingsConfigDict(
         env_file=".env",

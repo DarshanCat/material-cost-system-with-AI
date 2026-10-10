@@ -18,7 +18,9 @@ flowchart TD
     
     style P1 fill:#dcfce7,stroke:#16a34a,stroke-width:2px
     style P2 fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style P3 fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style P3 fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style P4 fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style P5 fill:#fef3c7,stroke:#d97706,stroke-width:2px
 ```
 
 ---
@@ -32,7 +34,7 @@ flowchart TD
 ---
 
 ### Phase 2: Master Data & Approval Workflows
-* **Status:** **COMPLETE (Current Deliverable)**
+* **Status:** **COMPLETE**
 * **Summary:**
   - Material Item Master schema (`material_items`) supporting ~741 items scope.
   - Item code convention: `DEPT-CATEGORY-SERIAL` (e.g. `FDY-RM-016`).
@@ -47,7 +49,7 @@ flowchart TD
 ---
 
 ### Phase 3: Material Entry & Inward/Outward Validation
-* **Status:** **COMPLETE (Current Deliverable)**
+* **Status:** **COMPLETE**
 * **Deliverables:**
   - Goods Receipt Note (GRN) logging with mandatory unit rate excluding GST for raw materials and separated tax rates.
   - Sourcing for external vendors, internal VSPL movements, and segregation yard returns.
@@ -61,19 +63,27 @@ flowchart TD
 ---
 
 ### Phase 4: Append-Only Live Inventory Ledger
-* **Status:** **UPCOMING (Next Step)**
+* **Status:** **COMPLETE (Current Deliverable)**
 * **Deliverables:**
-  - Immutable stock ledger table design (`stock_ledger_entries`).
-  - Enforced business rule: Zero stock depletion without an authorized Issue transaction.
-  - Strict prohibition of `UPDATE` and `DELETE` operations on transaction history.
-  - Opening balance ledger entries as of the baseline cutoff.
-  - Physical stock audit reconciliation workflow generating signed `ADJUSTMENT` journal entries.
-  - Real-time stock balance queries by department and warehouse location.
+  - Immutable stock ledger table design (`stock_ledger_entries`) with zero `UPDATE`/`DELETE` API endpoints.
+  - Derived balance calculation engine (`SUM(quantity_delta)`) with distinct operational states: `UNINITIALIZED`, `IN_STOCK`, `OUT_OF_STOCK`, `NEGATIVE_STOCK`.
+  - Point-in-time balance reconstruction using historical cutoff parameters.
+  - Source-to-ledger transactional posting on transaction approval:
+    - Approved GRN creates `INWARD_RECEIPT` or `INTERNAL_INWARD` ($+\Delta$).
+    - Approved Issue Slip creates `OUTWARD_ISSUE` ($-\Delta$).
+    - Approved Waste Slip creates `SCRAP_OUTWARD` ($-\Delta$), `INTERNAL_RECOVERY` ($0\Delta$), or non-movement hold.
+  - Database-enforced idempotency via `UNIQUE(source_document_type, source_line_id)` preventing duplicate journal entries.
+  - Traceable compensating `REVERSAL` journal movements linking to `reversal_of_entry_id` with mandatory supervisor justification.
+  - Configurable negative stock prevention (`settings.ALLOW_NEGATIVE_STOCK = False`): blocks issues and reversals resulting in negative balances, and strictly blocks issuing uninitialized materials.
+  - Baseline Opening Balance import engine for the **12 October 2026** cutoff with preview validation and atomic multi-item posting.
+  - Physical Stock Audit workflow (`physical_audit_headers` / `physical_audit_lines`) calculating system cutoff balance, recording physical counts, and posting signed `PHYSICAL_AUDIT_ADJUSTMENT` entries upon approval.
+  - Interactive industrial ERP frontend views: Live Inventory Dashboard, Opening Balance Manager, and Physical Audit Reconciliation.
+  - Comprehensive automated Pytest suite (35/35 passing) covering posting, immutability, reversal, uninitialized stock, and audit adjustments.
 
 ---
 
 ### Phase 5: Heat Log & Requisition Reconciliation
-* **Status:** **QUEUED**
+* **Status:** **UPCOMING (Next Step)**
 * **Deliverables:**
   - Induction furnace Heat Log entry (Heat number, date, shift, furnace ID, metallurgist).
   - Detailed charge mix logging (Pig iron, Steel scrap, Returns, FeSi, FeMn, Inoculants, Mg treatment).

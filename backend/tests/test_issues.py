@@ -29,6 +29,25 @@ def test_material_issue_workflow_and_heat_reference(client: TestClient, db_sessi
     db_session.add(item)
     db_session.commit()
 
+    # Establish opening balance so item is initialized with sufficient stock
+    from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
+    ob_entry = StockLedgerEntry(
+        entry_number="STK-TEST-OB-01",
+        posting_group_id="POST-OB-TEST",
+        material_item_id=item.id,
+        uom_id=uom_kg.id,
+        transaction_date=date(2026, 10, 12),
+        movement_type=MovementType.OPENING_BALANCE.value,
+        quantity_delta=Decimal("500.0000"),
+        source_document_type=SourceDocumentType.OPENING_BALANCE.value,
+        source_document_id=0,
+        source_line_id=item.id,
+        source_document_number="OB-TEST",
+        posted_by="Admin",
+    )
+    db_session.add(ob_entry)
+    db_session.commit()
+
     # 1. Create issue with raw heat number "102603-3721" (should normalize to "H-102603-3721")
     payload = {
         "issue_date": str(date.today()),

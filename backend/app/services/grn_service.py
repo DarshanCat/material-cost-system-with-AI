@@ -186,9 +186,15 @@ def approve_grn(db: Session, grn_id: int, actor_id: str, comments: Optional[str]
         from_status=prev_status,
         to_status=grn.status,
         actor_id=actor_id,
-        comments=comments or "GRN verified and approved. (Note: Ledger integration scheduled for Phase 4)",
+        comments=comments or "GRN verified and approved. Posted inward entries to stock ledger.",
     )
     db.add(audit)
+    db.flush()
+
+    # Atomically post to append-only stock ledger
+    from app.services.ledger_service import post_grn_to_ledger
+    post_grn_to_ledger(db, grn, actor_id)
+
     db.commit()
     db.refresh(grn)
     return grn

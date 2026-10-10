@@ -8,8 +8,10 @@ export type ModuleId =
   | 'material-issue'
   | 'waste-disposition'
   | 'excel-import'
-  | 'material-entry'
   | 'inventory-ledger'
+  | 'stock-history'
+  | 'opening-balances'
+  | 'physical-audits'
   | 'heat-reconciliation'
   | 'costing'
   | 'system-health';
@@ -225,4 +227,74 @@ export interface WasteDisposition {
   lines: WasteDispositionLineItem[];
   audit_logs: AuditLog[];
   validation_warnings?: string[];
+}
+
+export interface StockLedgerEntry {
+  id: number;
+  entry_number: string;
+  posting_group_id: string;
+  material_item_id: number;
+  item_code?: string;
+  item_name?: string;
+  uom_id: number;
+  uom_code?: string;
+  transaction_date: string;
+  posted_at: string;
+  movement_type: string;
+  quantity_delta: string | number;
+  source_document_type: string;
+  source_document_id: number;
+  source_line_id: number;
+  source_document_number: string;
+  reference_number?: string | null;
+  reason?: string | null;
+  posted_by: string;
+  reversal_of_entry_id?: number | null;
+  created_at: string;
+}
+
+export interface StockBalance {
+  material_item_id: number;
+  item_code: string;
+  item_name: string;
+  category: string;
+  department_name?: string | null;
+  base_uom_id: number;
+  uom_code: string;
+  current_balance: string | number;
+  is_initialized: boolean;
+  status: 'UNINITIALIZED' | 'OUT_OF_STOCK' | 'IN_STOCK' | 'NEGATIVE_STOCK';
+  last_movement_date?: string | null;
+  movement_count: number;
+}
+
+export interface PhysicalAuditLine {
+  id?: number;
+  audit_id?: number;
+  line_number: number;
+  material_item_id: number;
+  uom_id: number;
+  system_quantity: string | number;
+  physical_quantity: string | number;
+  variance: string | number;
+  reason?: string | null;
+  remarks?: string | null;
+  item_code?: string;
+  item_name?: string;
+  uom_code?: string;
+}
+
+export interface PhysicalAudit {
+  id: number;
+  audit_number: string;
+  audit_date: string;
+  department_id?: number | null;
+  department_name?: string | null;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED';
+  notes?: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  lines: PhysicalAuditLine[];
+  audit_logs: AuditLog[];
 }

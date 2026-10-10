@@ -14,6 +14,9 @@ import { GRNManagementView } from './components/GRNManagementView';
 import { MaterialIssueView } from './components/MaterialIssueView';
 import { WasteDispositionView } from './components/WasteDispositionView';
 import { ExcelImportView } from './components/ExcelImportView';
+import { LiveInventoryDashboard } from './components/LiveInventoryDashboard';
+import { OpeningBalanceView } from './components/OpeningBalanceView';
+import { PhysicalAuditView } from './components/PhysicalAuditView';
 
 export const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleId>('dashboard');
@@ -155,34 +158,27 @@ export const App: React.FC = () => {
           />
         );
 
-      case 'material-entry':
+      case 'inventory-ledger':
         return (
-          <GRNManagementView
+          <LiveInventoryDashboard
             currentRole={currentRole}
             currentUserId={currentUserId}
           />
         );
 
-      case 'inventory-ledger':
+      case 'opening-balances':
         return (
-          <ModulePlaceholder
-            title="Module 2: Live Inventory Ledger"
-            moduleId="inventory-ledger"
-            phase="Phase 4 (Scheduled)"
-            description="Immutable, append-only transaction ledger maintaining real-time stock balances, valuation, and physical stock count audit adjustments."
-            plannedFeatures={[
-              'Strict append-only stock movement tracking across 741 material items.',
-              'Zero destructive ledger operations (DELETE/UPDATE prohibition on financial entries).',
-              'Physical stock count reconciliation and audit adjustment journal entries.',
-              'Multi-department stock separation (Stores, Foundry floor, Machine shop buffer).',
-              'Traceable audit trail recording transaction author, department, timestamp, and source document.',
-            ]}
-            businessRules={[
-              'Never clear or overwrite transaction history to correct stock balances.',
-              'Physical stock discrepancies must be represented by distinct adjustment entries.',
-              'Heat Log charge records do NOT independently move inventory.',
-              'Stock movements require immutable transaction IDs with cryptographic audit logs.',
-            ]}
+          <OpeningBalanceView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'physical-audits':
+        return (
+          <PhysicalAuditView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
           />
         );
 

@@ -106,7 +106,74 @@
 
 ---
 
-## 3. Explicitly Unresolved Business & Costing Decisions (Pending Management Sign-off)
+## 4. Live Inventory Ledger & Stock Governance Rules (Established in Phase 4)
+
+### Rule L1: Immutable Append-Only Ledger Journal
+* **Statement:** The `stock_ledger_entries` table is strictly append-only. No application API or user interface provides `UPDATE` or `DELETE` endpoints for posted ledger records.
+* **Database Constraint:** Each movement record stores an immutable transaction timestamp, posting user, source document reference, source line reference, material reference, movement type, and signed quantity delta.
+* **Audit Trail:** Any modification or correction must be represented as a new, traceable ledger movement. Never clear or overwrite historical records.
+
+### Rule L2: Derived Stock Balance Engine
+* **Statement:** Inventory stock balances are never stored as mutable scalar columns or manually overwritten. Current on-hand stock and point-in-time stock are calculated by aggregating the ledger journal:
+  $$\text{Balance}(\text{item\_id}, t) = \sum_{entry.created\_at \le t} \text{entry.quantity\_delta}$$
+* **Point-in-Time Traceability:** Stock balances can be reconstructed for any historical date and time with exact audit fidelity.
+
+### Rule L3: Stock Status Classifications
+* **Statement:** Stock balances are classified into four mutually exclusive operational states:
+  1. `UNINITIALIZED`: Zero ledger records have ever been posted for this item.
+  2. `IN_STOCK`: Derived balance is strictly greater than zero ($\text{balance} > 0$).
+  3. `OUT_OF_STOCK`: Derived balance is exactly zero ($\text{balance} = 0$), having had previous movements.
+  4. `NEGATIVE_STOCK`: Derived balance is strictly less than zero ($\text{balance} < 0$).
+
+### Rule L4: Transactional Idempotency & Unique Source Constraints
+* **Statement:** To prevent duplicate stock postings when network timeouts or retries occur, every source line maps to at most one forward ledger entry.
+* **Enforcement:** Enforced at database level via a composite unique constraint: `UNIQUE(source_document_type, source_line_id)`.
+* **Forward Movement Mapping:**
+  - `GRN` (External Vendor): `INWARD_RECEIPT` ($+\Delta$)
+  - `GRN` (Internal VSPL / Segregation Yard): `INTERNAL_INWARD` ($+\Delta$)
+  - `ISSUE`: `OUTWARD_ISSUE` ($-\Delta$)
+  - `WASTE` (Scrap disposal / Offsite sale): `SCRAP_OUTWARD` ($-\Delta$)
+  - `WASTE` (Floor recovery / Internal reuse): `INTERNAL_RECOVERY` ($0\Delta$, net-neutral non-movement)
+  - `WASTE` (Inspection Hold): Non-movement quarantine record.
+
+### Rule L5: Compensating Reversal Lifecycle
+* **Statement:** Transaction cancellation or correction does not purge existing ledger entries. Instead, an authorized supervisor posts a compensating `REVERSAL` journal movement.
+* **Mechanism:**
+  - Opposite algebraic sign of the original `quantity_delta`.
+  - Foreign key link `reversal_of_entry_id` pointing directly to the original ledger entry.
+  - Mandatory justification notes and audit log record.
+  - Original entries and reversals cannot be reversed more than once.
+
+### Rule L6: Configurable Negative Stock Prevention
+* **Statement:** The system defaults to strict negative stock prevention (`settings.ALLOW_NEGATIVE_STOCK = False`).
+* **Enforcement:**
+  - Any issue slip that would cause derived balance to drop below zero is blocked (`409 Conflict: Insufficient stock`).
+  - Issuing an item that is `UNINITIALIZED` is strictly blocked (`409 Conflict: Cannot issue item with uninitialized stock`).
+  - Reversals that would cause stock to drop below zero are blocked.
+  - Can be toggled for controlled plant migration scenarios if explicitly sanctioned by management.
+
+### Rule L7: Baseline Opening Balance Governance (12 October 2026 Baseline)
+* **Statement:** The operational costing and inventory baseline begins on **12 October 2026**.
+* **Workflow:**
+  1. Upload CSV/Excel containing `[item_code, uom_code, quantity, optional_unit_rate, optional_batch_number]`.
+  2. Perform preview validation checking item active status, UOM compatibility, decimal precision, and existing initialization.
+  3. Post atomically inside a single transaction. Each valid line creates an `OPENING_BALANCE` ledger entry with transaction date set to `2026-10-12`.
+  4. Duplicate opening balance entries for an already initialized item are rejected.
+
+### Rule L8: Physical Stock Audit Variance & Cutoff Mechanics
+* **Statement:** Physical stock counts are recorded and reconciled without manual balance overrides.
+* **Cutoff Calculation:** The system computes the system balance at the exact audit cutoff date:
+  $$\text{System Cutoff Balance} = \sum_{\text{transaction\_date} \le \text{audit\_date}} \text{quantity\_delta}$$
+* **Variance Formula:**
+  $$\text{Variance} = \text{Physical Count} - \text{System Cutoff Balance}$$
+* **Approval & Ledger Adjustment:**
+  - Draft audits do NOT affect inventory.
+  - On approval by Management or Admin, non-zero variances generate a `PHYSICAL_AUDIT_ADJUSTMENT` ledger entry with $\text{quantity\_delta} = \text{Variance}$.
+  - Zero-variance items are recorded as verified without generating redundant zero deltas.
+
+---
+
+## 5. Explicitly Unresolved Business & Costing Decisions (Pending Management Sign-off)
 
 1. **Internal-Material Valuation Rates:**
    - *Status:* **PENDING**

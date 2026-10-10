@@ -158,9 +158,15 @@ def approve_material_issue(db: Session, issue_id: int, actor_id: str, comments: 
         from_status=prev_status,
         to_status=issue.status,
         actor_id=actor_id,
-        comments=comments or "Issue slip approved. (Note: Ledger deduction scheduled for Phase 4)",
+        comments=comments or "Issue slip approved. Posted outward entries to stock ledger.",
     )
     db.add(audit)
+    db.flush()
+
+    # Atomically post to append-only stock ledger
+    from app.services.ledger_service import post_issue_to_ledger
+    post_issue_to_ledger(db, issue, actor_id)
+
     db.commit()
     db.refresh(issue)
     return issue

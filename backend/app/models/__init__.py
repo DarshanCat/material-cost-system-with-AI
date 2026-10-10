@@ -18,6 +18,13 @@ from app.models.waste import (
     DispositionType,
     WasteStatus,
 )
+from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
+from app.models.physical_audit import (
+    PhysicalAuditHeader,
+    PhysicalAuditLine,
+    PhysicalAuditAuditLog,
+    AuditStatus,
+)
 
 __all__ = [
     "Base",
@@ -43,4 +50,11 @@ __all__ = [
     "WasteType",
     "DispositionType",
     "WasteStatus",
+    "StockLedgerEntry",
+    "MovementType",
+    "SourceDocumentType",
+    "PhysicalAuditHeader",
+    "PhysicalAuditLine",
+    "PhysicalAuditAuditLog",
+    "AuditStatus",
 ]

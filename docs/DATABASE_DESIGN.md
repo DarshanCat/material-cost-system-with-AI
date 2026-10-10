@@ -263,6 +263,53 @@ Tracks the lifecycle of new item proposals:
   - `reason` (VARCHAR(255) NULL)
   - `remarks` (TEXT NULL)
 
+### 4.4 Append-Only Stock Ledger (`stock_ledger_entries`)
+- `stock_ledger_entries`:
+  - `id` (INT PK autoincrement)
+  - `entry_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `LED-YYYYMMDD-XXXX`
+  - `material_item_id` (INT FK material_items(id) NOT NULL, index)
+  - `movement_type` (VARCHAR(50) NOT NULL, index) — `OPENING_BALANCE`, `INWARD_RECEIPT`, `INTERNAL_INWARD`, `OUTWARD_ISSUE`, `SCRAP_OUTWARD`, `INTERNAL_RECOVERY`, `PHYSICAL_AUDIT_ADJUSTMENT`, `REVERSAL`
+  - `quantity_delta` (NUMERIC(15, 4) NOT NULL) — Signed decimal delta (+ inward/recovery, - outward/scrap, +/- audit adjustment)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `source_document_type` (VARCHAR(50) NOT NULL, index) — `OPENING_BALANCE`, `GRN`, `ISSUE`, `WASTE`, `PHYSICAL_AUDIT`, `MANUAL_REVERSAL`
+  - `source_document_id` (INT NOT NULL, index)
+  - `source_line_id` (INT NULL, index)
+  - `source_document_number` (VARCHAR(50) NOT NULL, index)
+  - `department_id` (INT FK departments(id) NULL, index)
+  - `transaction_date` (DATE NOT NULL, index)
+  - `batch_number` (VARCHAR(100) NULL)
+  - `unit_rate` (NUMERIC(15, 2) NULL)
+  - `notes` (TEXT NULL)
+  - `created_by` (VARCHAR(100) NOT NULL)
+  - `created_at` (TIMESTAMPTZ NOT NULL, index)
+  - `is_reversal` (BOOLEAN DEFAULT FALSE NOT NULL, index)
+  - `reversal_of_entry_id` (INT FK stock_ledger_entries(id) NULL, index)
+  - `reversal_reason` (TEXT NULL)
+  - **Constraint:** `UNIQUE(source_document_type, source_line_id)` guarantees idempotency for line-item postings.
+
+### 4.5 Physical Inventory Audits (`physical_audit_headers`, `physical_audit_lines`, `physical_audit_audit_logs`)
+- `physical_audit_headers`:
+  - `id` (INT PK autoincrement)
+  - `audit_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `AUD-YYYYMMDD-XXXX`
+  - `audit_date` (DATE NOT NULL, index)
+  - `department_id` (INT FK departments(id) NOT NULL, index)
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'DRAFT', index) — `DRAFT`, `SUBMITTED`, `APPROVED`, `CANCELLED`
+  - `notes` (TEXT NULL)
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at`, `updated_at` (TIMESTAMPTZ NOT NULL)
+  - `approved_by` (VARCHAR(100) NULL), `approved_at` (TIMESTAMPTZ NULL)
+- `physical_audit_lines`:
+  - `id` (INT PK autoincrement)
+  - `audit_id` (INT FK physical_audit_headers(id) ON DELETE CASCADE NOT NULL)
+  - `material_item_id` (INT FK material_items(id) NOT NULL)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `system_quantity_at_cutoff` (NUMERIC(15, 4) NOT NULL)
+  - `physical_quantity` (NUMERIC(15, 4) NOT NULL)
+  - `variance_quantity` (NUMERIC(15, 4) NOT NULL) — Calculated as `physical_quantity - system_quantity_at_cutoff`
+  - `variance_reason` (VARCHAR(255) NULL)
+  - `remarks` (TEXT NULL)
+- `physical_audit_audit_logs`:
+  - Full audit trail logging action, state transitions, actor ID, comments, and timestamps.
+
 ---
 
 ## 5. Migration Architecture & History
@@ -273,3 +320,8 @@ Tracks the lifecycle of new item proposals:
 - **Revision `002_phase3_material_entry` (`backend/migrations/versions/002_phase3_material_entry.py`):**
   - Creates 6 transaction tables and 3 audit log tables: `grn_headers`, `grn_line_items`, `grn_audit_logs`, `material_issue_headers`, `material_issue_line_items`, `issue_audit_logs`, `waste_disposition_headers`, `waste_disposition_line_items`, and `waste_audit_logs`.
   - Enforces `NUMERIC(15, 4)` and `NUMERIC(15, 2)` types, date columns, cascade deletion on line items, and audit traceability.
+- **Revision `003_phase4_stock_ledger` (`backend/migrations/versions/003_phase4_stock_ledger.py`):**
+  - Creates `stock_ledger_entries`, `physical_audit_headers`, `physical_audit_lines`, and `physical_audit_audit_logs`.
+  - Enforces composite unique constraint `uq_stock_ledger_source_line` on `(source_document_type, source_line_id)` for idempotent posting.
+  - Adds foreign key relationship `fk_stock_ledger_reversal` for traceable compensating reversal movements.
+

@@ -10,6 +10,9 @@ import {
   Flame, 
   Calculator, 
   Server,
+  Scale,
+  Layers,
+  FileSpreadsheet,
   Lock
 } from 'lucide-react';
 import type { ModuleId } from '../types';
@@ -81,16 +84,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
       badge: 'Active',
     },
     {
-      id: 'excel-import',
-      label: 'Excel Bulk Import',
-      icon: <FileInput size={18} />,
-      badge: 'Active',
-    },
-    {
       id: 'inventory-ledger',
       label: 'Live Inventory Ledger',
       icon: <BookOpen size={18} />,
-      phase: 'Phase 4',
+      badge: 'Active',
+    },
+    {
+      id: 'opening-balances',
+      label: 'Opening Balances',
+      icon: <Layers size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'physical-audits',
+      label: 'Physical Stock Audits',
+      icon: <Scale size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'excel-import',
+      label: 'Excel Bulk Import',
+      icon: <FileSpreadsheet size={18} />,
+      badge: 'Active',
     },
     {
       id: 'heat-reconciliation',
@@ -159,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
           <p className="footer-desc">
             Restricted to factory network. Audit logging enabled.
           </p>
-          <div className="system-version">v0.2.0 (Phase 2 Active)</div>
+          <div className="system-version">v0.4.0 (Phase 4 Active)</div>
         </div>
       </div>
     </aside>
