@@ -1,0 +1,133 @@
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+
+from app.db.session import get_db
+from app.models.vendor import Vendor
+from app.schemas.vendor import VendorCreate, VendorRead, PaginatedVendorsResponse
+from app.services.validators import normalize_vendor_name
+from app.core.security import require_permission, Permission
+
+router = APIRouter()
+
+
+@router.get("", response_model=PaginatedVendorsResponse, summary="List and Search Vendors")
+def list_vendors(
+    q: Optional[str] = Query(None, description="Search query across vendor name, contact person, or GSTIN"),
+    is_active: Optional[bool] = Query(True, description="Filter active status"),
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(25, ge=1, le=100, description="Page size"),
+    db: Session = Depends(get_db),
+    _user=Depends(require_permission(Permission.VENDOR_READ)),
+):
+    """
+    Search and list vendor master records.
+    Filters by normalized name, contact details, or GSTIN.
+    """
+    try:
+        stmt = select(Vendor)
+
+        if is_active is not None:
+            stmt = stmt.where(Vendor.is_active == is_active)
+
+        if q and q.strip():
+            term = f"%{q.strip().lower()}%"
+            stmt = stmt.where(
+                (func.lower(Vendor.name).like(term)) |
+                (func.lower(Vendor.normalized_name).like(term)) |
+                (func.lower(Vendor.gstin).like(term)) |
+                (func.lower(Vendor.contact_person).like(term))
+            )
+
+        # Count total
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        total = db.scalar(count_stmt) or 0
+
+        # Paginate
+        offset = (page - 1) * size
+        vendors = db.scalars(stmt.order_by(Vendor.name).offset(offset).limit(size)).all()
+
+        return PaginatedVendorsResponse(
+            items=[VendorRead.model_validate(v) for v in vendors],
+            total=total,
+            page=page,
+            size=size,
+        )
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database error while querying vendors: {str(exc.__class__.__name__)}. Ensure PostgreSQL is online."
+        )
+
+
+@router.get("/{vendor_id}", response_model=VendorRead, summary="Get Vendor Details")
+def get_vendor(
+    vendor_id: int,
+    db: Session = Depends(get_db),
+    _user=Depends(require_permission(Permission.VENDOR_READ)),
+):
+    """Retrieves single vendor master details."""
+    try:
+        v = db.get(Vendor, vendor_id)
+        if not v:
+            raise HTTPException(status_code=404, detail="Vendor not found.")
+        return VendorRead.model_validate(v)
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database error while retrieving vendor: {str(exc.__class__.__name__)}"
+        )
+
+
+@router.post("", response_model=VendorRead, status_code=status.HTTP_201_CREATED, summary="Create New Vendor")
+def create_vendor(
+    payload: VendorCreate,
+    db: Session = Depends(get_db),
+    _user=Depends(require_permission(Permission.VENDOR_MANAGE)),
+):
+    """
+    Creates a new vendor record.
+    Enforces normalized name deduplication and GSTIN format syntax validation.
+    Preserves original name for official display and invoice auditing.
+    """
+    normalized = normalize_vendor_name(payload.name)
+    if not normalized:
+        raise HTTPException(status_code=400, detail="Vendor name cannot be empty or solely punctuation.")
+
+    try:
+        # Check duplicate normalized name
+        existing = db.scalar(select(Vendor).where(Vendor.normalized_name == normalized))
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Duplicate vendor conflict: Vendor '{existing.name}' already exists with normalized key '{normalized}'."
+            )
+
+        vendor = Vendor(
+            name=payload.name.strip(),
+            normalized_name=normalized,
+            gstin=payload.gstin,
+            address=payload.address,
+            contact_person=payload.contact_person,
+            phone=payload.phone,
+            email=payload.email,
+            is_active=True,
+        )
+        db.add(vendor)
+        db.commit()
+        db.refresh(vendor)
+        return VendorRead.model_validate(vendor)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="Vendor with identical normalized name already exists."
+        )
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database error while creating vendor: {str(exc.__class__.__name__)}"
+        )

@@ -17,41 +17,37 @@ flowchart TD
     P7 --> P8[Phase 8: Parallel Run, LAN Hardening & Deployment]
     
     style P1 fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-    style P2 fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style P2 fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+    style P3 fill:#fef3c7,stroke:#d97706,stroke-width:2px
 ```
 
 ---
 
-## Detailed Phase Breakdown
+## Detailed Phase Status
 
 ### Phase 1: Architectural Foundation & Development Shell
-* **Status:** **COMPLETE (Current Deliverable)**
-* **Scope:**
-  - Modern project structure (`backend/`, `frontend/`, `docs/`, `scripts/`).
-  - FastAPI backend configured with Pydantic settings, CORS, and health endpoints.
-  - SQLAlchemy 2.x declarative base and Alembic migration framework.
-  - React + TypeScript + Vite industrial ERP frontend shell with desktop-first navigation.
-  - Diagnostic endpoints with live database connectivity verification gates.
-  - Automated test harness (pytest unit tests, TypeScript compile, Vite build verification).
-  - Complete documentation suite.
+* **Status:** **COMPLETE**
+* **Summary:** FastAPI backend, SQLAlchemy 2.x declarative base, Alembic migrations, React ERP shell, pytest suite, Vite build verification, and system documentation.
 
 ---
 
 ### Phase 2: Master Data & Approval Workflows
-* **Status:** **UPCOMING (Recommended Next Step)**
-* **Deliverables:**
-  - Cataloging and schema definition for the **741 material items**.
-  - Categorization hierarchy: Raw Materials, Ferro Alloys, Consumables, Returns, Borings, Gatings.
-  - Master UOM definitions with decimal precision validation rules.
-  - Department Master: Foundry, Machine Shop, Maintenance, General/Stores, Packing, Quality, F3 HMC, F3 CNC.
-  - Vendor Master management with GSTIN validation.
-  - Item Creation and Approval Workflow: Stores/Purchase requests item creation; Admin/Management approves.
-  - Automated unit and integration tests for master data integrity.
+* **Status:** **COMPLETE (Current Deliverable)**
+* **Summary:**
+  - Material Item Master schema (`material_items`) supporting ~741 items scope.
+  - Item code convention: `DEPT-CATEGORY-SERIAL` (e.g. `FDY-RM-016`).
+  - Department Master (`departments`) seeded idempotently with 8 plant units.
+  - Controlled UOM Master (`uoms`) with explicit quantity decimal precision (KG=4, NOS=0, LTR=3).
+  - Vendor Master (`vendors`) with normalized search deduplication and optional 15-character GSTIN validation.
+  - Complete Requisition State Machine (`item_requests` & `item_request_audit_logs`) enforcing `DRAFT` $\rightarrow$ `SUBMITTED` $\rightarrow$ `APPROVED` / `REJECTED` / `CANCELLED`.
+  - Separation of duties: Strict self-approval prevention and mandatory rejection reason.
+  - Full REST API endpoints and interactive React ERP interface with modals, search, and pagination.
+  - 20 automated unit and integration tests passing.
 
 ---
 
 ### Phase 3: Material Entry & Inward/Outward Validation
-* **Status:** **QUEUED**
+* **Status:** **UPCOMING (Recommended Next Step)**
 * **Deliverables:**
   - Goods Receipt Note (GRN) logging with mandatory unit rate excluding GST for raw materials.
   - Handling of internal inward movements (VSPL segregation yard returns) with distinct origin tags.
@@ -110,9 +106,6 @@ flowchart TD
 ### Phase 8: Parallel Run, Security Hardening & Plant LAN Deployment
 * **Status:** **QUEUED**
 * **Deliverables:**
-  - Production authentication system (JWT / OAuth2 / Session tokens).
-  - Role-Based Access Control (RBAC) middleware enforcing permissions at the API route layer.
-  - Deployment configuration for plant on-premise server (systemd / Windows Service / Docker).
-  - On-premise network restriction to factory LAN IP ranges.
+  - Production authentication system (JWT / OAuth2 / LDAP).
+  - Production security hardening and plant LAN deployment.
   - Parallel run with existing Excel processes for validation and user sign-off.
-  - Comprehensive operational training and user manuals.

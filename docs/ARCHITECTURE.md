@@ -15,7 +15,7 @@ The system enforces strict accounting discipline, an append-only inventory movem
 - **Network Isolation:** The application is not exposed to the public Internet. It operates within the foundry's internal subnets connecting Stores, Foundry floor supervisors, Purchase, Quality, and Management workstations.
 - **Client Endpoints:** Modern desktop web browsers (Chrome, Edge) on industrial and office PC terminals.
 
-### 2.2 System Responsibilities
+### 2.2 System Architecture Overview
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -26,9 +26,12 @@ The system enforces strict accounting discipline, an append-only inventory movem
                                     HTTP / REST
                                           v
 +-----------------------------------------------------------------------------------+
-|                         FRONTEND (React + Vite + TypeScript)                      |
-|  - Desktop-First Industrial UI                                                    |
-|  - Zero Synthetic Data Representation (Empty state discipline)                    |
+|                         FRONTEND (React 19 + Vite + TypeScript)                   |
+|  - Desktop-First Industrial ERP UI Shell                                          |
+|  - Material Item Master View & Detail Drawer                                      |
+|  - Vendor Master Management & Creation Form                                       |
+|  - Item Creation Requisition Workflow, Pending Queue, Decision Interface         |
+|  - Department & UOM Reference Precision Architecture Views                        |
 |  - Role-aware Navigation (Stores, Foundry, Purchase, Management, Admin)           |
 +-----------------------------------------------------------------------------------+
                                           |
@@ -37,10 +40,11 @@ The system enforces strict accounting discipline, an append-only inventory movem
 +-----------------------------------------------------------------------------------+
 |                         BACKEND SERVICE (FastAPI + Python 3.11+)                  |
 |  - Core Config & Settings Validation (pydantic-settings)                          |
-|  - Role-Based Access Control (RBAC) Enforcement                                   |
+|  - Role-Based Access Control (RBAC) Enforcement via require_permission            |
+|  - Item Request Workflow State Machine (DRAFT -> SUBMITTED -> APPROVED/REJECTED)  |
+|  - Separation of Duties (No Self-Approval Enforcement)                            |
+|  - Vendor Name Normalization & GSTIN Syntax Validation Gate                       |
 |  - Append-Only Stock Movement Engine (Zero DELETE/UPDATE)                         |
-|  - Strict Receipt & Issue Validation Gates                                        |
-|  - Heat Log Reconciliation & Furnace Yield Engine                                 |
 |  - Weighted-Average Costing Engine (Arbitrary Precision Decimal)                   |
 +-----------------------------------------------------------------------------------+
                                           |
@@ -48,10 +52,10 @@ The system enforces strict accounting discipline, an append-only inventory movem
                                           v
 +-----------------------------------------------------------------------------------+
 |                      DATABASE LAYER (PostgreSQL 15+ / 16+)                        |
-|  - ACID Transaction Guarantee                                                     |
-|  - Schema Versioning via Alembic Migrations                                       |
+|  - ACID Transaction Guarantee with Explicit Constraint Naming                     |
+|  - Schema Versioning via Alembic Migrations (001_phase2_master_data)              |
 |  - Decimal/Numeric Precision for Quantities & Currency                            |
-|  - Immutable Transaction Log & Audit Journal                                      |
+|  - Immutable Transaction Log & Audit Journal (item_request_audit_logs)            |
 +-----------------------------------------------------------------------------------+
 ```
 
@@ -60,27 +64,23 @@ The system enforces strict accounting discipline, an append-only inventory movem
 ## 3. Backend Architecture & Design Principles
 
 ### 3.1 Layered Separation of Concerns
-1. **API Routing Layer (`app/api/v1/`):**
+1. **API Routing Layer (`app/api/v1/endpoints/`):**
    - HTTP request parsing, payload validation via Pydantic schemas.
    - Standardized JSON responses and HTTP status codes.
-   - Authentication dependency gates and role checks.
+   - Granular RBAC permission checks via `Depends(require_permission(...))`.
 2. **Service / Domain Layer (`app/services/`):**
-   - Pure business logic isolated from HTTP concerns.
-   - Costing calculation engine (`costing_service.py`).
-   - Movement ledger processor (`ledger_service.py`).
-   - Reconciliation logic (`reconciliation_service.py`).
-3. **Repository Layer (`app/repositories/`):**
-   - Isolated SQLAlchemy 2.x queries.
-   - Encapsulation of complex joins, bulk insertions, and transactional units.
-4. **Data Model Layer (`app/models/`):**
-   - Declarative SQLAlchemy models.
+   - Pure domain business logic isolated from HTTP routing.
+   - `ItemRequestService`: State machine controller, conflict detection, item code generator (`DEPT-CATEGORY-SERIAL`), atomic transaction management.
+   - `validators.py`: Vendor name normalization and GSTIN syntax validation.
+3. **Data Model Layer (`app/models/`):**
+   - Declarative SQLAlchemy models (`Department`, `UOM`, `MaterialItem`, `Vendor`, `ItemRequest`, `ItemRequestAuditLog`).
    - Explicit constraint naming (`POSTGRES_NAMING_CONVENTION`).
    - Mandatory UTC timestamp tracking via `TimestampMixin`.
 
-### 3.2 Database Access & Integrity
+### 3.2 Database Access & Precision Integrity
 - **Engine Configuration:** Configured with `pool_pre_ping=True` and connection pooling.
-- **Precision Integrity:** All monetary figures, unit prices, stock quantities, and heat charges utilize `DECIMAL(18, 4)` or `DECIMAL(18, 6)`. Floating-point types (`FLOAT`, `DOUBLE PRECISION`) are prohibited for financial calculations.
-- **Transaction Safety:** Read-committed isolation with explicit transaction blocks.
+- **Precision Integrity:** All monetary figures, unit prices, stock quantities, and heat charges utilize `DECIMAL(18, 4)` or `DECIMAL(18, 6)`. Binary floating-point types (`FLOAT`, `DOUBLE PRECISION`) are prohibited.
+- **Transaction Safety:** Read-committed isolation with explicit database transaction rollbacks upon validation failures.
 
 ---
 
@@ -88,30 +88,41 @@ The system enforces strict accounting discipline, an append-only inventory movem
 
 ### 4.1 Golden Security Rule
 > **Frontend route hiding is NOT authorization.**
-> Every backend endpoint must strictly validate caller identity and required permissions.
+> Every backend endpoint strictly validates caller identity and required permissions.
 
-### 4.2 Architectural Roles Matrix
-| Role | Primary Plant Functions | Access Permissions |
-| :--- | :--- | :--- |
-| **Stores** | GRNs, material inward, issues to departments, scrap logs, physical audit | `receipt:*`, `issue:*`, `waste:log`, `ledger:read`, `stock:adjust` |
-| **Foundry** | Induction heat logging, charge mixes, parts poured, reconciliation review | `heat_log:*`, `heat:reconcile`, `issue:read`, `ledger:read` |
-| **Purchase** | Vendor master catalog, purchase orders, material rates excluding GST | `vendor:manage`, `item:create`, `receipt:read` |
-| **Management** | Cost per kg analysis, heat cost variance, audit reviews, stock valuation | `costing:*`, `audit:read`, `ledger:read`, `heat_log:read` |
-| **Admin** | User administration, master approval workflows, system configuration | All permissions (`*`) |
+### 4.2 Role-to-Permission Mapping Matrix (Phase 2 Implemented)
 
-### 4.3 Separation of Duties
-- **Foundry floor supervisors** cannot directly adjust warehouse inventory balances. Only authorized warehouse Issue slips move stock out.
-- **Stores staff** cannot log furnace heat chemistries or modify metallurgist logs.
-- Physical stock corrections require approval and generate distinct `ADJUSTMENT` journal entries.
+| Permission Scope | Stores | Foundry | Purchase | Management | Admin |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `department:read`, `uom:read` | Yes | Yes | Yes | Yes | Yes |
+| `item:read` | Yes | Yes | Yes | Yes | Yes |
+| `item_request:create` | Yes | Yes | Yes | Yes | Yes |
+| `item_request:submit` | Yes | Yes | Yes | Yes | Yes |
+| `item_request:cancel` | Yes | Yes | Yes | Yes | Yes |
+| `item_request:read` | Yes | Yes | Yes | Yes | Yes |
+| `item:approve`, `item:reject` | No | No | No | **Yes** | **Yes** |
+| `vendor:read` | Yes | No | Yes | Yes | Yes |
+| `vendor:manage` | No | No | **Yes** | No | **Yes** |
+
+### 4.3 Separation of Duties & Self-Approval Prevention
+- A manager or administrator who initiates an item requisition cannot approve their own requisition (`reviewer_id != requester_id`).
+- Foundry and Stores roles cannot approve item master entries.
+- Purchase role manages vendor records.
+
+### 4.4 Authentication Status & Limitations
+- **Current State:** For Phase 2 development and testing, an explicit Development User Context (`DevUserContext`) is extracted from request headers (`X-User-Id`, `X-User-Role`, `X-User-Department`).
+- **Limitation Warning:** This development mechanism is **NOT production-secure**. Production authentication (JWT / SSO / LDAP) is scheduled for Phase 8.
 
 ---
 
-## 5. Auditability & Traceability
+## 5. Auditability & State Transitions
 
-1. **Immutable Historical Log:**
-   - Transaction records are append-only.
-   - `DELETE` and `UPDATE` queries on committed transaction or ledger records are structurally forbidden.
-2. **Audit Attribution:**
-   - Every operational entry captures: `created_by_user_id`, `created_at` (UTC), `department_id`, and `source_document_ref`.
-3. **Reversal Entries:**
-   - Clerical errors are corrected exclusively via compensating reversal transactions linked to the original reference ID.
+1. **State Machine (`ItemRequest`):**
+   - `DRAFT`: Editable by requester.
+   - `SUBMITTED`: Locked; pending review by Management/Admin.
+   - `APPROVED`: Terminal state; atomically generates `MaterialItem`.
+   - `REJECTED`: Terminal state; requires mandatory reason; no item generated.
+   - `CANCELLED`: Terminal state; cancelled by requester before approval.
+2. **Audit Attribution (`ItemRequestAuditLog`):**
+   - Every state transition records: `action`, `from_status`, `to_status`, `actor_id`, `actor_role`, `comments`, and `timestamp` (UTC).
+   - Modification or purging of audit log entries is structurally prohibited.

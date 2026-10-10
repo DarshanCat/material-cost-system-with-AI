@@ -1,81 +1,90 @@
 # VSPL Material Management & Costing System — Business Rules Specification
 
-## 1. Core Foundational Accounting & Inventory Rules
+## 1. Master Data & Requisition Rules (Established in Phase 2)
 
-The following business rules are non-negotiable and govern all modules, database operations, and algorithmic routines within the VSPL Material Management & Costing System.
+### Rule M1: Item Code Format Convention
+* **Statement:** All material master items must follow the standard identifier pattern: `DEPT-CATEGORY-SERIAL`.
+* **Format:** `^[A-Z0-9]{2,5}-[A-Z0-9]{2,5}-[0-9]{3,6}$` (e.g., `FDY-RM-001`, `MSP-BOR-012`).
+* **Enforcement:** Generated automatically by the `ItemRequestService` upon request approval. Serial numbers increment per `(department, category)` partition. Duplicate item codes are rejected at the database constraint level.
 
-### Rule 1: Stock Depletion Exclusively via Authorized Issues
-* **Statement:** Only authorized `Issue` transactions move stock out of inventory.
-* **Enforcement:** Direct balance reductions from ad-hoc operational logs, informal verbal requisitions, or unapproved draft slips are strictly rejected. Every outward stock movement requires a validated, authorized Issue Slip linked to a plant department.
+### Rule M2: Separation of Duties — Prohibition of Self-Approval
+* **Statement:** No actor may approve an item creation request that they themselves initiated.
+* **Enforcement:** If `reviewer_id == requester_id` during an approval call, the backend immediately halts the transaction and returns `HTTP 403 Forbidden` (`Self-approval violation: Requester cannot approve their own item request`).
 
-### Rule 2: Heat Log Charges Do Not Move Inventory
-* **Statement:** Heat Log charge records do NOT independently deplete warehouse inventory.
-* **Enforcement:** The furnace Heat Log is a metallurgical production record, not an inventory ledger mutation. Material is deducted from inventory when issued to the Foundry department via an Issue Slip. The Heat Log charge details are subsequently reconciled against issued quantities in Module 3.
+### Rule M3: Mandatory Rejection Justification
+* **Statement:** Rejection of an item creation request requires an explicit, non-empty explanation reason.
+* **Enforcement:** The rejection endpoint validates that `decision_comments` contains substantive text. Empty or whitespace-only comments return `HTTP 400 Bad Request`.
 
-### Rule 3: Full Auditability and Traceability
-* **Statement:** All stock movements must be traceable and auditable.
-* **Enforcement:** Every transaction must record the author (user ID), originating department, physical timestamp (UTC), business transaction date, and referencing document identifier (GRN number, Issue Slip number, Audit voucher).
+### Rule M4: Atomic Approval & Singleton Material Item Creation
+* **Statement:** Approving an item creation request must create exactly one material master record and transition the request state in an atomic transaction.
+* **Enforcement:** Repeated approval calls on an already `APPROVED` request fail with `HTTP 400 Bad Request`. Cancelled or rejected requests never generate material items.
 
-### Rule 4: Absolute Immutability of Transaction History
-* **Statement:** Never clear transaction history or delete ledger records to correct stock balances.
-* **Enforcement:** `DELETE` and `UPDATE` operations are forbidden on ledger and posted transaction tables. Administrative scripts or UI actions that truncate or purge transaction history to "reset" inventory are blocked by database constraints.
+### Rule M5: Vendor Name Normalization and Deduplication
+* **Statement:** Vendor duplicate detection relies on a normalized search key while preserving original legal names for invoicing and audit trails.
+* **Enforcement:** `normalized_name = lowercase(remove_punctuation(collapse_whitespace(name)))`. Insertion of duplicate normalized keys is blocked at the database level (`409 Conflict`). Automatic merging of historical vendor spellings is prohibited without human review.
 
-### Rule 5: Physical Stock Corrections via Adjustment Entries
-* **Statement:** Physical stock corrections must eventually be represented by explicit adjustment entries.
-* **Enforcement:** Any discrepancy discovered during physical stock audits must be accounted for using a signed `PHYSICAL_AUDIT_ADJUSTMENT` journal entry. This entry records the book quantity, physical count, delta, authorized supervisor signature, and variance explanation.
+### Rule M6: Optional GSTIN with Syntactic Validation
+* **Statement:** GSTIN is optional for vendor registration, but when provided, it must conform to the 15-character Indian GST format.
+* **Format:** `^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$`.
+* **Constraint:** The system validates formatting syntactically and does not claim to verify live registration against external GSTN APIs.
 
-### Rule 6: Raw-Material Receipts Require Rate Excluding GST
-* **Statement:** Raw-material receipts require a rate per UOM excluding GST, except qualifying internal inward movements from VSPL or the segregation yard.
-* **Enforcement:**
-  - Standard external vendor GRNs must include a mandatory `unit_rate_ex_gst` (> 0). Receipts with null or zero rates are rejected unless explicitly tagged as qualifying internal movements.
-  - Qualifying internal movements (e.g., returns from the segregation yard, runner/riser remelts) require explicit source documentation.
-
-### Rule 7: Costing Baseline Cutoff Date
-* **Statement:** The costing start date is strictly **12 October 2026**.
-* **Enforcement:** Transactions and movements prior to this date represent historical opening balances or legacy records and must not be used to calculate weighted-average production costing without authorized transition policies.
-
-### Rule 8: Phased Isolation of Weighted-Average Costing
-* **Statement:** Weighted-average costing must be implemented in a later, separately tested phase (Phase 6).
-* **Enforcement:** No interim costing shortcuts or naive moving averages may be introduced into the master data or material entry modules until the dedicated costing engine and test harness are formally initialized and verified.
-
-### Rule 9: Strict Import Validation (No Silent Column Skips)
-* **Statement:** Receipt and historical imports must strictly validate headers and data types rather than silently skipping columns or dropping unparseable rows.
-* **Enforcement:** Any Excel/CSV import containing unexpected columns, missing required headers, malformed dates, or unparseable quantities must reject the entire file or raise a detailed row-by-row error report. Silent truncation or assumption-based default values are prohibited.
-
-### Rule 10: Decimal Precision Validation
-* **Statement:** Quantity precision must be validated to catch decimal-entry errors.
-* **Enforcement:** The system must validate input precision against defined item UOM limits (e.g., kilograms limited to 4 decimal places, pieces limited to whole integers). Erroneous decimal entries (such as entry of 1000 instead of 10.00) must be flagged with threshold warnings.
-
-### Rule 11: Duplicate Batch and Source Record Detection
-* **Statement:** Duplicate batches and duplicate source records must be detected and blocked.
-* **Enforcement:** The system checks composite uniqueness on `(vendor_id, invoice_number, item_id)` for receipts, and `(heat_number, furnace_id, heat_date)` for heat logs. Repeated uploads of identical transactions are rejected with clear duplication alerts.
-
-### Rule 12: Zero Data Fabrication
-* **Statement:** Historical data and financial metrics must not be fabricated.
-* **Enforcement:** At no point during development or initial deployment should mock balances, synthetic costs, or estimated historical records be inserted into production tables. Where data is not yet migrated, systems must display clear empty states.
+### Rule M7: Extensible UOM Precision Governance
+* **Statement:** Each unit of measurement specifies an integer decimal precision (e.g., `KG`: 4, `MT`: 4, `NOS`: 0, `LTR`: 3).
+* **Enforcement:** All financial and inventory calculations use `NUMERIC` / `Decimal`. IEEE 754 binary floating-point (`FLOAT`/`DOUBLE PRECISION`) is strictly prohibited. Values like `5014` vs `5.014` are flagged for review by future transaction validation and never silently auto-converted.
 
 ---
 
-## 2. Explicitly Unresolved Business & Costing Decisions
+## 2. Foundational Accounting & Inventory Ledger Rules
 
-The following items are officially classified as **PENDING MANAGEMENT DECISION** and must NOT be implemented with unapproved assumptions:
+### Rule 1: Stock Depletion Exclusively via Authorized Issues
+* Only authorized `Issue` transactions move stock out of inventory.
+
+### Rule 2: Heat Log Charges Do Not Move Inventory
+* Heat Log charge records do NOT independently deplete warehouse inventory. Depletion occurs via Issue Slips.
+
+### Rule 3: Full Auditability and Traceability
+* Every transaction records user ID, originating department, UTC timestamp, and document reference.
+
+### Rule 4: Absolute Immutability of Transaction History
+* Never clear transaction history or delete ledger records to correct stock balances.
+
+### Rule 5: Physical Stock Corrections via Adjustment Entries
+* Physical stock count discrepancies are accounted for using signed `PHYSICAL_AUDIT_ADJUSTMENT` journal entries.
+
+### Rule 6: Raw-Material Receipts Require Rate Excluding GST
+* Receipts require rate per UOM excluding GST, except qualifying internal inward movements from VSPL segregation yard.
+
+### Rule 7: Costing Baseline Cutoff Date
+* The costing start date is strictly **12 October 2026**.
+
+### Rule 8: Phased Isolation of Weighted-Average Costing
+* Weighted-average costing is implemented exclusively in Phase 6.
+
+### Rule 9: Strict Import Validation (No Silent Column Skips)
+* Receipt and historical imports strictly validate headers and types without silent column skips.
+
+### Rule 10: Decimal Precision Validation
+* Quantity precision is validated against UOM limits to catch decimal-entry anomalies.
+
+### Rule 11: Duplicate Batch and Source Record Detection
+* Composite uniqueness on `(vendor_id, invoice_number, item_id)` and `(heat_number, furnace_id, heat_date)`.
+
+### Rule 12: Zero Data Fabrication
+* No synthetic mock inventory quantities, fictitious rates, or invented transactions are displayed.
+
+---
+
+## 3. Explicitly Unresolved Business & Costing Decisions (Pending Management Sign-off)
 
 1. **Internal-Material Valuation Rates:**
    - *Status:* **PENDING**
-   - *Detail:* The precise valuation rate per kg for foundry returns (runners, risers, rejected castings, machine shop borings) transferred from the segregation yard back into the furnace charge has not been finalized.
-   - *Constraint:* Do not hardcode arbitrary percentage discounts (e.g., 80% of pig iron rate) until approved in writing.
-
+   - *Detail:* Valuation rate per kg for foundry returns (runners, risers, rejected castings, borings from Machine Shop) transferred back into furnace charges.
 2. **Costing Denominator Standard:**
    - *Status:* **PENDING**
-   - *Detail:* Clarification is required whether cost per kg is calculated over *Gross Liquid Metal Tapped* or *Net Good Casting Weight* for specific SG iron part grades.
-   - *Constraint:* Both metrics must be calculated and displayed distinctly without conflation.
-
+   - *Detail:* Clarification whether cost per kg for casting part numbers uses *Gross Liquid Metal Tapped* or *Net Good Casting Weight*.
 3. **Additional Production Overheads Apportionment:**
    - *Status:* **PENDING**
-   - *Detail:* How furnace electrical power (kWh/heat), refractory liner wear, and labor overheads are apportioned into individual heat costs.
-   - *Constraint:* Module 6 must isolate raw material metal cost from conversion overheads until an overhead allocation method is formally designated.
-
+   - *Detail:* How furnace electrical power (kWh/heat), refractory liner wear, and direct labor overheads are apportioned.
 4. **Historical Pricing Reconciliation Prior to Cutoff:**
    - *Status:* **PENDING**
    - *Detail:* Method of establishing opening stock unit rates for the 741 items on 12 October 2026.
-   - *Constraint:* Historical transactions prior to 12 October 2026 must be preserved as quantity-only or with explicit legacy flags until valuation basis is approved.

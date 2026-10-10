@@ -6,11 +6,27 @@ The system manages inventory across **741 material items**, provides an immutabl
 
 ---
 
+## Current Status: Phase 2 Active (Master Data & Approvals)
+
+- **Phase 1: Foundation & Application Shell** — Complete
+- **Phase 2: Master Data & Approval Workflows** — Complete
+  - Material Item Master (`material_items`) supporting ~741 items scope.
+  - Item code convention: `DEPT-CATEGORY-SERIAL` (e.g. `FDY-RM-016`).
+  - Department Master (`departments`) with 8 plant departments.
+  - Controlled UOM Master (`uoms`) with explicit decimal precision (KG=4, NOS=0, LTR=3).
+  - Vendor Master (`vendors`) with normalized search deduplication and 15-character GSTIN format validation.
+  - Item Creation & Approval State Machine (`item_requests` & `item_request_audit_logs`) enforcing separation of duties (no self-approval).
+  - Versioned REST APIs (`/api/v1/departments`, `/uoms`, `/items`, `/vendors`, `/item-requests`).
+  - Desktop-first React ERP UI with search, filtering, drawer details, and decision modals.
+  - 20 automated tests passing with full coverage of constraints, states, and permissions.
+
+---
+
 ## Technology Stack
 
 - **Backend:** Python 3.11+ (tested on Python 3.14), FastAPI, SQLAlchemy 2.x, Alembic, psycopg 3, Pydantic v2, Pytest
 - **Frontend:** React 19, TypeScript, Vite, Lucide Icons
-- **Database:** PostgreSQL (with `DECIMAL`/`NUMERIC` precision for financial calculations)
+- **Database:** PostgreSQL (with `DECIMAL`/`NUMERIC` precision for financial and quantity calculations)
 - **Deployment Target:** Industrial Plant Local Area Network (LAN)
 
 ---
@@ -24,28 +40,49 @@ VSPL-Material-Management-Costing/
 │   │   ├── api/
 │   │   │   └── v1/
 │   │   │       ├── endpoints/
-│   │   │       │   └── health.py
+│   │   │       │   ├── health.py
+│   │   │       │   ├── departments.py
+│   │   │       │   ├── uoms.py
+│   │   │       │   ├── items.py
+│   │   │       │   ├── vendors.py
+│   │   │       │   └── item_requests.py
 │   │   │       └── api.py
 │   │   ├── core/
 │   │   │   ├── config.py
-│   │   │   └── security.py
+│   │   │   └── security.py          # RBAC matrix, DevUserContext, permissions
 │   │   ├── db/
-│   │   │   ├── base.py
-│   │   │   └── session.py
+│   │   │   ├── base.py              # DeclarativeBase, TimestampMixin
+│   │   │   ├── session.py           # Engine & SessionLocal
+│   │   │   └── seed.py              # Idempotent reference data seeding
 │   │   ├── models/
+│   │   │   ├── department.py
+│   │   │   ├── uom.py
+│   │   │   ├── item.py
+│   │   │   ├── vendor.py
+│   │   │   └── item_request.py
 │   │   ├── schemas/
+│   │   │   ├── department.py
+│   │   │   ├── uom.py
+│   │   │   ├── item.py
+│   │   │   ├── vendor.py
+│   │   │   ├── item_request.py
 │   │   │   └── health.py
 │   │   ├── services/
-│   │   ├── repositories/
+│   │   │   ├── validators.py        # GSTIN & vendor normalization
+│   │   │   └── item_request_service.py # Workflow state machine
 │   │   └── main.py
 │   ├── migrations/
+│   │   ├── versions/
+│   │   │   └── 001_phase2_master_data.py # Master data & workflow tables
 │   │   ├── env.py
-│   │   ├── script.py.mako
-│   │   └── versions/
+│   │   └── script.py.mako
 │   ├── tests/
-│   │   ├── conftest.py
+│   │   ├── conftest.py              # Test database session & role fixtures
 │   │   ├── test_config.py
-│   │   └── test_health.py
+│   │   ├── test_health.py
+│   │   ├── test_master_data.py      # Master data & code generation tests
+│   │   ├── test_vendors.py          # Vendor deduplication & GSTIN tests
+│   │   └── test_item_requests_workflow.py # Approval workflow & state tests
 │   ├── requirements.txt
 │   ├── .env.example
 │   └── alembic.ini
@@ -53,6 +90,10 @@ VSPL-Material-Management-Costing/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── DashboardView.tsx
+│   │   │   ├── MaterialMasterView.tsx
+│   │   │   ├── VendorMasterView.tsx
+│   │   │   ├── ItemRequestsView.tsx
+│   │   │   ├── ReferenceDataView.tsx
 │   │   │   ├── DiagnosticsView.tsx
 │   │   │   ├── Header.tsx
 │   │   │   ├── ModulePlaceholder.tsx
@@ -66,11 +107,11 @@ VSPL-Material-Management-Costing/
 │   ├── tsconfig.json
 │   └── vite.config.ts
 ├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── DATABASE_DESIGN.md
-│   ├── BUSINESS_RULES.md
-│   ├── IMPLEMENTATION_ROADMAP.md
-│   └── SETUP_GUIDE.md
+│   ├── ARCHITECTURE.md              # System boundaries, RBAC matrix, auditability
+│   ├── DATABASE_DESIGN.md           # Entity specifications, ER diagram, precision rules
+│   ├── BUSINESS_RULES.md            # Master data & non-negotiable accounting rules
+│   ├── IMPLEMENTATION_ROADMAP.md    # 8-Phase engineering delivery roadmap
+│   └── SETUP_GUIDE.md               # PowerShell commands & troubleshooting
 ├── scripts/
 │   ├── setup-env.ps1
 │   ├── run-backend.ps1
@@ -86,12 +127,12 @@ VSPL-Material-Management-Costing/
 ## Quick Start (Windows PowerShell)
 
 ### 1. Prerequisites
-- **Python 3.11+** installed (`python --version`)
-- **Node.js v18+ & npm** installed (`node --version`, `npm --version`)
-- **PostgreSQL 15+** installed and running (required for real migrations and database persistence)
+- **Python 3.11+** (`python --version`)
+- **Node.js v18+ & npm** (`node --version`, `npm --version`)
+- **PostgreSQL 15+** (Required for real database persistence and migrations)
 
 ### 2. Environment Initialization
-Run the automated environment setup script:
+Run the automated setup script:
 ```powershell
 .\scripts\setup-env.ps1
 ```
@@ -115,40 +156,18 @@ In a second PowerShell terminal:
 
 ## Testing & Quality Assurance
 
-To execute all automated quality gates (backend pytest suite + frontend TypeScript typecheck and Vite build):
+To execute all automated quality gates (20 backend unit & integration tests + frontend TypeScript typecheck and Vite production build):
 ```powershell
 .\scripts\run-tests.ps1
 ```
-
-### Run Backend Tests Independently:
-```powershell
-.\backend\.venv\Scripts\pytest.exe backend\tests -v
-```
-
-### Run Frontend Build Independently:
-```powershell
-cd frontend
-npm run build
-```
-
----
-
-## Database Migrations
-
-When your local PostgreSQL instance is running:
-```powershell
-.\scripts\run-migrations.ps1
-```
-
-> **Note:** The application starts and functions in offline-safe mode even if PostgreSQL is not currently active, reporting degraded database health without crashing.
 
 ---
 
 ## Project Documentation
 
 Detailed technical documentation is available in the `docs/` directory:
-- [ARCHITECTURE.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/ARCHITECTURE.md) — System boundaries, layered architecture, RBAC, and audit principles.
-- [DATABASE_DESIGN.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/DATABASE_DESIGN.md) — Relational schema design, entity definitions, and Decimal precision rules.
-- [BUSINESS_RULES.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/BUSINESS_RULES.md) — Strict accounting invariants, cutoff dates, and unresolved costing decisions.
-- [IMPLEMENTATION_ROADMAP.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/IMPLEMENTATION_ROADMAP.md) — 8-Phase engineering delivery roadmap.
-- [SETUP_GUIDE.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/SETUP_GUIDE.md) — Complete Windows setup guide and troubleshooting.
+- [ARCHITECTURE.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/ARCHITECTURE.md)
+- [DATABASE_DESIGN.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/DATABASE_DESIGN.md)
+- [BUSINESS_RULES.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/BUSINESS_RULES.md)
+- [IMPLEMENTATION_ROADMAP.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/IMPLEMENTATION_ROADMAP.md)
+- [SETUP_GUIDE.md](file:///c:/VSPL_MM/Material%20managment%20system/docs/SETUP_GUIDE.md)

@@ -4,6 +4,10 @@ import type { ModuleId, UserRole, SystemHealthData } from './types';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
+import { MaterialMasterView } from './components/MaterialMasterView';
+import { VendorMasterView } from './components/VendorMasterView';
+import { ItemRequestsView } from './components/ItemRequestsView';
+import { ReferenceDataView } from './components/ReferenceDataView';
 import { ModulePlaceholder } from './components/ModulePlaceholder';
 import { DiagnosticsView } from './components/DiagnosticsView';
 
@@ -12,6 +16,25 @@ export const App: React.FC = () => {
   const [currentRole, setCurrentRole] = useState<UserRole>('Stores');
   const [health, setHealth] = useState<SystemHealthData | null>(null);
   const [loadingHealth, setLoadingHealth] = useState<boolean>(false);
+
+  const getUserIdForRole = (role: UserRole): string => {
+    switch (role) {
+      case 'Stores':
+        return 'usr_stores_01';
+      case 'Foundry':
+        return 'usr_foundry_01';
+      case 'Purchase':
+        return 'usr_purchase_01';
+      case 'Management':
+        return 'usr_mgmt_01';
+      case 'Admin':
+        return 'usr_admin_01';
+      default:
+        return 'usr_dev_01';
+    }
+  };
+
+  const currentUserId = getUserIdForRole(currentRole);
 
   const fetchHealth = useCallback(async () => {
     setLoadingHealth(true);
@@ -25,7 +48,7 @@ export const App: React.FC = () => {
           status: 'degraded',
           app_name: 'VSPL Material Management & Costing System',
           environment: 'development',
-          version: '0.1.0',
+          version: '0.2.0',
           costing_start_date: '2026-10-12',
           database: {
             connected: false,
@@ -40,7 +63,7 @@ export const App: React.FC = () => {
         status: 'degraded',
         app_name: 'VSPL Material Management & Costing System',
         environment: 'development',
-        version: '0.1.0',
+        version: '0.2.0',
         costing_start_date: '2026-10-12',
         database: {
           connected: false,
@@ -69,6 +92,32 @@ export const App: React.FC = () => {
             onNavigate={(mod) => setActiveModule(mod)}
           />
         );
+
+      case 'material-master':
+        return (
+          <MaterialMasterView
+            currentRole={currentRole}
+            onRequestNewItem={() => setActiveModule('item-requests')}
+          />
+        );
+
+      case 'vendor-master':
+        return (
+          <VendorMasterView
+            currentRole={currentRole}
+          />
+        );
+
+      case 'item-requests':
+        return (
+          <ItemRequestsView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'references':
+        return <ReferenceDataView />;
 
       case 'material-entry':
         return (
