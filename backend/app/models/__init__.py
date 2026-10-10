@@ -25,6 +25,30 @@ from app.models.physical_audit import (
     PhysicalAuditAuditLog,
     AuditStatus,
 )
+from app.models.heat import (
+    HeatHeader,
+    HeatChargeLine,
+    HeatPartsProduced,
+    ProductionStatus,
+    HeatChargeValidationStatus,
+    CastingClassification,
+)
+from app.models.material_alias import (
+    MaterialAlias,
+    MaterialAliasAuditLog,
+    AliasApprovalStatus,
+)
+from app.models.reconciliation import (
+    ReconciliationRun,
+    ReconciliationResult,
+    ReconciliationCandidateMatch,
+    ReconciliationException,
+    ReconciliationExceptionAuditLog,
+    VarianceClass,
+    MatchMethod,
+    CandidateMatchStatus,
+    ExceptionStatus,
+)
 
 __all__ = [
     "Base",
@@ -57,4 +81,22 @@ __all__ = [
     "PhysicalAuditLine",
     "PhysicalAuditAuditLog",
     "AuditStatus",
+    "HeatHeader",
+    "HeatChargeLine",
+    "HeatPartsProduced",
+    "ProductionStatus",
+    "HeatChargeValidationStatus",
+    "CastingClassification",
+    "MaterialAlias",
+    "MaterialAliasAuditLog",
+    "AliasApprovalStatus",
+    "ReconciliationRun",
+    "ReconciliationResult",
+    "ReconciliationCandidateMatch",
+    "ReconciliationException",
+    "ReconciliationExceptionAuditLog",
+    "VarianceClass",
+    "MatchMethod",
+    "CandidateMatchStatus",
+    "ExceptionStatus",
 ]

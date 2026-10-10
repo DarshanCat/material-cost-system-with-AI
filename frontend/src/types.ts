@@ -7,12 +7,14 @@ export type ModuleId =
   | 'grn-management'
   | 'material-issue'
   | 'waste-disposition'
-  | 'excel-import'
   | 'inventory-ledger'
-  | 'stock-history'
   | 'opening-balances'
   | 'physical-audits'
+  | 'heat-log'
+  | 'material-aliases'
   | 'heat-reconciliation'
+  | 'heat-import'
+  | 'excel-import'
   | 'costing'
   | 'system-health';
 
@@ -298,3 +300,143 @@ export interface PhysicalAudit {
   lines: PhysicalAuditLine[];
   audit_logs: AuditLog[];
 }
+
+export interface HeatChargeLine {
+  id?: number;
+  heat_id?: number;
+  line_number: number;
+  material_item_id?: number | null;
+  original_material_description: string;
+  charged_quantity: string | number;
+  uom_id: number;
+  validation_status: string;
+  source_row_reference?: string | null;
+  remarks?: string | null;
+  material_item?: MaterialItem;
+  uom?: UOM;
+}
+
+export interface HeatPartsProduced {
+  id?: number;
+  heat_id?: number;
+  line_number: number;
+  part_item_id?: number | null;
+  original_part_description: string;
+  quantity_produced: string | number;
+  unit_cast_weight?: string | number | null;
+  weight_uom_id?: number | null;
+  classification: string;
+  source_row_reference?: string | null;
+  remarks?: string | null;
+}
+
+export interface HeatHeader {
+  id: number;
+  heat_number: string;
+  original_heat_number: string;
+  normalized_heat_number: string;
+  heat_date: string;
+  furnace_id?: string | null;
+  shift?: string | null;
+  metal_tapped_weight?: string | number | null;
+  metal_tapped_uom_id?: number | null;
+  production_status: string;
+  source_document_reference?: string | null;
+  notes?: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  charge_lines: HeatChargeLine[];
+  parts_produced: HeatPartsProduced[];
+}
+
+export interface MaterialAlias {
+  id: number;
+  alias_text: string;
+  normalized_alias_key: string;
+  material_item_id: number;
+  is_active: boolean;
+  status: string;
+  reviewer_id?: string | null;
+  reviewed_at?: string | null;
+  decision_notes?: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  material_item?: MaterialItem;
+}
+
+export interface ReconciliationResult {
+  id: number;
+  run_id: number;
+  material_item_id?: number | null;
+  heat_id?: number | null;
+  match_method: string;
+  issued_quantity: string | number;
+  charged_quantity: string | number;
+  variance_quantity: string | number;
+  variance_percentage?: string | number | null;
+  applied_tolerance: string | number;
+  tolerance_basis: string;
+  variance_class: string;
+  contributing_issue_ids?: string | null;
+  contributing_issue_line_ids?: string | null;
+  contributing_heat_ids?: string | null;
+  contributing_charge_line_ids?: string | null;
+  notes?: string | null;
+  status: string;
+  material_item?: MaterialItem;
+  heat?: HeatHeader;
+}
+
+export interface ReconciliationCandidateMatch {
+  id: number;
+  run_id: number;
+  issue_line_id: number;
+  heat_charge_line_id: number;
+  confidence_score: string | number;
+  suggestion_reason: string;
+  status: string;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  review_comments?: string | null;
+  issue_line?: any;
+  charge_line?: any;
+}
+
+export interface ReconciliationException {
+  id: number;
+  run_id: number;
+  exception_type: string;
+  source_reference: string;
+  description: string;
+  assigned_role: string;
+  priority: string;
+  status: string;
+  resolution_comments?: string | null;
+  resolved_by?: string | null;
+  resolved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReconciliationRun {
+  id: number;
+  run_number: string;
+  algorithm_version: string;
+  date_from?: string | null;
+  date_to?: string | null;
+  status: string;
+  total_evaluated_count: number;
+  exact_matches_count: number;
+  batch_matches_count: number;
+  fuzzy_candidates_count: number;
+  discrepancies_count: number;
+  notes?: string | null;
+  created_by: string;
+  created_at: string;
+  results?: ReconciliationResult[];
+  candidate_matches?: ReconciliationCandidateMatch[];
+  exceptions?: ReconciliationException[];
+}
+

@@ -17,6 +17,10 @@ import { ExcelImportView } from './components/ExcelImportView';
 import { LiveInventoryDashboard } from './components/LiveInventoryDashboard';
 import { OpeningBalanceView } from './components/OpeningBalanceView';
 import { PhysicalAuditView } from './components/PhysicalAuditView';
+import { HeatLogManagementView } from './components/HeatLogManagementView';
+import { MaterialAliasView } from './components/MaterialAliasView';
+import { ReconciliationDashboard } from './components/ReconciliationDashboard';
+import { HeatExcelImportView } from './components/HeatExcelImportView';
 
 export const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleId>('dashboard');
@@ -182,25 +186,35 @@ export const App: React.FC = () => {
           />
         );
 
+      case 'heat-log':
+        return (
+          <HeatLogManagementView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'material-aliases':
+        return (
+          <MaterialAliasView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
       case 'heat-reconciliation':
         return (
-          <ModulePlaceholder
-            title="Module 3: Heat Log & Issue Reconciliation"
-            moduleId="heat-reconciliation"
-            phase="Phase 5 (Scheduled)"
-            description="Logs induction furnace heat records, charge detail mixes (pig iron, scrap, ferro alloys, inoculants), parts cast, and reconciles issues to actual charge consumption."
-            plannedFeatures={[
-              'Furnace heat log capture (Heat Number, Date, Shift, Furnace ID, Metallurgist).',
-              'Charge mix detail logging (Pig Iron, Return Borings, Steel Scrap, FeSi, FeMn, Mg treatment).',
-              'Casting and parts produced tracking linked to specific heat chemistry.',
-              'Issue-Slip-to-Heat-Log reconciliation variance reporting.',
-              'Foundry yield and melting loss calculation.',
-            ]}
-            businessRules={[
-              'Heat Log charge records do NOT independently deplete inventory (ledger movement occurs via authorized issue slip).',
-              'Heat-to-issue reconciliation identifies floor consumption variances without fabricating ledger balance adjustments.',
-              'Reconciliation discrepancies must be flagged for metallurgical supervisor review.',
-            ]}
+          <ReconciliationDashboard
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'heat-import':
+        return (
+          <HeatExcelImportView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
           />
         );
 

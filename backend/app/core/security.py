@@ -189,3 +189,14 @@ def require_permission(required_permission: Permission):
         return user
 
     return permission_checker
+
+
+def get_current_user_role(context: DevUserContext = Depends(get_current_user_context)) -> str:
+    """Helper dependency returning current user role string."""
+    return context.role.value
+
+
+def get_current_user_id(context: DevUserContext = Depends(get_current_user_context)) -> str:
+    """Helper dependency returning current user id string."""
+    return context.user_id
+

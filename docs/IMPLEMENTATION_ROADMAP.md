@@ -63,7 +63,7 @@ flowchart TD
 ---
 
 ### Phase 4: Append-Only Live Inventory Ledger
-* **Status:** **COMPLETE (Current Deliverable)**
+* **Status:** **COMPLETE**
 * **Deliverables:**
   - Immutable stock ledger table design (`stock_ledger_entries`) with zero `UPDATE`/`DELETE` API endpoints.
   - Derived balance calculation engine (`SUM(quantity_delta)`) with distinct operational states: `UNINITIALIZED`, `IN_STOCK`, `OUT_OF_STOCK`, `NEGATIVE_STOCK`.
@@ -83,18 +83,27 @@ flowchart TD
 ---
 
 ### Phase 5: Heat Log & Requisition Reconciliation
-* **Status:** **UPCOMING (Next Step)**
+* **Status:** **COMPLETE (Current Deliverable)**
 * **Deliverables:**
-  - Induction furnace Heat Log entry (Heat number, date, shift, furnace ID, metallurgist).
-  - Detailed charge mix logging (Pig iron, Steel scrap, Returns, FeSi, FeMn, Inoculants, Mg treatment).
-  - Finished parts cast and good vs rejected casting counts.
-  - **Issue-to-Heat Reconciliation Module:** Compares raw materials issued to Foundry against logged furnace charges.
-  - Variance reporting: Identifies melting loss, spillages, and unreported material usage without fabricating stock adjustments.
+  - Induction furnace Heat Log entry (`heat_headers`, `heat_charge_lines`, `heat_parts_produced`) capturing heat number, furnace ID, date, shift, operator, charges, and parts produced.
+  - Heat reference normalization: bidirectional matching between `102603-3721` and `H-102603-3721`.
+  - Material Alias Master (`material_aliases`, `material_alias_audit_logs`) mapping raw descriptions (e.g. `CRC Scrap-Low High MN`) to canonical items without mutating source records.
+  - Deterministic 3-Pass Reconciliation Engine (`reconciliation_runs`, `reconciliation_results`):
+    - **Pass 1:** Exact heat reference matching with line-by-line item comparison.
+    - **Pass 2:** Same-day batch aggregation for unallocated lines without double-counting.
+    - **Pass 3:** Advisory fuzzy candidate suggestions (`reconciliation_candidate_matches`) requiring explicit supervisor confirmation.
+  - Tolerance Precedence Rule: $\text{Limit} = \max(0.50\text{ kg}, 0.02 \times \text{Issued Quantity})$.
+  - Signed Variance Convention: $\text{Variance} = \text{Issued Quantity} - \text{Charged Quantity}$.
+  - Exception Management Queue (`reconciliation_exceptions`) with assignment and resolution workflows.
+  - Atomic Heat Log Excel Import Engine with dry-run preview and rollback on validation errors.
+  - **NON-NEGOTIABLE ISOLATION:** Strictly zero stock ledger movements or balance adjustments caused by heat logs or reconciliation runs.
+  - Interactive industrial ERP frontend: Furnace Heat Log Manager, Material Aliases, Reconciliation Dashboard, and Heat Excel Import.
+  - Comprehensive automated Pytest suite (46/46 passing) with dedicated test for zero stock ledger side-effects.
 
 ---
 
 ### Phase 6: Costing Engine & Valuation
-* **Status:** **QUEUED**
+* **Status:** **UPCOMING (Next Step)**
 * **Deliverables:**
   - Formal implementation of the Weighted-Average Costing engine.
   - Strict costing start date enforcement: **12 October 2026**.

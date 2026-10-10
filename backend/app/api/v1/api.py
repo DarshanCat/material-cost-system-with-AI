@@ -13,6 +13,10 @@ from app.api.v1.endpoints import (
     ledger,
     opening_balances,
     physical_audits,
+    heats,
+    material_aliases,
+    reconciliation,
+    heat_import,
 )
 
 api_router = APIRouter()
@@ -29,3 +33,7 @@ api_router.include_router(excel_import.router, prefix="/excel-import", tags=["Ex
 api_router.include_router(ledger.router, prefix="/ledger", tags=["Append-Only Stock Ledger"])
 api_router.include_router(opening_balances.router, prefix="/opening-balances", tags=["Opening Stock Balances"])
 api_router.include_router(physical_audits.router, prefix="/physical-audits", tags=["Physical Inventory Audits"])
+api_router.include_router(heats.router, prefix="/heats", tags=["Induction Furnace Heat Log"])
+api_router.include_router(material_aliases.router, prefix="/material-aliases", tags=["Material Description Aliases"])
+api_router.include_router(reconciliation.router, prefix="/reconciliation", tags=["Issue-to-Heat Reconciliation"])
+api_router.include_router(heat_import.router, prefix="/heats/import", tags=["Heat Log Excel Import"])

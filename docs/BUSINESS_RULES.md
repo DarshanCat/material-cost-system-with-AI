@@ -173,7 +173,63 @@
 
 ---
 
-## 5. Explicitly Unresolved Business & Costing Decisions (Pending Management Sign-off)
+## 5. Induction Furnace Heat Log & Reconciliation Rules (Established in Phase 5)
+
+### Rule H1: Strict Inventory Non-Movement (Critical Directive)
+* **Statement:** Induction Furnace Heat Log charge details and reconciliation runs NEVER create inventory movements or alter stock ledger balances.
+* **Enforcement:**
+  - Only authorized Stores `MaterialIssueHeader` transactions post outward stock ledger entries (`OUTWARD_ISSUE`).
+  - Furnace charge records represent floor metallurgical consumption, not warehouse stock dispatches.
+  - Reconciliation results identify consumption variances without synthesizing ledger balance adjustments.
+  - Dedicated regression tests (`test_reconciliation_isolation.py`) enforce zero stock movements across heat creation, editing, importing, reconciling, and candidate match confirmation.
+
+### Rule H2: Heat Reference Normalization Convention
+* **Statement:** Furnace heats follow the standard convention `H-XXXXXX-XXXX` (e.g. `H-102603-3721`).
+* **Preservation Rule:**
+  - Raw user inputs (e.g. `102603-3721`) are preserved in `original_heat_number`.
+  - Normalized uppercase reference (`H-102603-3721`) is stored separately in `normalized_heat_number`.
+  - Normalization collisions are rejected with `409 Conflict`.
+  - Issue slip numbers and heat log numbers are never silently rewritten.
+
+### Rule H3: Controlled Material Alias Dictionary
+* **Statement:** Raw textual descriptions in historical furnace sheets (e.g. `CRC Scrap-Low High MN`) map to official `material_items` through an auditable alias master (`material_aliases`).
+* **Governance:**
+  - Original alias text is preserved alongside a normalized key (`normalize_alias_key(text)`).
+  - Ambiguous mappings (mapping the same alias text to multiple items) are blocked at the database level (`409 Conflict`).
+  - Silent fuzzy matching to auto-create aliases is strictly prohibited.
+  - Alias lifecycle (`PENDING` $\rightarrow$ `APPROVED` / `REJECTED`) requires supervisor review, with mandatory justification comments on rejection.
+
+### Rule H4: Deterministic Three-Pass Reconciliation Engine
+* **Statement:** Floor issues and melt charges are reconciled via a deterministic, explainable algorithm:
+  1. **Pass 1 (Exact Heat-Slip Matching):** Matches `issue.heat_reference_number` against `heat.heat_number` / `heat.normalized_heat_number`. Compares common items item-by-item. Allocated lines are marked and excluded from subsequent passes.
+  2. **Pass 2 (Same-Day Batch Aggregation):** For unallocated records, aggregates issues and charges by `(transaction_date == heat_date)` and resolved `material_item_id`. Prevents double-counting lines allocated in Pass 1.
+  3. **Pass 3 (Advisory Fuzzy Suggestions):** For remaining unallocated lines, proposes suggestions based on date proximity ($\pm 1$ day for shift crossovers), reference similarity, and quantity proximity. **Never auto-confirms.**
+
+### Rule H5: Unambiguous Tolerance Precedence Formula
+* **Statement:** In foundry charge reconciliation, tolerances accommodate both small inoculants ($5\text{ kg}$) and bulk scrap ($1,000\text{ kg}$) via:
+  $$\text{Tolerance Limit} = \max(\text{Absolute Tolerance } (0.5\text{ kg}), \text{Relative Tolerance } (2\%) \times \text{Issued Quantity})$$
+* **Zero Handling:** When Issued Quantity is zero, the threshold defaults to the absolute tolerance ($0.5\text{ kg}$).
+* **Explainability:** The applied numerical tolerance and comparison basis string are permanently persisted with each reconciliation result.
+
+### Rule H6: Signed Variance Convention
+* **Statement:** Discrepancy variance is defined consistently across all APIs, models, and UI as:
+  $$\text{Variance} = \text{Issued Quantity} - \text{Charged Quantity}$$
+* **Classification Rules:**
+  - If $|\text{Variance}| \le \text{Tolerance Limit} \implies \text{OK}$
+  - If $\text{Variance} > \text{Tolerance Limit} \implies \text{EXCESS\_ISSUE}$ (Stores issued more than logged as charged)
+  - If $\text{Variance} < -\text{Tolerance Limit} \implies \text{SHORT\_ISSUE}$ (More logged as charged than officially issued)
+  - If magnitude ratio $\ge 10$ or $\le 0.1 \implies \text{DECIMAL\_SUSPECT}$ (flagged for order-of-magnitude scale review without auto-division)
+
+### Rule H7: Human-Confirmed Advisory Suggestions
+* **Statement:** Fuzzy candidate matches are strictly advisory and require human confirmation by an authorized supervisor (`Foundry`, `Management`, or `Admin`).
+* **Audit Trail:** Confirmed candidates record reviewer ID, review timestamp, and justification remarks.
+
+### Rule H8: Versioned Immutable Reconciliation Runs
+* **Statement:** Re-running reconciliation never overwrites historical results. Each execution creates a new `reconciliation_runs` record preserving exact run numbers, parameters, algorithm version, and line comparisons.
+
+---
+
+## 6. Explicitly Unresolved Business & Costing Decisions (Pending Management Sign-off)
 
 1. **Internal-Material Valuation Rates:**
    - *Status:* **PENDING**
@@ -187,3 +243,4 @@
 4. **Historical Pricing Reconciliation Prior to Cutoff:**
    - *Status:* **PENDING**
    - *Detail:* Method of establishing opening stock unit rates for the 741 items on 12 October 2026.
+

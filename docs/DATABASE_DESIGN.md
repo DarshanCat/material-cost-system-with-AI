@@ -310,6 +310,101 @@ Tracks the lifecycle of new item proposals:
 - `physical_audit_audit_logs`:
   - Full audit trail logging action, state transitions, actor ID, comments, and timestamps.
 
+### 4.6 Induction Furnace Heat Logs (`heat_headers`, `heat_charge_lines`, `heat_parts_produced`)
+- `heat_headers`:
+  - `id` (INT PK autoincrement)
+  - `heat_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Raw heat identifier entered by operator
+  - `normalized_heat_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Normalized format (e.g., `102603-3721` or `H-102603-3721` normalized to uppercase stripped digits/hyphens)
+  - `heat_date` (DATE NOT NULL, index)
+  - `furnace_id` (VARCHAR(50) NOT NULL, index) — e.g., `FURNACE-1`, `FURNACE-2`
+  - `shift` (VARCHAR(20) NOT NULL) — `MORNING`, `EVENING`, `NIGHT`
+  - `operator_name` (VARCHAR(100) NULL)
+  - `notes` (TEXT NULL)
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at`, `updated_at` (TIMESTAMPTZ NOT NULL)
+- `heat_charge_lines`:
+  - `id` (INT PK autoincrement)
+  - `heat_id` (INT FK heat_headers(id) ON DELETE CASCADE NOT NULL, index)
+  - `line_number` (INT NOT NULL)
+  - `raw_material_description` (VARCHAR(255) NOT NULL) — Description as logged on the furnace floor
+  - `material_item_id` (INT FK material_items(id) NULL, index) — Resolved canonical item ID via alias or direct link
+  - `alias_id` (INT FK material_aliases(id) NULL, index)
+  - `charged_quantity` (NUMERIC(15, 4) NOT NULL) — Charged weight in kg (must be > 0)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `charge_time` (VARCHAR(20) NULL)
+  - `remarks` (TEXT NULL)
+- `heat_parts_produced`:
+  - `id` (INT PK autoincrement)
+  - `heat_id` (INT FK heat_headers(id) ON DELETE CASCADE NOT NULL, index)
+  - `line_number` (INT NOT NULL)
+  - `part_number` (VARCHAR(100) NOT NULL, index)
+  - `part_name` (VARCHAR(255) NOT NULL)
+  - `quantity_produced` (NUMERIC(15, 4) NOT NULL)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `remarks` (TEXT NULL)
+
+### 4.7 Material Alias Master (`material_aliases`, `material_alias_audit_logs`)
+- `material_aliases`:
+  - `id` (INT PK autoincrement)
+  - `alias_key` (VARCHAR(255) UNIQUE NOT NULL, index) — Normalized lowercase string for zero-cost exact lookup
+  - `raw_description` (VARCHAR(255) NOT NULL) — Original un-normalized raw representation
+  - `material_item_id` (INT FK material_items(id) NOT NULL, index) — Canonical mapped item
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'PENDING', index) — `PENDING`, `APPROVED`, `REJECTED`, `INACTIVE`
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at` (TIMESTAMPTZ NOT NULL)
+  - `reviewed_by` (VARCHAR(100) NULL), `reviewed_at` (TIMESTAMPTZ NULL)
+  - `review_comments` (TEXT NULL)
+- `material_alias_audit_logs`:
+  - `id` (INT PK autoincrement)
+  - `alias_id` (INT FK material_aliases(id) ON DELETE CASCADE NOT NULL, index)
+  - `action` (VARCHAR(50) NOT NULL) — `CREATED`, `APPROVED`, `REJECTED`, `DEACTIVATED`
+  - `performed_by` (VARCHAR(100) NOT NULL)
+  - `performed_at` (TIMESTAMPTZ NOT NULL)
+  - `comments` (TEXT NULL)
+
+### 4.8 3-Pass Issue Reconciliation Engine (`reconciliation_runs`, `reconciliation_results`, `reconciliation_candidate_matches`, `reconciliation_exceptions`, `reconciliation_exception_audit_logs`)
+- `reconciliation_runs`:
+  - `id` (INT PK autoincrement)
+  - `run_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `REC-YYYYMMDD-XXXX`
+  - `period_start` (DATE NOT NULL, index)
+  - `period_end` (DATE NOT NULL, index)
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'IN_PROGRESS', index) — `IN_PROGRESS`, `COMPLETED`, `CANCELLED`
+  - `summary_notes` (TEXT NULL)
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at` (TIMESTAMPTZ NOT NULL)
+- `reconciliation_results`:
+  - `id` (INT PK autoincrement)
+  - `reconciliation_run_id` (INT FK reconciliation_runs(id) ON DELETE CASCADE NOT NULL, index)
+  - `heat_id` (INT FK heat_headers(id) NULL, index)
+  - `material_item_id` (INT FK material_items(id) NOT NULL, index)
+  - `matched_pass` (VARCHAR(20) NOT NULL, index) — `PASS_1_EXACT`, `PASS_2_BATCH_AGGREGATE`, `PASS_3_CANDIDATE_CONFIRMED`, `UNMATCHED_CHARGE`, `UNMATCHED_ISSUE`
+  - `issued_quantity` (NUMERIC(15, 4) NOT NULL DEFAULT 0)
+  - `charged_quantity` (NUMERIC(15, 4) NOT NULL DEFAULT 0)
+  - `variance_quantity` (NUMERIC(15, 4) NOT NULL DEFAULT 0) — Signed: `issued_quantity - charged_quantity`
+  - `tolerance_limit` (NUMERIC(15, 4) NOT NULL DEFAULT 0) — Precedence: `max(0.50 kg, 0.02 * issued_quantity)`
+  - `variance_status` (VARCHAR(20) NOT NULL, index) — `WITHIN_TOLERANCE`, `EXCEEDS_TOLERANCE`
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `details` (TEXT NULL)
+- `reconciliation_candidate_matches`:
+  - `id` (INT PK autoincrement)
+  - `reconciliation_run_id` (INT FK reconciliation_runs(id) ON DELETE CASCADE NOT NULL, index)
+  - `issue_line_id` (INT FK material_issue_line_items(id) NOT NULL, index)
+  - `charge_line_id` (INT FK heat_charge_lines(id) NOT NULL, index)
+  - `confidence_score` (NUMERIC(5, 4) NOT NULL) — Advisory heuristic score (0.0000 - 1.0000)
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'PENDING_REVIEW', index) — `PENDING_REVIEW`, `CONFIRMED`, `REJECTED`
+  - `reviewed_by` (VARCHAR(100) NULL), `reviewed_at` (TIMESTAMPTZ NULL)
+  - `review_comments` (TEXT NULL)
+- `reconciliation_exceptions`:
+  - `id` (INT PK autoincrement)
+  - `reconciliation_run_id` (INT FK reconciliation_runs(id) ON DELETE CASCADE NOT NULL, index)
+  - `reconciliation_result_id` (INT FK reconciliation_results(id) NULL, index)
+  - `exception_type` (VARCHAR(50) NOT NULL, index) — `EXCEEDS_TOLERANCE`, `UNMATCHED_CHARGE`, `UNMATCHED_ISSUE`, `UNKNOWN_ALIAS`
+  - `severity` (VARCHAR(20) NOT NULL DEFAULT 'MEDIUM', index) — `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'OPEN', index) — `OPEN`, `ASSIGNED`, `RESOLVED`, `WAIVED`
+  - `assigned_to` (VARCHAR(100) NULL, index)
+  - `resolution_notes` (TEXT NULL)
+  - `resolved_by` (VARCHAR(100) NULL), `resolved_at` (TIMESTAMPTZ NULL)
+  - `created_at` (TIMESTAMPTZ NOT NULL)
+- `reconciliation_exception_audit_logs`:
+  - Full audit trail logging actions, supervisor reviews, and notes.
+
 ---
 
 ## 5. Migration Architecture & History
@@ -324,4 +419,8 @@ Tracks the lifecycle of new item proposals:
   - Creates `stock_ledger_entries`, `physical_audit_headers`, `physical_audit_lines`, and `physical_audit_audit_logs`.
   - Enforces composite unique constraint `uq_stock_ledger_source_line` on `(source_document_type, source_line_id)` for idempotent posting.
   - Adds foreign key relationship `fk_stock_ledger_reversal` for traceable compensating reversal movements.
+- **Revision `004_phase5_heat_reconciliation` (`backend/migrations/versions/004_phase5_heat_reconciliation.py`):**
+  - Creates 10 Phase 5 tables: `heat_headers`, `heat_charge_lines`, `heat_parts_produced`, `material_aliases`, `material_alias_audit_logs`, `reconciliation_runs`, `reconciliation_results`, `reconciliation_candidate_matches`, `reconciliation_exceptions`, and `reconciliation_exception_audit_logs`.
+  - Enforces normalized heat numbers, normalized alias keys, cascade deletions on child lines/logs, and numeric precision for charged weights and variances.
+  - **NON-NEGOTIABLE:** Strictly maintains schema isolation with zero trigger or foreign key coupling to `stock_ledger_entries`.
 

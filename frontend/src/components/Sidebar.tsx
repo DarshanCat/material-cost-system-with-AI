@@ -62,6 +62,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
       icon: <Ruler size={18} />,
       badge: 'Phase 2',
     },
+    {
+      id: 'material-aliases',
+      label: 'Material Aliases',
+      icon: <Layers size={18} />,
+      badge: 'Active',
+    },
   ];
 
   const operationalNavItems: NavItem[] = [
@@ -102,16 +108,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
       badge: 'Active',
     },
     {
-      id: 'excel-import',
-      label: 'Excel Bulk Import',
-      icon: <FileSpreadsheet size={18} />,
+      id: 'heat-log',
+      label: 'Furnace Heat Log',
+      icon: <Flame size={18} />,
       badge: 'Active',
     },
     {
       id: 'heat-reconciliation',
       label: 'Heat Reconciliation',
-      icon: <Flame size={18} />,
-      phase: 'Phase 5',
+      icon: <Scale size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'heat-import',
+      label: 'Heat Excel Import',
+      icon: <FileSpreadsheet size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'excel-import',
+      label: 'Excel Bulk Import',
+      icon: <FileSpreadsheet size={18} />,
+      badge: 'Active',
     },
     {
       id: 'costing',
@@ -174,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
           <p className="footer-desc">
             Restricted to factory network. Audit logging enabled.
           </p>
-          <div className="system-version">v0.4.0 (Phase 4 Active)</div>
+          <div className="system-version">v0.5.0 (Phase 5 Active)</div>
         </div>
       </div>
     </aside>
