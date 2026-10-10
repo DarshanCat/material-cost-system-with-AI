@@ -440,3 +440,158 @@ export interface ReconciliationRun {
   exceptions?: ReconciliationException[];
 }
 
+export interface ItemValuationSummary {
+  material_item_id: number;
+  item_code: string;
+  item_name: string;
+  category: string;
+  uom_code: string;
+  inventory_quantity: string;
+  weighted_average_rate?: string | null;
+  extended_value?: string | null;
+  valuation_status: string;
+  as_of_date: string;
+  rate_source?: string | null;
+  cost_scope: string;
+  notes?: string | null;
+}
+
+export interface InventoryValuationReport {
+  as_of_date: string;
+  costing_start_date: string;
+  total_active_items: number;
+  valued_items_count: number;
+  unvalued_items_count: number;
+  zero_stock_items_count: number;
+  total_inventory_valuation: string;
+  cost_scope: string;
+  items: ItemValuationSummary[];
+}
+
+export interface ItemRateJournalEntry {
+  step_number: number;
+  stock_ledger_entry_id?: number | null;
+  transaction_date: string;
+  movement_type: string;
+  quantity_delta: string;
+  running_quantity: string;
+  receipt_rate?: string | null;
+  applied_rate?: string | null;
+  resulting_average_rate?: string | null;
+  movement_extended_value?: string | null;
+  cumulative_value?: string | null;
+  status: string;
+  notes?: string | null;
+}
+
+export interface ItemRateJournal {
+  material_item_id: number;
+  item_code: string;
+  item_name: string;
+  current_quantity: string;
+  current_weighted_average_rate?: string | null;
+  current_valuation_status: string;
+  steps: ItemRateJournalEntry[];
+}
+
+export interface HeatCostLineSummary {
+  heat_charge_line_id: number;
+  line_number: number;
+  material_item_id?: number | null;
+  canonical_item_code?: string | null;
+  canonical_item_name?: string | null;
+  raw_material_description: string;
+  charged_quantity: string;
+  applicable_rate?: string | null;
+  line_cost?: string | null;
+  rate_source?: string | null;
+  is_included: boolean;
+  status: string;
+  remarks?: string | null;
+}
+
+export interface HeatCostSummary {
+  heat_id: number;
+  heat_number: string;
+  heat_date: string;
+  furnace_id: string;
+  total_charged_quantity: string;
+  total_material_cost: string;
+  metal_tapped_weight?: string | null;
+  cost_denominator_value?: string | null;
+  denominator_type: string;
+  cost_per_kg?: string | null;
+  cost_scope: string;
+  status: string;
+  total_lines: number;
+  valued_lines: number;
+  unvalued_lines: number;
+  lines: HeatCostLineSummary[];
+}
+
+export interface PartCostSummary {
+  heat_parts_produced_id: number;
+  part_number: string;
+  part_name: string;
+  part_item_id?: number | null;
+  quantity_produced: string;
+  unit_cast_weight?: string | null;
+  weight_uom_id?: number | null;
+  cost_per_kg?: string | null;
+  part_material_cost_per_unit?: string | null;
+  total_part_material_cost?: string | null;
+  cost_scope: string;
+  status: string;
+  notes?: string | null;
+}
+
+export interface CostingRunSummary {
+  id: number;
+  run_number: string;
+  period_start: string;
+  period_end: string;
+  as_of_date: string;
+  cost_engine_version: string;
+  status: string;
+  total_items_evaluated: number;
+  total_items_valued: number;
+  total_items_unvalued: number;
+  total_inventory_valuation: string;
+  total_heats_evaluated: number;
+  total_heats_costed: number;
+  total_heat_material_cost: string;
+  cost_scope: string;
+  created_by: string;
+  created_at: string;
+  completed_at?: string | null;
+  summary_notes?: string | null;
+}
+
+export interface CostingComparisonSummary {
+  summary: {
+    run_1_number: string;
+    run_2_number: string;
+    run_1_as_of: string;
+    run_2_as_of: string;
+    valuation_run_1: number;
+    valuation_run_2: number;
+    valuation_delta: number;
+    heat_cost_run_1: number;
+    heat_cost_run_2: number;
+    heat_cost_delta: number;
+  };
+  item_differences: Array<{
+    material_item_id: number;
+    item_code: string;
+    item_name: string;
+    run_1_rate?: number | null;
+    run_2_rate?: number | null;
+    rate_delta?: number | null;
+    run_1_value?: number | null;
+    run_2_value?: number | null;
+    value_delta?: number | null;
+    run_1_status?: string | null;
+    run_2_status?: string | null;
+  }>;
+}
+

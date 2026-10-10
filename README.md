@@ -6,27 +6,25 @@ The system manages inventory across **741 material items**, provides an immutabl
 
 ---
 
-## Current Status: Phase 5 Active (Induction Furnace Heat Log & Issue Reconciliation)
+## Current Status: Phase 6 Active (Weighted-Average Costing & Valuation)
 
 - **Phase 1: Foundation & Application Shell** — Complete
 - **Phase 2: Master Data & Approval Workflows** — Complete
 - **Phase 3: Material Entry & Transaction Validation** — Complete
 - **Phase 4: Append-Only Live Inventory Ledger** — Complete
 - **Phase 5: Induction Furnace Heat Log & Issue Reconciliation** — Complete
-  - Induction Furnace Heat Logs (`heat_headers`, `heat_charge_lines`, `heat_parts_produced`) capturing heat number, furnace ID, shift, charged materials, and parts produced.
-  - Heat reference normalization: bidirectional matching between `102603-3721` and `H-102603-3721`.
-  - Material Alias Master (`material_aliases`, `material_alias_audit_logs`) mapping raw descriptions (e.g. `CRC Scrap-Low High MN`) to canonical items without mutating source records.
-  - Deterministic 3-Pass Reconciliation Engine (`reconciliation_runs`, `reconciliation_results`):
-    - **Pass 1:** Exact heat reference matching with line-by-line item comparison.
-    - **Pass 2:** Same-day batch aggregation for remaining unallocated lines without double-counting.
-    - **Pass 3:** Advisory fuzzy candidate suggestions (`reconciliation_candidate_matches`) requiring explicit supervisor confirmation.
-  - Tolerance Precedence Rule: $\text{Limit} = \max(0.50\text{ kg}, 0.02 \times \text{Issued Quantity})$.
-  - Signed Variance Convention: $\text{Variance} = \text{Issued Quantity} - \text{Charged Quantity}$.
-  - Exception Management Queue (`reconciliation_exceptions`) with assignment and resolution workflows.
-  - Multi-sheet/flattened Heat Log Excel Import Engine with dry-run preview and atomic rollback on validation errors.
-  - **NON-NEGOTIABLE ISOLATION:** Strictly zero stock ledger movements or balance adjustments caused by heat logs or reconciliation runs.
-  - Interactive industrial ERP frontend views: Furnace Heat Log Manager, Material Aliases, Reconciliation Dashboard, and Heat Excel Import.
-  - 46 automated Pytest tests passing with zero regressions.
+- **Phase 6: Weighted-Average Costing & Valuation** — Complete
+  - Arbitrary-precision weighted-average costing engine using Python `Decimal` and `ROUND_HALF_UP` to 4 decimal places (`NUMERIC(14, 4)`).
+  - Strict costing baseline start date: **12 October 2026** (`settings.COSTING_START_DATE`).
+  - Separation of physical stock quantities from commercial valuations; unvalued opening stock flagged as `OPENING_VALUATION_MISSING`.
+  - Deterministic same-day transaction ordering hierarchy with ID tie-breaking.
+  - Zero-stock rate restart: subsequent receipts restart weighted-average rate without dilution.
+  - **NON-NEGOTIABLE:** Stock ledger entries and quantities are strictly read-only and never mutated by costing queries or run calculations.
+  - Induction Furnace Heat Costing: sums charged materials at effective rate on heat date; computes cost per kg of liquid metal tapped (`MATERIAL_ONLY` scope).
+  - Part Material Unit Costing: $\text{Unit Cast Weight} \times \text{Cost per kg}$ without finished-goods inventory movements.
+  - Versioned, immutable costing runs (`costing_runs`, `item_cost_snapshots`, `item_cost_journal_entries`, `heat_cost_records`, `heat_cost_lines`, `part_cost_records`) and run comparison engine.
+  - Interactive industrial ERP frontend views: Inventory Valuation, Item Cost History Journal, Heat Production Costing, Costing Runs & Comparisons, and Exceptions Queue.
+  - 68 automated Pytest tests passing (100% pass rate).
 
 ---
 

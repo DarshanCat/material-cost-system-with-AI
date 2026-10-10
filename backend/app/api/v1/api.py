@@ -17,6 +17,7 @@ from app.api.v1.endpoints import (
     material_aliases,
     reconciliation,
     heat_import,
+    costing,
 )
 
 api_router = APIRouter()
@@ -37,3 +38,4 @@ api_router.include_router(heats.router, prefix="/heats", tags=["Induction Furnac
 api_router.include_router(material_aliases.router, prefix="/material-aliases", tags=["Material Description Aliases"])
 api_router.include_router(reconciliation.router, prefix="/reconciliation", tags=["Issue-to-Heat Reconciliation"])
 api_router.include_router(heat_import.router, prefix="/heats/import", tags=["Heat Log Excel Import"])
+api_router.include_router(costing.router, tags=["Costing & Valuation"])

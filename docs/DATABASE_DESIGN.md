@@ -407,7 +407,76 @@ Tracks the lifecycle of new item proposals:
 
 ---
 
-## 5. Migration Architecture & History
+## 5. Phase 6: Weighted-Average Costing & Valuation Schema
+
+### 5.1 Costing Runs (`costing_runs`)
+- `id` (INT PK autoincrement)
+- `run_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `CR-YYYYMMDD-XXXX`
+- `period_start` (DATE NOT NULL), `period_end` (DATE NOT NULL), `as_of_date` (DATE NOT NULL, index)
+- `cost_engine_version` (VARCHAR(20) NOT NULL DEFAULT 'v1.0.0')
+- `denominator_policy` (VARCHAR(30) NOT NULL DEFAULT 'METAL_TAPPED')
+- `scrap_recovery_policy` (VARCHAR(30) NOT NULL DEFAULT 'POLICY_PENDING')
+- `internal_recovery_policy` (VARCHAR(30) NOT NULL DEFAULT 'POLICY_PENDING')
+- `cost_scope` (VARCHAR(30) NOT NULL DEFAULT 'MATERIAL_ONLY')
+- `status` (VARCHAR(20) NOT NULL DEFAULT 'IN_PROGRESS', index) — `IN_PROGRESS`, `COMPLETED`, `FAILED`
+- `total_items_evaluated` (INT NOT NULL DEFAULT 0), `total_items_valued` (INT NOT NULL DEFAULT 0), `total_items_unvalued` (INT NOT NULL DEFAULT 0)
+- `total_inventory_valuation` (NUMERIC(16, 2) NOT NULL DEFAULT 0)
+- `total_heats_evaluated` (INT NOT NULL DEFAULT 0), `total_heats_costed` (INT NOT NULL DEFAULT 0)
+- `total_heat_material_cost` (NUMERIC(16, 2) NOT NULL DEFAULT 0)
+- `created_by` (VARCHAR(100) NOT NULL), `created_at` (TIMESTAMPTZ NOT NULL), `completed_at` (TIMESTAMPTZ NULL)
+- `summary_notes` (TEXT NULL)
+
+### 5.2 Item Cost Snapshots & Journal Entries (`item_cost_snapshots` & `item_cost_journal_entries`)
+- `item_cost_snapshots`:
+  - `id` (INT PK autoincrement)
+  - `costing_run_id` (INT FK costing_runs(id) ON DELETE CASCADE NOT NULL, index)
+  - `material_item_id` (INT FK material_items(id) NOT NULL, index)
+  - `as_of_date` (DATE NOT NULL, index)
+  - `inventory_quantity` (NUMERIC(15, 4) NOT NULL)
+  - `weighted_average_rate` (NUMERIC(14, 4) NULL) — Ex-GST material rate per UOM
+  - `extended_value` (NUMERIC(16, 2) NULL) — `inventory_quantity * weighted_average_rate`
+  - `valuation_status` (VARCHAR(30) NOT NULL, index) — `VALUED`, `ZERO_STOCK`, `OPENING_VALUATION_MISSING`, `NEGATIVE_STOCK_SUSPENDED`, `UNINITIALIZED`
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `rate_source` (VARCHAR(100) NULL)
+  - `notes` (TEXT NULL)
+  - Index: `ix_item_cost_snapshot_run_item` on `(costing_run_id, material_item_id)`
+- `item_cost_journal_entries`:
+  - Detailed movement-by-movement running calculation log.
+  - `id` (INT PK autoincrement)
+  - `costing_run_id` (INT FK costing_runs(id) ON DELETE CASCADE NOT NULL, index)
+  - `material_item_id` (INT FK material_items(id) NOT NULL, index)
+  - `stock_ledger_entry_id` (INT FK stock_ledger_entries(id) NULL, index)
+  - `transaction_date` (DATE NOT NULL)
+  - `movement_type` (VARCHAR(40) NOT NULL)
+  - `quantity_delta` (NUMERIC(15, 4) NOT NULL), `running_quantity` (NUMERIC(15, 4) NOT NULL)
+  - `receipt_rate` (NUMERIC(14, 4) NULL), `applied_rate` (NUMERIC(14, 4) NULL), `resulting_average_rate` (NUMERIC(14, 4) NULL)
+  - `movement_extended_value` (NUMERIC(16, 2) NULL), `cumulative_value` (NUMERIC(16, 2) NULL)
+  - `status` (VARCHAR(30) NOT NULL), `notes` (TEXT NULL)
+
+### 5.3 Heat & Part Production Cost Records
+- `heat_cost_records`:
+  - `id` (INT PK autoincrement)
+  - `costing_run_id` (INT FK costing_runs(id) ON DELETE CASCADE NOT NULL, index)
+  - `heat_id` (INT FK heat_headers(id) NOT NULL, index)
+  - `heat_number` (VARCHAR(50) NOT NULL, index), `heat_date` (DATE NOT NULL, index)
+  - `total_charged_quantity` (NUMERIC(15, 4) NOT NULL)
+  - `total_material_cost` (NUMERIC(16, 2) NOT NULL)
+  - `metal_tapped_weight` (NUMERIC(15, 4) NULL)
+  - `cost_denominator_value` (NUMERIC(15, 4) NULL), `denominator_type` (VARCHAR(30) NOT NULL DEFAULT 'METAL_TAPPED')
+  - `cost_per_kg` (NUMERIC(14, 4) NULL) — `total_material_cost / cost_denominator_value`
+  - `cost_scope` (VARCHAR(30) NOT NULL DEFAULT 'MATERIAL_ONLY')
+  - `status` (VARCHAR(30) NOT NULL, index) — `COMPLETE`, `PARTIAL_COST`, `MISSING_TAPPED_WEIGHT`, `INSUFFICIENT_COST_DATA`
+  - `total_lines` (INT NOT NULL), `valued_lines` (INT NOT NULL), `unvalued_lines` (INT NOT NULL)
+- `heat_cost_lines`:
+  - Line-level charge breakdown with applied unit rates and extended cost.
+- `part_cost_records`:
+  - Unit material cost for parts produced (`unit_cast_weight * heat_cost_per_kg`).
+- `item_opening_valuations`:
+  - Master records approving commercial rates for Phase 4 opening balances.
+
+---
+
+## 6. Migration Architecture & History
 
 - **Revision `001_phase2_master_data` (`backend/migrations/versions/001_phase2_master_data.py`):**
   - Upgrades schema by creating the 6 Phase 2 master tables, unique constraints, foreign keys, and indexes.
@@ -423,4 +492,7 @@ Tracks the lifecycle of new item proposals:
   - Creates 10 Phase 5 tables: `heat_headers`, `heat_charge_lines`, `heat_parts_produced`, `material_aliases`, `material_alias_audit_logs`, `reconciliation_runs`, `reconciliation_results`, `reconciliation_candidate_matches`, `reconciliation_exceptions`, and `reconciliation_exception_audit_logs`.
   - Enforces normalized heat numbers, normalized alias keys, cascade deletions on child lines/logs, and numeric precision for charged weights and variances.
   - **NON-NEGOTIABLE:** Strictly maintains schema isolation with zero trigger or foreign key coupling to `stock_ledger_entries`.
+- **Revision `005_phase6_costing_valuation` (`backend/migrations/versions/005_phase6_costing_valuation.py`):**
+  - Creates 7 Phase 6 tables: `costing_runs`, `item_cost_snapshots`, `item_cost_journal_entries`, `heat_cost_records`, `heat_cost_lines`, `part_cost_records`, and `item_opening_valuations`.
+  - Enforces `NUMERIC(14, 4)` rate precision, `NUMERIC(16, 2)` valuation totals, immutable run numbers, and read-only non-mutating relationships.
 

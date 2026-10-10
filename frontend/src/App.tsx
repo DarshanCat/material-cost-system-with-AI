@@ -8,7 +8,6 @@ import { MaterialMasterView } from './components/MaterialMasterView';
 import { VendorMasterView } from './components/VendorMasterView';
 import { ItemRequestsView } from './components/ItemRequestsView';
 import { ReferenceDataView } from './components/ReferenceDataView';
-import { ModulePlaceholder } from './components/ModulePlaceholder';
 import { DiagnosticsView } from './components/DiagnosticsView';
 import { GRNManagementView } from './components/GRNManagementView';
 import { MaterialIssueView } from './components/MaterialIssueView';
@@ -21,6 +20,7 @@ import { HeatLogManagementView } from './components/HeatLogManagementView';
 import { MaterialAliasView } from './components/MaterialAliasView';
 import { ReconciliationDashboard } from './components/ReconciliationDashboard';
 import { HeatExcelImportView } from './components/HeatExcelImportView';
+import { CostingDashboard } from './components/CostingDashboard';
 
 export const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleId>('dashboard');
@@ -220,24 +220,9 @@ export const App: React.FC = () => {
 
       case 'costing':
         return (
-          <ModulePlaceholder
-            title="Module 4: Weighted-Average Costing & Valuation"
-            moduleId="costing"
-            phase="Phase 6 (Scheduled)"
-            description="Calculates true material and production costs per heat, cost per kg of liquid metal, and finished part costs starting from 12 October 2026."
-            plannedFeatures={[
-              'Weighted-average costing engine utilizing Decimal/Numeric precision.',
-              'Heat metal cost computation based on reconciled charge materials and rates.',
-              'Cost per kg of good casting produced factoring in melting loss and runner/riser returns.',
-              'Part-level unit costing for SG iron automotive and engineering castings.',
-              'Variance reporting between standard batch cost and actual heat batch cost.',
-            ]}
-            businessRules={[
-              'The costing baseline start date is strictly 12 October 2026.',
-              'Weighted-average costing must be verified against separate automated test suites.',
-              'Unresolved costing decisions (internal rates, scrap valuation) remain documented as pending.',
-              'No floating-point arithmetic permitted in monetary or inventory valuations.',
-            ]}
+          <CostingDashboard
+            currentRole={currentRole}
+            currentUserId={currentUserId}
           />
         );
 

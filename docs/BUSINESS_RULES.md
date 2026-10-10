@@ -233,14 +233,74 @@
 
 1. **Internal-Material Valuation Rates:**
    - *Status:* **PENDING**
-   - *Detail:* Valuation rate per kg for foundry returns (runners, risers, rejected castings, borings from Machine Shop) transferred back into furnace charges.
+   - *Detail:* Valuation rate per kg for foundry returns (runners, risers, rejected castings, borings from Machine Shop) transferred back into furnace charges. Governed by Rule C7 (logged with zero quantity delta and status `POLICY_PENDING`).
 2. **Costing Denominator Standard:**
    - *Status:* **PENDING**
-   - *Detail:* Clarification whether cost per kg for casting part numbers uses *Gross Liquid Metal Tapped* or *Net Good Casting Weight*.
+   - *Detail:* Defaulted to `METAL_TAPPED` (liquid metal tapped from furnace). Management sign-off pending for switching to `GOOD_CASTING_WEIGHT` once yield reporting is formalized.
 3. **Additional Production Overheads Apportionment:**
    - *Status:* **PENDING**
-   - *Detail:* How furnace electrical power (kWh/heat), refractory liner wear, and direct labor overheads are apportioned.
+   - *Detail:* How furnace electrical power (kWh/heat), refractory liner wear, and direct labor overheads are apportioned. Currently flagged as `MATERIAL_ONLY` scope (Rule C8).
 4. **Historical Pricing Reconciliation Prior to Cutoff:**
    - *Status:* **PENDING**
-   - *Detail:* Method of establishing opening stock unit rates for the 741 items on 12 October 2026.
+   - *Detail:* Method of establishing opening stock unit rates for the items on 12 October 2026. Handled via Rule C3 with `OPENING_VALUATION_MISSING` until approved via `item_opening_valuations`.
+
+---
+
+## 7. Phase 6: Weighted-Average Costing & Valuation Rules
+
+### Rule C1: Ex-GST Weighted-Average Material Unit Rate
+* **Formula:**
+  $$\bar{R}_{\text{new}} = \frac{(Q_{\text{prev}} \times \bar{R}_{\text{prev}}) + (Q_{\text{receipt}} \times R_{\text{receipt}})}{Q_{\text{prev}} + Q_{\text{receipt}}}$$
+* **Rate Scope:** Commercial receipt rates strictly represent ex-GST invoice values (`rate_ex_gst`).
+* **Rounding Convention:** Rounded deterministically to 4 decimal places (`NUMERIC(14, 4)`) using Python `Decimal` and `ROUND_HALF_UP`.
+* **Zero Floating-Point Policy:** All rates, valuations, and extended values use arbitrary-precision `Decimal` objects. Floating-point arithmetic is strictly forbidden.
+
+### Rule C2: Same-Day Transaction Ordering & Deterministic Tie-Breaking
+* **Ordering Hierarchy:** When multiple stock movements share the same transaction date, they are processed in deterministic sequential order:
+  1. `OPENING_BALANCE`
+  2. `INWARD_RECEIPT` / `INTERNAL_INWARD`
+  3. `PHYSICAL_AUDIT_ADJUSTMENT` ($+\Delta$)
+  4. `OUTWARD_ISSUE` / `SCRAP_OUTWARD`
+  5. `PHYSICAL_AUDIT_ADJUSTMENT` ($-\Delta$)
+  6. `REVERSAL`
+  7. `INTERNAL_RECOVERY`
+* **Tie-Breaking:** Movements within the same class on the same date order strictly by `StockLedgerEntry.id` ascending.
+* **Economic Rationale:** External receipts arrive and enter stock before same-day floor issues take place, ensuring outward issues are priced at the updated blended rate.
+
+### Rule C3: Strict Cutoff Date & Opening Balance Valuation
+* **Baseline Cutoff:** Costing calculations strictly start on **12 October 2026** (`settings.COSTING_START_DATE`). Movements prior to this date are excluded from inventory valuation.
+* **Separation of Stock & Valuation:** Opening stock quantities from Phase 4 are distinct from commercial valuations. If an opening balance has no approved `item_opening_valuations` record, its valuation status is explicitly flagged as `OPENING_VALUATION_MISSING`.
+* **Zero Stock Handling:** Items with a balance of $0.0000$ are reported with extended value ₹0.00 and status `ZERO_STOCK`, distinct from uninitialized items (`UNINITIALIZED`).
+
+### Rule C4: Outward Issue Consumption & Zero-Stock Rate Restart
+* **Issue Pricing:** Outward issues (`OUTWARD_ISSUE`, `SCRAP_OUTWARD`) consume inventory at the current running weighted-average rate without altering the unit rate.
+* **Restart on Zero/Negative Stock:** When existing stock balance is $\le 0.0000$, a subsequent inward receipt restarts the running weighted-average rate directly at the receipt's commercial rate ($R_{\text{receipt}}$) rather than blending with past rates.
+
+### Rule C5: Ledger Non-Mutation Guarantee
+* **Strict Read-Only Ledger Invariant:** The append-only stock ledger (`stock_ledger_entries`) is the authoritative physical movement record.
+* Costing runs, rate reconstruction queries, and valuation reports **never mutate, delete, or create** stock ledger records.
+
+### Rule C6: Induction Furnace Heat Costing
+* **Formula:**
+  $$\text{Heat Material Cost} = \sum_{i=1}^{n} (Q_{\text{charged}, i} \times \bar{R}_{i}(\text{heat\_date}))$$
+* **Rate As-Of Date:** Charge lines are priced at the item's weighted-average rate effective on the heat date (`heat_date`).
+* **Cost Per kg:**
+  $$\text{Cost per kg} = \frac{\text{Heat Material Cost}}{\text{Metal Tapped Weight}}$$
+* **Missing Data Invariants:**
+  - If a charge line uses an unmapped alias or an unpriced item, the heat status is set to `PARTIAL_COST`.
+  - If `metal_tapped_weight` is null or zero, cost per kg is withheld (`None`) with status `MISSING_TAPPED_WEIGHT`.
+
+### Rule C7: Part Material Unit Costing
+* **Formula:**
+  $$\text{Part Material Cost per Unit} = \text{Unit Cast Weight} \times \text{Heat Cost per kg}$$
+* **Scope:** Labeled strictly as `MATERIAL_ONLY`. Does not generate finished-goods stock movements.
+* **Prerequisites:** Requires a completed parent heat cost (`HeatCostStatus.COMPLETE`) and valid `unit_cast_weight`.
+
+### Rule C8: Explicit Pending Policy Flags
+* Any valuation scenario without approved management sign-off (internal recovery scrap, borings, overheads) must be exposed via explicit enum statuses: `POLICY_PENDING`, `OPENING_VALUATION_MISSING`, or `INSUFFICIENT_COST_DATA`. Silent defaults (e.g. ₹0.00) are forbidden.
+
+### Rule C9: Versioned, Immutable Costing Runs
+* Every costing execution generates a permanent, sequential `costing_runs` record (`CR-YYYYMMDD-XXXX`).
+* Recalculations create new runs and never overwrite historical snapshots, rate journals, or heat costs.
+* Side-by-side run comparisons expose valuation, rate, and cost deltas between any two runs.
 

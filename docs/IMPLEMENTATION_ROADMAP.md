@@ -103,19 +103,24 @@ flowchart TD
 ---
 
 ### Phase 6: Costing Engine & Valuation
-* **Status:** **UPCOMING (Next Step)**
+* **Status:** **COMPLETE**
 * **Deliverables:**
-  - Formal implementation of the Weighted-Average Costing engine.
-  - Strict costing start date enforcement: **12 October 2026**.
-  - Arbitrary-precision financial calculations using `Decimal/Numeric`.
-  - Heat Cost calculation: Total metal charge cost divided by liquid metal tapped / good casting weight.
-  - Unit Part Cost calculation for automotive and engineering castings.
-  - Dedicated automated test harness with extensive parameterized test fixtures for costing algorithms.
+  - Formal implementation of the Weighted-Average Costing engine using Python `Decimal` and `ROUND_HALF_UP` to 4 decimal places (`NUMERIC(14, 4)`).
+  - Strict costing start date enforcement: **12 October 2026** (`settings.COSTING_START_DATE`).
+  - Separation of physical stock from commercial valuation: unvalued stock flagged as `OPENING_VALUATION_MISSING` and $0.0000$ balance flagged as `ZERO_STOCK`.
+  - Same-day deterministic transaction ordering hierarchy with ID tie-breaking.
+  - Zero-stock rate restart: subsequent receipts restart weighted-average rate without dilution.
+  - Strict Ledger Non-Mutation Guarantee: stock ledger is strictly read-only during costing.
+  - Induction Furnace Heat Costing: sums charged quantities at heat date rate; computes cost per kg of liquid metal tapped (`MATERIAL_ONLY` scope).
+  - Part Material Unit Costing: $\text{Unit Cast Weight} \times \text{Cost per kg}$ without finished-goods ledger movements.
+  - Versioned, immutable costing runs (`costing_runs`, `item_cost_snapshots`, `item_cost_journal_entries`, `heat_cost_records`, `part_cost_records`) and side-by-side run comparison engine.
+  - Interactive industrial ERP frontend: Inventory Valuation, Item Cost History Journal, Heat Production Costing, Runs & Comparisons, and Exceptions Queue.
+  - 100% automated test suite passing (68/68 tests) with 22 new Phase 6 verification tests.
 
 ---
 
 ### Phase 7: Excel Migration & Historical Reconciliation
-* **Status:** **QUEUED**
+* **Status:** **UPCOMING (Next Step)**
 * **Deliverables:**
   - High-integrity data migration pipeline for approximately **12,280 historical records**.
   - Comprehensive pre-import validation: column headers, type checking, duplicate detection.
