@@ -4,6 +4,10 @@ export type ModuleId =
   | 'vendor-master'
   | 'item-requests'
   | 'references'
+  | 'grn-management'
+  | 'material-issue'
+  | 'waste-disposition'
+  | 'excel-import'
   | 'material-entry'
   | 'inventory-ledger'
   | 'heat-reconciliation'
@@ -124,4 +128,101 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   size: number;
+}
+
+export interface GRNLineItem {
+  id?: number;
+  line_number: number;
+  material_item_id: number;
+  uom_id: number;
+  quantity: string | number;
+  rate_ex_gst?: string | number | null;
+  gst_percent?: string | number | null;
+  remarks?: string;
+  item_code?: string;
+  item_name?: string;
+  uom_code?: string;
+}
+
+export interface GRN {
+  id: number;
+  grn_number: string;
+  receipt_date: string;
+  source_type: 'EXTERNAL_VENDOR' | 'INTERNAL_VSPL' | 'SEGREGATION_YARD';
+  vendor_id?: number | null;
+  vendor_name?: string | null;
+  vendor_invoice_no?: string | null;
+  invoice_date?: string | null;
+  reference_document?: string | null;
+  notes?: string | null;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED';
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  lines: GRNLineItem[];
+  audit_logs: AuditLog[];
+  validation_warnings?: string[];
+}
+
+export interface MaterialIssueLineItem {
+  id?: number;
+  line_number: number;
+  material_item_id: number;
+  uom_id: number;
+  quantity: string | number;
+  remarks?: string;
+  item_code?: string;
+  item_name?: string;
+  uom_code?: string;
+}
+
+export interface MaterialIssue {
+  id: number;
+  issue_slip_number: string;
+  issue_date: string;
+  issuing_department_id: number;
+  issuing_department_name?: string;
+  receiving_department_id: number;
+  receiving_department_name?: string;
+  heat_reference_number?: string | null;
+  notes?: string | null;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED';
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  lines: MaterialIssueLineItem[];
+  audit_logs: AuditLog[];
+  validation_warnings?: string[];
+}
+
+export interface WasteDispositionLineItem {
+  id?: number;
+  line_number: number;
+  material_item_id: number;
+  uom_id: number;
+  quantity: string | number;
+  reason?: string;
+  remarks?: string;
+  item_code?: string;
+  item_name?: string;
+  uom_code?: string;
+}
+
+export interface WasteDisposition {
+  id: number;
+  waste_number: string;
+  disposition_date: string;
+  waste_type: string;
+  disposition_type: string;
+  source_department_id: number;
+  source_department_name?: string;
+  destination_notes?: string | null;
+  notes?: string | null;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED';
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  lines: WasteDispositionLineItem[];
+  audit_logs: AuditLog[];
+  validation_warnings?: string[];
 }

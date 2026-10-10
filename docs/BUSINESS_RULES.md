@@ -34,7 +34,39 @@
 
 ---
 
-## 2. Foundational Accounting & Inventory Ledger Rules
+## 2. Material Entry & Transaction Validation Rules (Established in Phase 3)
+
+### Rule T1: Human-Readable Sequential Document Numbering
+* **Statement:** All transaction headers generate distinct, tamper-evident document serials:
+  - Goods Receipt Notes: `GRN-YYYYMMDD-XXXX` (e.g., `GRN-20261010-0001`)
+  - Material Issue Slips: `ISS-YYYYMMDD-XXXX` (e.g., `ISS-20261010-0001`)
+  - Waste & Scrap Slips: `WST-YYYYMMDD-XXXX` (e.g., `WST-20261010-0001`)
+* **Enforcement:** Enforced at database table level via unique indexed constraints.
+
+### Rule T2: Receipt Sourcing & Rate Mandate
+* **Statement:** Receipts support three mutually exclusive sources:
+  1. `EXTERNAL_VENDOR`: Requires valid registered Vendor reference and rate per UOM (excluding GST) > 0 for raw materials.
+  2. `INTERNAL_VSPL`: Internal factory transfers; vendor and commercial rate are optional.
+  3. `SEGREGATION_YARD`: Inward recovery from scrap segregation; rate optional.
+* **GST Treatment:** Pre-GST material rate (`rate_ex_gst`) and GST tax percentage (`gst_percent`) are strictly separated into independent `NUMERIC` columns. Tax is never blended into material inventory rates.
+
+### Rule T3: Heat Reference Standardization
+* **Statement:** Melting issue slips record furnace heat numbers using convention `H-XXXXXX-XXXX` (e.g. `H-102603-3721`). Raw user entries without prefix are normalized automatically without destructive data alteration.
+
+### Rule T4: Suspect Quantity Entry Detection
+* **Statement:** Quantities violating UOM decimal precision limits are strictly blocked (`422 Unprocessable`). Suspected scale errors (e.g., entering 5014 kg as 5014 MT, or entering 290 kg as whole MT) trigger explicit human confirmation warnings without silent auto-division.
+
+### Rule T5: Transaction Lifecycle & Ledger Boundary
+* **Statement:** Transactions originate in `DRAFT`, undergo verification to `SUBMITTED`, and achieve finalization on `APPROVED`.
+* **Scope Boundary:** Phase 3 transactions do **NOT** move warehouse inventory ledger balances or post accounting journal entries. Ledger movements are strictly isolated to Phase 4.
+
+### Rule T6: Atomic All-or-Nothing Excel Import Engine
+* **Statement:** Multi-row batch imports validate entire worksheets across headers, master data references, duplicate document numbers, and decimal precision.
+* **Enforcement:** If even a single row contains a blocking error, the batch is rejected (`can_commit = false`). Commit executes inside a single database transaction rollback boundary—zero partial or orphaned writes.
+
+---
+
+## 3. Foundational Accounting & Inventory Ledger Rules
 
 ### Rule 1: Stock Depletion Exclusively via Authorized Issues
 * Only authorized `Issue` transactions move stock out of inventory.

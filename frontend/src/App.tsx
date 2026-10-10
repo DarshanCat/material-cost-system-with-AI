@@ -10,6 +10,10 @@ import { ItemRequestsView } from './components/ItemRequestsView';
 import { ReferenceDataView } from './components/ReferenceDataView';
 import { ModulePlaceholder } from './components/ModulePlaceholder';
 import { DiagnosticsView } from './components/DiagnosticsView';
+import { GRNManagementView } from './components/GRNManagementView';
+import { MaterialIssueView } from './components/MaterialIssueView';
+import { WasteDispositionView } from './components/WasteDispositionView';
+import { ExcelImportView } from './components/ExcelImportView';
 
 export const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleId>('dashboard');
@@ -119,27 +123,43 @@ export const App: React.FC = () => {
       case 'references':
         return <ReferenceDataView />;
 
+      case 'grn-management':
+        return (
+          <GRNManagementView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'material-issue':
+        return (
+          <MaterialIssueView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'waste-disposition':
+        return (
+          <WasteDispositionView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case 'excel-import':
+        return (
+          <ExcelImportView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
+          />
+        );
+
       case 'material-entry':
         return (
-          <ModulePlaceholder
-            title="Module 1: Material Entry & Requisition"
-            moduleId="material-entry"
-            phase="Phase 3 (Scheduled)"
-            description="Manages material receipts, Goods Receipt Notes (GRNs), inter-departmental issues, scrap/waste logs, and vendor catalogs across all 8 plant departments."
-            plannedFeatures={[
-              'Goods Receipt Notes (GRN) logging with mandatory non-GST rate entry for raw materials.',
-              'Qualifying internal inward movements from VSPL segregation yard handled with clear sourcing.',
-              'Inter-departmental Material Issue Slips (Foundry, Machine Shop, Maintenance, Stores).',
-              'Scrap and waste disposition tracking (borings, runners, risers, rejected castings).',
-              'Duplicate batch and duplicate source record detection engine.',
-              'Strict header and data-type validation for receipt imports without silent column skips.',
-            ]}
-            businessRules={[
-              'Only authorized Issue transactions move stock out of inventory.',
-              'Raw-material receipts require a rate per UOM excluding GST.',
-              'Quantity precision must be validated against decimal-entry errors before commit.',
-              'Material issue slips require approval before ledger posting.',
-            ]}
+          <GRNManagementView
+            currentRole={currentRole}
+            currentUserId={currentUserId}
           />
         );
 

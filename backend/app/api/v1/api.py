@@ -6,6 +6,10 @@ from app.api.v1.endpoints import (
     items,
     vendors,
     item_requests,
+    grn,
+    issues,
+    waste,
+    excel_import,
 )
 
 api_router = APIRouter()
@@ -15,3 +19,7 @@ api_router.include_router(uoms.router, prefix="/uoms", tags=["UOM Master"])
 api_router.include_router(items.router, prefix="/items", tags=["Material Item Master"])
 api_router.include_router(vendors.router, prefix="/vendors", tags=["Vendor Master"])
 api_router.include_router(item_requests.router, prefix="/item-requests", tags=["Item Approval Workflow"])
+api_router.include_router(grn.router, prefix="/grn", tags=["Goods Receipt Note (GRN)"])
+api_router.include_router(issues.router, prefix="/issues", tags=["Material Issue"])
+api_router.include_router(waste.router, prefix="/waste", tags=["Waste Disposition"])
+api_router.include_router(excel_import.router, prefix="/excel-import", tags=["Excel Import Validation"])

@@ -193,9 +193,83 @@ Tracks the lifecycle of new item proposals:
 
 ---
 
-## 4. Migration Architecture & History
+## 4. Phase 3 Transaction & Inward/Outward Schema Specifications
+
+### 4.1 Goods Receipt Notes (`grn_headers` & `grn_line_items`)
+- `grn_headers`:
+  - `id` (INT PK autoincrement)
+  - `grn_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `GRN-YYYYMMDD-XXXX`
+  - `receipt_date` (DATE NOT NULL, index)
+  - `source_type` (VARCHAR(30) NOT NULL) — `EXTERNAL_VENDOR`, `INTERNAL_VSPL`, `SEGREGATION_YARD`
+  - `vendor_id` (INT FK vendors(id) NULL, index)
+  - `vendor_invoice_no` (VARCHAR(100) NULL)
+  - `invoice_date` (DATE NULL)
+  - `reference_document` (VARCHAR(100) NULL)
+  - `notes` (TEXT NULL)
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'DRAFT', index) — `DRAFT`, `SUBMITTED`, `APPROVED`, `CANCELLED`
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at`, `updated_at` (TIMESTAMPTZ NOT NULL)
+  - Index: `ix_grn_vendor_invoice` on `(vendor_id, vendor_invoice_no, invoice_date)`
+- `grn_line_items`:
+  - `id` (INT PK autoincrement)
+  - `grn_id` (INT FK grn_headers(id) ON DELETE CASCADE NOT NULL)
+  - `line_number` (INT NOT NULL)
+  - `material_item_id` (INT FK material_items(id) NOT NULL)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `quantity` (NUMERIC(15, 4) NOT NULL)
+  - `rate_ex_gst` (NUMERIC(15, 2) NULL) — Stored pre-GST; mandatory for external raw materials
+  - `gst_percent` (NUMERIC(5, 2) NULL)
+  - `remarks` (TEXT NULL)
+
+### 4.2 Material Issue Slips (`material_issue_headers` & `material_issue_line_items`)
+- `material_issue_headers`:
+  - `id` (INT PK autoincrement)
+  - `issue_slip_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `ISS-YYYYMMDD-XXXX`
+  - `issue_date` (DATE NOT NULL, index)
+  - `issuing_department_id` (INT FK departments(id) NOT NULL, index)
+  - `receiving_department_id` (INT FK departments(id) NOT NULL, index)
+  - `heat_reference_number` (VARCHAR(50) NULL, index) — Standard format `H-XXXXXX-XXXX`
+  - `notes` (TEXT NULL)
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'DRAFT', index)
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at`, `updated_at` (TIMESTAMPTZ NOT NULL)
+  - Index: `ix_issue_slip_date_recv` on `(issue_slip_number, issue_date, receiving_department_id)`
+- `material_issue_line_items`:
+  - `id` (INT PK autoincrement)
+  - `issue_id` (INT FK material_issue_headers(id) ON DELETE CASCADE NOT NULL)
+  - `line_number` (INT NOT NULL)
+  - `material_item_id` (INT FK material_items(id) NOT NULL)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `quantity` (NUMERIC(15, 4) NOT NULL)
+  - `remarks` (TEXT NULL)
+
+### 4.3 Scrap & Waste Dispositions (`waste_disposition_headers` & `waste_disposition_line_items`)
+- `waste_disposition_headers`:
+  - `id` (INT PK autoincrement)
+  - `waste_number` (VARCHAR(50) UNIQUE NOT NULL, index) — Format `WST-YYYYMMDD-XXXX`
+  - `disposition_date` (DATE NOT NULL, index)
+  - `waste_type` (VARCHAR(50) NOT NULL, index) — `BORINGS`, `GATINGS_RUNNERS`, `RETURNS`, `REJECTED_CASTINGS`, `SLAG`, `OTHER_SCRAP`
+  - `disposition_type` (VARCHAR(50) NOT NULL, index) — `INTERNAL_RECOVERY`, `SCRAP_OUTWARD`, `INSPECTION_HOLD`
+  - `source_department_id` (INT FK departments(id) NOT NULL, index)
+  - `destination_notes` (VARCHAR(255) NULL)
+  - `notes` (TEXT NULL)
+  - `status` (VARCHAR(20) NOT NULL DEFAULT 'DRAFT', index)
+  - `created_by` (VARCHAR(100) NOT NULL), `created_at`, `updated_at` (TIMESTAMPTZ NOT NULL)
+- `waste_disposition_line_items`:
+  - `id` (INT PK autoincrement)
+  - `waste_id` (INT FK waste_disposition_headers(id) ON DELETE CASCADE NOT NULL)
+  - `line_number` (INT NOT NULL)
+  - `material_item_id` (INT FK material_items(id) NOT NULL)
+  - `uom_id` (INT FK uoms(id) NOT NULL)
+  - `quantity` (NUMERIC(15, 4) NOT NULL)
+  - `reason` (VARCHAR(255) NULL)
+  - `remarks` (TEXT NULL)
+
+---
+
+## 5. Migration Architecture & History
 
 - **Revision `001_phase2_master_data` (`backend/migrations/versions/001_phase2_master_data.py`):**
-  - Upgrades schema by creating the 6 Phase 2 tables, unique constraints, foreign keys, and indexes.
-  - Safe rollback defined in `downgrade()`.
+  - Upgrades schema by creating the 6 Phase 2 master tables, unique constraints, foreign keys, and indexes.
   - Idempotent seed function `app.db.seed.seed_reference_data` populates the 8 departments and standard UOMs.
+- **Revision `002_phase3_material_entry` (`backend/migrations/versions/002_phase3_material_entry.py`):**
+  - Creates 6 transaction tables and 3 audit log tables: `grn_headers`, `grn_line_items`, `grn_audit_logs`, `material_issue_headers`, `material_issue_line_items`, `issue_audit_logs`, `waste_disposition_headers`, `waste_disposition_line_items`, and `waste_audit_logs`.
+  - Enforces `NUMERIC(15, 4)` and `NUMERIC(15, 2)` types, date columns, cascade deletion on line items, and audit traceability.

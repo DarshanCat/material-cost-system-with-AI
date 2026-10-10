@@ -63,10 +63,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
 
   const operationalNavItems: NavItem[] = [
     {
-      id: 'material-entry',
-      label: 'Material Entry',
+      id: 'grn-management',
+      label: 'Goods Receipt (GRN)',
       icon: <FileInput size={18} />,
-      phase: 'Phase 3',
+      badge: 'Active',
+    },
+    {
+      id: 'material-issue',
+      label: 'Material Issues',
+      icon: <Flame size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'waste-disposition',
+      label: 'Waste & Scrap',
+      icon: <Package size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'excel-import',
+      label: 'Excel Bulk Import',
+      icon: <FileInput size={18} />,
+      badge: 'Active',
     },
     {
       id: 'inventory-ledger',

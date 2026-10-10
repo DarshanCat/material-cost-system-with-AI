@@ -47,19 +47,21 @@ flowchart TD
 ---
 
 ### Phase 3: Material Entry & Inward/Outward Validation
-* **Status:** **UPCOMING (Recommended Next Step)**
+* **Status:** **COMPLETE (Current Deliverable)**
 * **Deliverables:**
-  - Goods Receipt Note (GRN) logging with mandatory unit rate excluding GST for raw materials.
-  - Handling of internal inward movements (VSPL segregation yard returns) with distinct origin tags.
-  - Material Issue Slips per department with role-based requisition and authorization.
-  - Scrap and waste disposition logging (borings, rejected castings, runner/riser returns).
-  - Duplicate detection engine: composite checking on `(vendor, invoice_no, item)` and batches.
-  - Strict input validation preventing silent column skips and catching decimal-entry anomalies.
+  - Goods Receipt Note (GRN) logging with mandatory unit rate excluding GST for raw materials and separated tax rates.
+  - Sourcing for external vendors, internal VSPL movements, and segregation yard returns.
+  - Departmental Material Issue Slips with furnace heat allocation tracking (`H-102603-3721`).
+  - Scrap and waste disposition logging across foundry categories (borings, gatings, returns, rejected castings).
+  - Duplicate detection engine with hard document constraints and soft invoice audit flags.
+  - Decimal precision and suspect entry heuristic engine.
+  - Atomic All-or-Nothing Excel Import Engine with preview and zero partial commits on errors.
+  - 29 automated Pytest tests passing and full frontend ERP views operational.
 
 ---
 
 ### Phase 4: Append-Only Live Inventory Ledger
-* **Status:** **QUEUED**
+* **Status:** **UPCOMING (Next Step)**
 * **Deliverables:**
   - Immutable stock ledger table design (`stock_ledger_entries`).
   - Enforced business rule: Zero stock depletion without an authorized Issue transaction.

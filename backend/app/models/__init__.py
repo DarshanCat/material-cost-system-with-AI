@@ -8,6 +8,16 @@ from app.models.uom import UOM
 from app.models.item import MaterialItem
 from app.models.vendor import Vendor
 from app.models.item_request import ItemRequest, ItemRequestAuditLog, RequestStatus
+from app.models.grn import GRNHeader, GRNLineItem, GRNAuditLog, GRNSourceType, GRNStatus
+from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueAuditLog, IssueStatus
+from app.models.waste import (
+    WasteDispositionHeader,
+    WasteDispositionLineItem,
+    WasteAuditLog,
+    WasteType,
+    DispositionType,
+    WasteStatus,
+)
 
 __all__ = [
     "Base",
@@ -18,4 +28,19 @@ __all__ = [
     "ItemRequest",
     "ItemRequestAuditLog",
     "RequestStatus",
+    "GRNHeader",
+    "GRNLineItem",
+    "GRNAuditLog",
+    "GRNSourceType",
+    "GRNStatus",
+    "MaterialIssueHeader",
+    "MaterialIssueLineItem",
+    "IssueAuditLog",
+    "IssueStatus",
+    "WasteDispositionHeader",
+    "WasteDispositionLineItem",
+    "WasteAuditLog",
+    "WasteType",
+    "DispositionType",
+    "WasteStatus",
 ]

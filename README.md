@@ -6,19 +6,19 @@ The system manages inventory across **741 material items**, provides an immutabl
 
 ---
 
-## Current Status: Phase 2 Active (Master Data & Approvals)
+## Current Status: Phase 3 Active (Material Entry & Transaction Validation)
 
 - **Phase 1: Foundation & Application Shell** — Complete
 - **Phase 2: Master Data & Approval Workflows** — Complete
-  - Material Item Master (`material_items`) supporting ~741 items scope.
-  - Item code convention: `DEPT-CATEGORY-SERIAL` (e.g. `FDY-RM-016`).
-  - Department Master (`departments`) with 8 plant departments.
-  - Controlled UOM Master (`uoms`) with explicit decimal precision (KG=4, NOS=0, LTR=3).
-  - Vendor Master (`vendors`) with normalized search deduplication and 15-character GSTIN format validation.
-  - Item Creation & Approval State Machine (`item_requests` & `item_request_audit_logs`) enforcing separation of duties (no self-approval).
-  - Versioned REST APIs (`/api/v1/departments`, `/uoms`, `/items`, `/vendors`, `/item-requests`).
-  - Desktop-first React ERP UI with search, filtering, drawer details, and decision modals.
-  - 20 automated tests passing with full coverage of constraints, states, and permissions.
+- **Phase 3: Material Entry & Transaction Validation** — Complete
+  - Goods Receipt Notes (`grn_headers`, `grn_line_items`) for External Vendors, Internal VSPL, and Segregation Yard.
+  - Pre-GST rate enforcement for raw materials with tax separation.
+  - Material Issue Slips (`material_issue_headers`, `material_issue_line_items`) with heat number standardization (`H-102603-3721`).
+  - Scrap & Waste Disposition (`waste_disposition_headers`, `waste_disposition_line_items`) with recovery / outward classification.
+  - Duplicate detection engine preventing duplicate document numbers and double invoice processing.
+  - Decimal precision and suspect entry heuristic validation.
+  - Atomic All-or-Nothing Excel Import Engine (`/api/v1/excel-import`) with preview and zero partial commits.
+  - 29 automated Pytest tests passing.
 
 ---
 
