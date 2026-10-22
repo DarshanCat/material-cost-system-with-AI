@@ -21,6 +21,7 @@ import { MaterialAliasView } from './components/MaterialAliasView';
 import { ReconciliationDashboard } from './components/ReconciliationDashboard';
 import { HeatExcelImportView } from './components/HeatExcelImportView';
 import { CostingDashboard } from './components/CostingDashboard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import {
   apiFetch,
   devLogin,
@@ -317,7 +318,7 @@ export const App: React.FC = () => {
           onSelectModule={setActiveModule}
         />
         <main className="erp-content">
-          {renderContent()}
+          <ErrorBoundary resetKey={activeModule}>{renderContent()}</ErrorBoundary>
         </main>
       </div>
     </div>

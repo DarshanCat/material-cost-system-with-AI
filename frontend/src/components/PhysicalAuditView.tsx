@@ -9,7 +9,7 @@ import {
   Eye
 } from 'lucide-react';
 import type { PhysicalAudit, MaterialItem, UOM, Department, UserRole } from '../types';
-import { apiFetch } from '../api/client';
+import { apiFetch, readApiError } from '../api/client';
 
 interface PhysicalAuditViewProps {
   currentRole: UserRole;
@@ -17,6 +17,7 @@ interface PhysicalAuditViewProps {
 }
 
 export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
+  const [actionError, setActionError] = useState<string | null>(null);
   const [audits, setAudits] = useState<PhysicalAudit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -46,7 +47,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
   const fetchAudits = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/v1/physical-audits');
+      const res = await apiFetch('/api/v1/physical-audits/');
       if (res.ok) {
         const data = await res.json();
         setAudits(data);
@@ -143,6 +144,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
   };
 
   const handleAction = async (auditId: number, action: 'submit' | 'approve') => {
+    setActionError(null);
     try {
       const res = await apiFetch(`/api/v1/physical-audits/${auditId}/${action}`, {
         method: 'POST',
@@ -155,9 +157,12 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
           const updated = await res.json();
           setSelectedAudit(updated);
         }
+      } else {
+        setActionError(await readApiError(res, 'Could not '+action+' the physical audit'));
       }
     } catch (err) {
       console.error(`Failed to ${action} physical audit:`, err);
+      setActionError('Network error: the request could not be completed.');
     }
   };
 
@@ -171,6 +176,11 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
 
   return (
     <div className="erp-view">
+      {actionError && (
+        <div className="erp-alert alert-danger" role="alert">
+          {actionError}
+        </div>
+      )}
       <div className="view-header">
         <div>
           <h2>Physical Stock Audits & Adjustments</h2>

@@ -440,37 +440,41 @@ export interface ReconciliationRun {
   exceptions?: ReconciliationException[];
 }
 
+// ---- Costing & valuation contract --------------------------------------------------------------
+// Mirrors backend/app/schemas/costing.py (the authority). backend/tests/test_costing_contract.py fails
+// if a field declared here does not exist in the corresponding backend response schema.
+// Decimal values arrive as JSON strings; only the exceptions endpoint returns plain numbers.
+
 export interface ItemValuationSummary {
   material_item_id: number;
   item_code: string;
   item_name: string;
+  department_name?: string | null;
   category: string;
-  uom_code: string;
   inventory_quantity: string;
+  uom_code: string;
   weighted_average_rate?: string | null;
   extended_value?: string | null;
-  valuation_status: string;
   as_of_date: string;
+  valuation_status: string;
   rate_source?: string | null;
-  cost_scope: string;
-  notes?: string | null;
+  anomaly_notes?: string | null;
 }
 
 export interface InventoryValuationReport {
   as_of_date: string;
-  costing_start_date: string;
-  total_active_items: number;
+  total_items: number;
   valued_items_count: number;
   unvalued_items_count: number;
   zero_stock_items_count: number;
+  negative_stock_items_count: number;
   total_inventory_valuation: string;
-  cost_scope: string;
   items: ItemValuationSummary[];
 }
 
 export interface ItemRateJournalEntry {
-  step_number: number;
   stock_ledger_entry_id?: number | null;
+  entry_number?: string | null;
   transaction_date: string;
   movement_type: string;
   quantity_delta: string;
@@ -488,9 +492,11 @@ export interface ItemRateJournal {
   material_item_id: number;
   item_code: string;
   item_name: string;
+  uom_code: string;
   current_quantity: string;
-  current_weighted_average_rate?: string | null;
-  current_valuation_status: string;
+  weighted_average_rate?: string | null;
+  valuation_status: string;
+  rate_source?: string | null;
   steps: ItemRateJournalEntry[];
 }
 
@@ -514,7 +520,7 @@ export interface HeatCostSummary {
   heat_id: number;
   heat_number: string;
   heat_date: string;
-  furnace_id: string;
+  furnace_id?: string | null;
   total_charged_quantity: string;
   total_material_cost: string;
   metal_tapped_weight?: string | null;
@@ -536,7 +542,6 @@ export interface PartCostSummary {
   part_item_id?: number | null;
   quantity_produced: string;
   unit_cast_weight?: string | null;
-  weight_uom_id?: number | null;
   cost_per_kg?: string | null;
   part_material_cost_per_unit?: string | null;
   total_part_material_cost?: string | null;
@@ -548,23 +553,42 @@ export interface PartCostSummary {
 export interface CostingRunSummary {
   id: number;
   run_number: string;
+  calculation_version: string;
   period_start: string;
   period_end: string;
   as_of_date: string;
-  cost_engine_version: string;
+  denominator_policy: string;
+  cost_scope: string;
   status: string;
   total_items_evaluated: number;
-  total_items_valued: number;
-  total_items_unvalued: number;
+  valued_items_count: number;
+  unvalued_items_count: number;
   total_inventory_valuation: string;
   total_heats_evaluated: number;
-  total_heats_costed: number;
+  completed_heats_count: number;
+  partial_heats_count: number;
   total_heat_material_cost: string;
-  cost_scope: string;
+  summary_notes?: string | null;
   created_by: string;
   created_at: string;
-  completed_at?: string | null;
-  summary_notes?: string | null;
+}
+
+export interface CostingExceptionRow {
+  material_item_id: number;
+  item_code: string;
+  item_name: string;
+  quantity: number;
+  uom: string;
+  issue: string;
+}
+
+/** GET /costing/exceptions (untyped dict on the backend; shape pinned by test_costing_contract.py). */
+export interface CostingExceptionsReport {
+  as_of_date: string;
+  total_exceptions: number;
+  missing_opening_valuation: CostingExceptionRow[];
+  unvalued_stock: CostingExceptionRow[];
+  negative_stock: CostingExceptionRow[];
 }
 
 export interface CostingComparisonSummary {

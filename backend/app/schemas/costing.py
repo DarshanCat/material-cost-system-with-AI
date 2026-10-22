@@ -73,6 +73,8 @@ class HeatCostLineResponse(BaseModel):
     heat_charge_line_id: int
     line_number: int
     material_item_id: Optional[int] = None
+    canonical_item_code: Optional[str] = None
+    canonical_item_name: Optional[str] = None
     raw_material_description: str
     charged_quantity: Decimal
     applicable_rate: Optional[Decimal] = None
@@ -87,6 +89,7 @@ class HeatCostResponse(BaseModel):
     heat_id: int
     heat_number: str
     heat_date: date
+    furnace_id: Optional[str] = None
     total_charged_quantity: Decimal
     total_material_cost: Decimal
     metal_tapped_weight: Optional[Decimal] = None

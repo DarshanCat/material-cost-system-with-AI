@@ -10,7 +10,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import type { MaterialIssue, MaterialItem, UOM, Department, UserRole } from '../types';
-import { apiFetch } from '../api/client';
+import { apiFetch, readApiError } from '../api/client';
 
 interface MaterialIssueViewProps {
   currentRole: UserRole;
@@ -18,6 +18,7 @@ interface MaterialIssueViewProps {
 }
 
 export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
+  const [actionError, setActionError] = useState<string | null>(null);
   const [issues, setIssues] = useState<MaterialIssue[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -49,7 +50,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   const fetchIssues = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/v1/issues');
+      const res = await apiFetch('/api/v1/issues/');
       if (res.ok) {
         const data = await res.json();
         setIssues(data);
@@ -152,6 +153,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   };
 
   const handleAction = async (issueId: number, action: 'submit' | 'approve' | 'cancel') => {
+    setActionError(null);
     try {
       const res = await apiFetch(`/api/v1/issues/${issueId}/${action}`, {
         method: 'POST',
@@ -164,9 +166,12 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
           const updated = await res.json();
           setSelectedIssue(updated);
         }
+      } else {
+        setActionError(await readApiError(res, 'Could not '+action+' the issue slip'));
       }
     } catch (err) {
       console.error(`Failed to ${action} issue slip:`, err);
+      setActionError('Network error: the request could not be completed.');
     }
   };
 
@@ -181,6 +186,11 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
 
   return (
     <div className="erp-view">
+      {actionError && (
+        <div className="erp-alert alert-danger" role="alert">
+          {actionError}
+        </div>
+      )}
       <div className="view-header">
         <div>
           <h2>Material Issue Slips</h2>

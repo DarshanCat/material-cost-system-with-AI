@@ -314,6 +314,15 @@ def get_costing_exceptions(
 
 # --- Heat Costing Endpoints ---
 
+def _canonical_item_labels(db: Session, material_item_id: Optional[int]) -> Dict[str, Optional[str]]:
+    """Mapped canonical item code/name for a heat charge line (None when the line is unmapped)."""
+    item = db.get(MaterialItem, material_item_id) if material_item_id else None
+    return {
+        "canonical_item_code": item.item_code if item else None,
+        "canonical_item_name": item.name if item else None,
+    }
+
+
 @router.get(
     "/heats",
     response_model=List[HeatCostResponse],
@@ -354,6 +363,7 @@ def list_heat_costs(
                 is_included=l["is_included"],
                 status=l["status"],
                 remarks=l["remarks"],
+                **_canonical_item_labels(db, l["material_item_id"]),
             )
             for l in detail["lines"]
         ]
@@ -362,6 +372,7 @@ def list_heat_costs(
                 heat_id=detail["heat_id"],
                 heat_number=detail["heat_number"],
                 heat_date=detail["heat_date"],
+                furnace_id=heat.furnace_id,
                 total_charged_quantity=detail["total_charged_quantity"],
                 total_material_cost=detail["total_material_cost"],
                 metal_tapped_weight=detail["metal_tapped_weight"],
@@ -411,6 +422,7 @@ def get_heat_cost_detail_endpoint(
             is_included=l["is_included"],
             status=l["status"],
             remarks=l["remarks"],
+            **_canonical_item_labels(db, l["material_item_id"]),
         )
         for l in detail["lines"]
     ]
@@ -418,6 +430,7 @@ def get_heat_cost_detail_endpoint(
         heat_id=detail["heat_id"],
         heat_number=detail["heat_number"],
         heat_date=detail["heat_date"],
+        furnace_id=heat.furnace_id,
         total_charged_quantity=detail["total_charged_quantity"],
         total_material_cost=detail["total_material_cost"],
         metal_tapped_weight=detail["metal_tapped_weight"],

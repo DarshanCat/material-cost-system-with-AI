@@ -6,8 +6,10 @@ import type {
   HeatCostSummary,
   CostingRunSummary,
   CostingComparisonSummary,
+  CostingExceptionRow,
+  CostingExceptionsReport,
 } from '../types';
-import { apiFetch } from '../api/client';
+import { apiFetch, readApiError } from '../api/client';
 
 interface CostingDashboardProps {
   currentRole: UserRole;
@@ -41,17 +43,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
   const [compareRun1Id, setCompareRun1Id] = useState<string>('');
   const [compareRun2Id, setCompareRun2Id] = useState<string>('');
 
-  const [exceptions, setExceptions] = useState<{
-    missing_rates: any[];
-    missing_weights: any[];
-    unmapped_descriptions: any[];
-    pending_openings: any[];
-  }>({
-    missing_rates: [],
-    missing_weights: [],
-    unmapped_descriptions: [],
-    pending_openings: [],
-  });
+  const [exceptions, setExceptions] = useState<CostingExceptionsReport | null>(null);
 
   const canRunCosting = currentRole === 'Management' || currentRole === 'Admin';
 
@@ -62,8 +54,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     try {
       const resp = await apiFetch(`/api/v1/costing/valuation/historical?as_of_date=${dateStr}`);
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to fetch inventory valuation');
+        throw new Error(await readApiError(resp, 'Failed to fetch inventory valuation'));
       }
       const data: InventoryValuationReport = await resp.json();
       setValuationReport(data);
@@ -81,8 +72,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     try {
       const resp = await apiFetch(`/api/v1/costing/rates/history/${itemId}`);
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to load rate evolution');
+        throw new Error(await readApiError(resp, 'Failed to load rate evolution'));
       }
       const data: ItemRateJournal = await resp.json();
       setItemJournal(data);
@@ -100,8 +90,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     try {
       const resp = await apiFetch('/api/v1/costing/heats');
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to fetch heat costs');
+        throw new Error(await readApiError(resp, 'Failed to fetch heat costs'));
       }
       const data: HeatCostSummary[] = await resp.json();
       setHeatCosts(data);
@@ -119,8 +108,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     try {
       const resp = await apiFetch('/api/v1/costing/runs');
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to fetch costing runs');
+        throw new Error(await readApiError(resp, 'Failed to fetch costing runs'));
       }
       const data: CostingRunSummary[] = await resp.json();
       setRuns(data);
@@ -138,8 +126,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     try {
       const resp = await apiFetch('/api/v1/costing/exceptions');
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to fetch exceptions');
+        throw new Error(await readApiError(resp, 'Failed to fetch exceptions'));
       }
       const data = await resp.json();
       setExceptions(data);
@@ -174,8 +161,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
         }),
       });
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to execute costing run');
+        throw new Error(await readApiError(resp, 'Failed to execute costing run'));
       }
       const newRun: CostingRunSummary = await resp.json();
       setSuccessMsg(`Costing Run ${newRun.run_number} completed successfully!`);
@@ -200,8 +186,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
         `/api/v1/costing/runs/compare?run_id_1=${compareRun1Id}&run_id_2=${compareRun2Id}`
       );
       if (!resp.ok) {
-        const errData = await resp.json();
-        throw new Error(errData.detail || 'Failed to compare costing runs');
+        throw new Error(await readApiError(resp, 'Failed to compare costing runs'));
       }
       const compData: CostingComparisonSummary = await resp.json();
       setComparison(compData);
@@ -246,6 +231,46 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
         return <span className="erp-badge badge-secondary">{status}</span>;
     }
   };
+
+  const renderExceptionCard = (
+    title: string,
+    description: string,
+    rows: CostingExceptionRow[],
+    emptyText: string
+  ) => (
+    <div className="erp-card mb-4">
+      <h4>
+        {title} ({rows.length})
+      </h4>
+      <p>{description}</p>
+      {rows.length === 0 ? (
+        <p className="text-muted">{emptyText}</p>
+      ) : (
+        <table className="erp-table">
+          <thead>
+            <tr>
+              <th>Item Code</th>
+              <th>Item Name</th>
+              <th>Quantity</th>
+              <th>UOM</th>
+              <th>Issue</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.material_item_id}>
+                <td>{row.item_code}</td>
+                <td>{row.item_name}</td>
+                <td className="text-right">{row.quantity}</td>
+                <td>{row.uom}</td>
+                <td>{row.issue}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
 
   return (
     <div className="erp-page-container">
@@ -356,7 +381,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                   <span className="metric-title">Valued Items</span>
                   <span className="metric-value">{valuationReport.valued_items_count}</span>
                   <span className="metric-sub">
-                    of {valuationReport.total_active_items} total active items
+                    of {valuationReport.total_items} total active items
                   </span>
                 </div>
                 <div className="erp-metric-card">
@@ -460,11 +485,11 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                   Current Quantity: <strong>{itemJournal.current_quantity}</strong> | Weighted-Avg
                   Rate:{' '}
                   <strong>
-                    {itemJournal.current_weighted_average_rate
-                      ? `₹${itemJournal.current_weighted_average_rate}`
+                    {itemJournal.weighted_average_rate
+                      ? `₹${itemJournal.weighted_average_rate}`
                       : 'N/A'}
                   </strong>{' '}
-                  | Status: {getStatusBadge(itemJournal.current_valuation_status)}
+                  | Status: {getStatusBadge(itemJournal.valuation_status)}
                 </div>
               </div>
 
@@ -487,9 +512,9 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {itemJournal.steps.map((s) => (
-                      <tr key={s.step_number}>
-                        <td>{s.step_number}</td>
+                    {itemJournal.steps.map((s, idx) => (
+                      <tr key={s.stock_ledger_entry_id ?? `step-${idx}`}>
+                        <td>{idx + 1}</td>
                         <td>{s.transaction_date}</td>
                         <td>
                           <code>{s.movement_type}</code>
@@ -568,7 +593,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                       <strong>{h.heat_number}</strong>
                     </td>
                     <td>{h.heat_date}</td>
-                    <td>{h.furnace_id}</td>
+                    <td>{h.furnace_id ?? '—'}</td>
                     <td className="text-right">{h.total_charged_quantity}</td>
                     <td className="text-right">{h.metal_tapped_weight || '—'}</td>
                     <td className="text-right">
@@ -708,10 +733,10 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                       })}
                     </td>
                     <td>
-                      {r.total_items_valued} / {r.total_items_evaluated}
+                      {r.valued_items_count} / {r.total_items_evaluated}
                     </td>
                     <td>
-                      {r.total_heats_costed} / {r.total_heats_evaluated}
+                      {r.completed_heats_count} / {r.total_heats_evaluated}
                     </td>
                     <td>{r.created_by}</td>
                     <td>{getStatusBadge(r.status)}</td>
@@ -842,65 +867,34 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
             </p>
           </div>
 
-          <div className="erp-card mb-4">
-            <h4>Pending Opening Valuations ({exceptions.pending_openings.length})</h4>
-            <p>Stock exists from 12-Oct-2026 opening balance but lacks approved commercial rate.</p>
-            {exceptions.pending_openings.length === 0 ? (
-              <p className="text-muted">No pending opening valuations.</p>
-            ) : (
-              <table className="erp-table">
-                <thead>
-                  <tr>
-                    <th>Item ID</th>
-                    <th>Item Code</th>
-                    <th>Item Name</th>
-                    <th>Opening Qty</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exceptions.pending_openings.map((po, idx) => (
-                    <tr key={idx}>
-                      <td>{po.material_item_id}</td>
-                      <td>{po.item_code}</td>
-                      <td>{po.item_name}</td>
-                      <td className="text-right">{po.opening_quantity}</td>
-                      <td>{getStatusBadge(po.valuation_status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          <div className="erp-card mb-4">
-            <h4>Missing GRN Receipt Rates ({exceptions.missing_rates.length})</h4>
-            <p>Receipts posted to ledger without commercial rate (rate_ex_gst is None).</p>
-            {exceptions.missing_rates.length === 0 ? (
-              <p className="text-muted">No missing GRN receipt rates.</p>
-            ) : (
-              <table className="erp-table">
-                <thead>
-                  <tr>
-                    <th>Item ID</th>
-                    <th>GRN Reference</th>
-                    <th>Transaction Date</th>
-                    <th>Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exceptions.missing_rates.map((mr, idx) => (
-                    <tr key={idx}>
-                      <td>{mr.material_item_id}</td>
-                      <td>{mr.source_document_number}</td>
-                      <td>{mr.transaction_date}</td>
-                      <td className="text-right">{mr.quantity_delta}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+          {!exceptions ? (
+            <p className="text-muted">{loading ? 'Loading exceptions…' : 'No exception data loaded.'}</p>
+          ) : (
+            <>
+              <p>
+                As of <strong>{exceptions.as_of_date}</strong> — total exceptions:{' '}
+                <strong>{exceptions.total_exceptions}</strong>
+              </p>
+              {renderExceptionCard(
+                'Pending Opening Valuations',
+                'Stock exists from the opening balance but lacks an approved commercial rate.',
+                exceptions.missing_opening_valuation,
+                'No pending opening valuations.'
+              )}
+              {renderExceptionCard(
+                'Unvalued Stock',
+                'Material in stock without any approved priced receipts.',
+                exceptions.unvalued_stock,
+                'No unvalued stock.'
+              )}
+              {renderExceptionCard(
+                'Negative Stock Balances',
+                'Negative inventory violates VSPL inventory policy and needs physical verification.',
+                exceptions.negative_stock,
+                'No negative stock balances.'
+              )}
+            </>
+          )}
         </div>
       )}
     </div>

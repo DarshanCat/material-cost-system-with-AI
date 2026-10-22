@@ -9,7 +9,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import type { GRN, MaterialItem, UOM, Vendor, UserRole } from '../types';
-import { apiFetch } from '../api/client';
+import { apiFetch, readApiError } from '../api/client';
 
 interface GRNManagementViewProps {
   currentRole: UserRole;
@@ -17,6 +17,7 @@ interface GRNManagementViewProps {
 }
 
 export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
+  const [actionError, setActionError] = useState<string | null>(null);
   const [grns, setGrns] = useState<GRN[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -51,7 +52,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
   const fetchGRNs = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/v1/grn');
+      const res = await apiFetch('/api/v1/grn/');
       if (res.ok) {
         const data = await res.json();
         setGrns(data);
@@ -163,6 +164,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
   };
 
   const handleAction = async (grnId: number, action: 'submit' | 'approve' | 'cancel') => {
+    setActionError(null);
     try {
       const res = await apiFetch(`/api/v1/grn/${grnId}/${action}`, {
         method: 'POST',
@@ -175,9 +177,12 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
           const updated = await res.json();
           setSelectedGRN(updated);
         }
+      } else {
+        setActionError(await readApiError(res, 'Could not '+action+' the GRN'));
       }
     } catch (err) {
       console.error(`Failed to ${action} GRN:`, err);
+      setActionError('Network error: the request could not be completed.');
     }
   };
 
@@ -192,6 +197,11 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
 
   return (
     <div className="erp-view">
+      {actionError && (
+        <div className="erp-alert alert-danger" role="alert">
+          {actionError}
+        </div>
+      )}
       <div className="view-header">
         <div>
           <h2>Goods Receipt Notes (GRN)</h2>

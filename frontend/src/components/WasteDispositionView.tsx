@@ -8,7 +8,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import type { WasteDisposition, MaterialItem, UOM, Department, UserRole } from '../types';
-import { apiFetch } from '../api/client';
+import { apiFetch, readApiError } from '../api/client';
 
 interface WasteDispositionViewProps {
   currentRole: UserRole;
@@ -16,6 +16,7 @@ interface WasteDispositionViewProps {
 }
 
 export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
+  const [actionError, setActionError] = useState<string | null>(null);
   const [wastes, setWastes] = useState<WasteDisposition[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -47,7 +48,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
   const fetchWastes = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch('/api/v1/waste');
+      const res = await apiFetch('/api/v1/waste/');
       if (res.ok) {
         const data = await res.json();
         setWastes(data);
@@ -147,6 +148,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
   };
 
   const handleAction = async (wasteId: number, action: 'submit' | 'approve') => {
+    setActionError(null);
     try {
       const res = await apiFetch(`/api/v1/waste/${wasteId}/${action}`, {
         method: 'POST',
@@ -159,9 +161,12 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
           const updated = await res.json();
           setSelectedWaste(updated);
         }
+      } else {
+        setActionError(await readApiError(res, 'Could not '+action+' the waste record'));
       }
     } catch (err) {
       console.error(`Failed to ${action} waste record:`, err);
+      setActionError('Network error: the request could not be completed.');
     }
   };
 
@@ -176,6 +181,11 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
 
   return (
     <div className="erp-view">
+      {actionError && (
+        <div className="erp-alert alert-danger" role="alert">
+          {actionError}
+        </div>
+      )}
       <div className="view-header">
         <div>
           <h2>Scrap & Waste Disposition</h2>

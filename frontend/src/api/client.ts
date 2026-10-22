@@ -97,3 +97,26 @@ export async function devLogin(role: UserRole): Promise<AuthUser> {
 export function signOut(): void {
   setAccessToken(null);
 }
+
+/**
+ * Human-readable message for a failed response. FastAPI returns `detail` as a string, a list of
+ * validation errors, or an object; anything else falls back to the HTTP status.
+ */
+export async function readApiError(res: Response, fallback: string): Promise<string> {
+  try {
+    const body = await res.clone().json();
+    const detail = body?.detail;
+    if (typeof detail === 'string' && detail) return detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail
+        .map((e: any) => (e?.msg ? `${(e.loc ?? []).slice(1).join('.') || 'request'}: ${e.msg}` : String(e)))
+        .join('; ');
+    }
+    if (detail && typeof detail === 'object') {
+      return String(detail.message ?? detail.error ?? JSON.stringify(detail));
+    }
+  } catch {
+    /* body was not JSON */
+  }
+  return `${fallback} (HTTP ${res.status})`;
+}
