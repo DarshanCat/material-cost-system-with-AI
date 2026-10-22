@@ -13,6 +13,7 @@ import {
   X
 } from 'lucide-react';
 import type { MaterialItem, Department, PaginatedResponse, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface MaterialMasterViewProps {
   currentRole: UserRole;
@@ -41,7 +42,7 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
 
   // Load departments for filter dropdown
   useEffect(() => {
-    fetch('/api/v1/departments')
+    apiFetch('/api/v1/departments')
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setDepartments(data))
       .catch(() => {});
@@ -58,7 +59,7 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
       params.append('page', String(page));
       params.append('size', String(pageSize));
 
-      const res = await fetch(`/api/v1/items?${params.toString()}`);
+      const res = await apiFetch(`/api/v1/items?${params.toString()}`);
       if (res.ok) {
         const data: PaginatedResponse<MaterialItem> = await res.json();
         setItems(data.items);

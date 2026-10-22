@@ -1,3 +1,4 @@
+from tests.auth_helpers import bearer
 """
 Tests for Heat Log Excel Import preview and atomic commit.
 """
@@ -51,7 +52,7 @@ def test_heat_import_preview_and_atomic_commit(client: TestClient, db_session: S
     preview_resp = client.post(
         "/api/v1/heats/import/preview",
         json={"rows": rows_with_error},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert preview_resp.status_code == 200
     p_data = preview_resp.json()
@@ -63,7 +64,7 @@ def test_heat_import_preview_and_atomic_commit(client: TestClient, db_session: S
     commit_fail = client.post(
         "/api/v1/heats/import/commit",
         json={"rows": rows_with_error},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert commit_fail.status_code == 400
 
@@ -85,7 +86,7 @@ def test_heat_import_preview_and_atomic_commit(client: TestClient, db_session: S
     commit_resp = client.post(
         "/api/v1/heats/import/commit",
         json={"rows": valid_rows, "source_filename": "Furnace_Logs_Oct21.xlsx"},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert commit_resp.status_code == 201
     c_data = commit_resp.json()

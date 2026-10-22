@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.schemas.waste import (
     WasteDispositionCreate,
@@ -80,10 +81,10 @@ def _serialize_waste(header: WasteDispositionHeader, warnings: Optional[List[str
 @router.post("/", response_model=WasteDispositionResponse, status_code=status.HTTP_201_CREATED)
 def create_new_waste(
     payload: WasteDispositionCreate,
-    created_by: str = Query("Admin", description="User creating the waste disposition"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_LOG)),
     db: Session = Depends(get_db),
 ):
-    header, warnings = create_waste_disposition(db, payload, created_by)
+    header, warnings = create_waste_disposition(db, payload, user.user_id)
     return _serialize_waste(header, warnings)
 
 
@@ -97,6 +98,7 @@ def list_waste_dispositions(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_READ)),
 ):
     query = select(WasteDispositionHeader).order_by(desc(WasteDispositionHeader.created_at))
     if status:
@@ -116,7 +118,11 @@ def list_waste_dispositions(
 
 
 @router.get("/{waste_id}", response_model=WasteDispositionResponse)
-def get_waste_by_id(waste_id: int, db: Session = Depends(get_db)):
+def get_waste_by_id(
+    waste_id: int,
+    db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_READ)),
+):
     waste = db.get(WasteDispositionHeader, waste_id)
     if not waste:
         raise HTTPException(status_code=404, detail="Waste disposition record not found")
@@ -127,10 +133,10 @@ def get_waste_by_id(waste_id: int, db: Session = Depends(get_db)):
 def submit_waste_action(
     waste_id: int,
     action: WasteStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_LOG)),
     db: Session = Depends(get_db),
 ):
-    waste = submit_waste_disposition(db, waste_id, actor_id, action.comments)
+    waste = submit_waste_disposition(db, waste_id, user.user_id, action.comments)
     return _serialize_waste(waste)
 
 
@@ -138,8 +144,8 @@ def submit_waste_action(
 def approve_waste_action(
     waste_id: int,
     action: WasteStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_APPROVE)),
     db: Session = Depends(get_db),
 ):
-    waste = approve_waste_disposition(db, waste_id, actor_id, action.comments)
+    waste = approve_waste_disposition(db, waste_id, user.user_id, action.comments)
     return _serialize_waste(waste)

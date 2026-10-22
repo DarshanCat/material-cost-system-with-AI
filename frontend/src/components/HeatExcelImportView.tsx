@@ -8,6 +8,7 @@ import {
   Database
 } from 'lucide-react';
 import type { UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface HeatExcelImportViewProps {
   currentRole: UserRole;
@@ -29,7 +30,7 @@ interface HeatPreviewFinding {
   errors: string[];
 }
 
-export const HeatExcelImportView: React.FC<HeatExcelImportViewProps> = ({ currentRole }) => {
+export const HeatExcelImportView: React.FC<HeatExcelImportViewProps> = () => {
   const [csvContent, setCsvContent] = useState<string>('');
   const [validating, setValidating] = useState<boolean>(false);
   const [committing, setCommitting] = useState<boolean>(false);
@@ -77,11 +78,10 @@ export const HeatExcelImportView: React.FC<HeatExcelImportViewProps> = ({ curren
 
     setValidating(true);
     try {
-      const res = await fetch('/api/v1/heats/import/preview', {
+      const res = await apiFetch('/api/v1/heats/import/preview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({ rows }),
       });
@@ -107,11 +107,10 @@ export const HeatExcelImportView: React.FC<HeatExcelImportViewProps> = ({ curren
 
     const rows = parseCsvToRows(csvContent);
     try {
-      const res = await fetch('/api/v1/heats/import/commit', {
+      const res = await apiFetch('/api/v1/heats/import/commit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({
           rows,

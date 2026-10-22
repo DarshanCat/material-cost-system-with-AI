@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.core.security import get_current_user_role, get_current_user_id
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.schemas.heat import HeatCreate, HeatRead
 from app.services.heat_service import create_heat, get_heat_by_id, get_heat_by_number, list_heats
 
@@ -20,18 +20,12 @@ router = APIRouter()
 def api_create_heat(
     payload: HeatCreate,
     db: Session = Depends(get_db),
-    current_role: str = Depends(get_current_user_role),
-    current_user_id: str = Depends(get_current_user_id),
+    user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_LOG_CREATE)),
 ):
     """
     Creates a new induction furnace heat record.
     Restricted to Foundry, Management, and Admin roles.
     """
-    if current_role not in ("Foundry", "Management", "Admin"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Role '{current_role}' is not authorized to create heat records",
-        )
     
     charge_data = [l.model_dump() for l in payload.charge_lines] if payload.charge_lines else None
     parts_data = [p.model_dump() for p in payload.parts_produced] if payload.parts_produced else None
@@ -40,7 +34,7 @@ def api_create_heat(
         db=db,
         heat_number=payload.heat_number,
         heat_date=payload.heat_date,
-        created_by=current_user_id,
+        created_by=user.user_id,
         furnace_id=payload.furnace_id,
         shift=payload.shift,
         metal_tapped_weight=payload.metal_tapped_weight,
@@ -64,6 +58,7 @@ def api_list_heats(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_LOG_READ)),
 ):
     """Lists heats with optional date range, furnace, and search filters."""
     items, _ = list_heats(
@@ -83,6 +78,7 @@ def api_list_heats(
 def api_get_heat_by_id(
     id: int,
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_LOG_READ)),
 ):
     """Retrieves heat details including charge lines and parts produced."""
     heat = get_heat_by_id(db, id)
@@ -98,6 +94,7 @@ def api_get_heat_by_id(
 def api_get_heat_by_number(
     heat_number: str,
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_LOG_READ)),
 ):
     """Retrieves heat details by raw or normalized heat number."""
     heat = get_heat_by_number(db, heat_number)

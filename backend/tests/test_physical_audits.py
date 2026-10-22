@@ -63,7 +63,7 @@ def test_physical_audit_variance_and_adjustment_posting(client: TestClient, db_s
         ],
     }
 
-    create_resp = client.post("/api/v1/physical-audits/?created_by=Auditor", json=audit_payload)
+    create_resp = client.post("/api/v1/physical-audits/", json=audit_payload)
     assert create_resp.status_code == 201
     audit_data = create_resp.json()
     assert audit_data["status"] == "DRAFT"
@@ -76,11 +76,11 @@ def test_physical_audit_variance_and_adjustment_posting(client: TestClient, db_s
     assert Decimal(str(bal_during.json()["current_balance"])) == Decimal("1000.0000")
 
     # 2. Submit
-    sub_resp = client.post(f"/api/v1/physical-audits/{audit_id}/submit?actor_id=Auditor", json={})
+    sub_resp = client.post(f"/api/v1/physical-audits/{audit_id}/submit", json={})
     assert sub_resp.status_code == 200
 
     # 3. Approve -> Posts adjustment to ledger
-    app_resp = client.post(f"/api/v1/physical-audits/{audit_id}/approve?actor_id=FinanceHead", json={"comments": "Variance approved"})
+    app_resp = client.post(f"/api/v1/physical-audits/{audit_id}/approve", json={"comments": "Variance approved"})
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
 
@@ -88,3 +88,9 @@ def test_physical_audit_variance_and_adjustment_posting(client: TestClient, db_s
     bal_after = client.get(f"/api/v1/ledger/balances/{item.id}")
     assert Decimal(str(bal_after.json()["current_balance"])) == Decimal("980.0000")
     assert bal_after.json()["movement_count"] == 2  # Opening balance + Audit adjustment
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

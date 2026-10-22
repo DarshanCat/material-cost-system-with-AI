@@ -13,6 +13,7 @@ import type {
   ReconciliationRun, 
   UserRole 
 } from '../types';
+import { apiFetch } from '../api/client';
 
 interface ReconciliationDashboardProps {
   currentRole: UserRole;
@@ -45,7 +46,7 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
   const fetchRuns = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/reconciliation/runs?limit=50');
+      const res = await apiFetch('/api/v1/reconciliation/runs?limit=50');
       if (res.ok) {
         setRuns(await res.json());
       }
@@ -59,7 +60,7 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
   const fetchRunDetail = async (runId: number) => {
     setLoadingDetail(true);
     try {
-      const res = await fetch(`/api/v1/reconciliation/runs/${runId}`);
+      const res = await apiFetch(`/api/v1/reconciliation/runs/${runId}`);
       if (res.ok) {
         setSelectedRun(await res.json());
       }
@@ -86,11 +87,10 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
     };
 
     try {
-      const res = await fetch('/api/v1/reconciliation/run', {
+      const res = await apiFetch('/api/v1/reconciliation/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify(payload),
       });
@@ -117,11 +117,10 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
 
   const handleConfirmCandidate = async (candidateId: number) => {
     try {
-      const res = await fetch(`/api/v1/reconciliation/candidates/${candidateId}/confirm`, {
+      const res = await apiFetch(`/api/v1/reconciliation/candidates/${candidateId}/confirm`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({ comments: candidateActionComment.trim() || 'Confirmed by supervisor' }),
       });
@@ -144,11 +143,10 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
       return;
     }
     try {
-      const res = await fetch(`/api/v1/reconciliation/candidates/${candidateId}/reject`, {
+      const res = await apiFetch(`/api/v1/reconciliation/candidates/${candidateId}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({ comments: candidateActionComment.trim() }),
       });
@@ -170,11 +168,10 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
     if (!selectedExceptionId || !exceptionComment.trim()) return;
 
     try {
-      const res = await fetch(`/api/v1/reconciliation/exceptions/${selectedExceptionId}/resolve`, {
+      const res = await apiFetch(`/api/v1/reconciliation/exceptions/${selectedExceptionId}/resolve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({
           action: exceptionAction,

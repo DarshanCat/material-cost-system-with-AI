@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.models.ledger import StockLedgerEntry
 from app.models.item import MaterialItem
@@ -59,6 +60,7 @@ def get_all_stock_balances(
     department_id: Optional[int] = Query(None, description="Filter items by department"),
     q: Optional[str] = Query(None, description="Search item code or name"),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
 ):
     """
     Computes stock balances for all material items strictly derived from append-only ledger entries.
@@ -111,6 +113,7 @@ def get_single_item_stock_balance(
     item_id: int,
     as_of_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
 ):
     item = db.get(MaterialItem, item_id)
     if not item:
@@ -152,6 +155,7 @@ def list_stock_ledger_entries(
     page: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
 ):
     """
     Paginated access to immutable movement history journal.
@@ -182,7 +186,9 @@ def list_stock_ledger_entries(
 
 
 @router.get("/entries/{entry_id}", response_model=StockLedgerEntryResponse)
-def get_ledger_entry_by_id(entry_id: int, db: Session = Depends(get_db)):
+def get_ledger_entry_by_id(entry_id: int, db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
+):
     entry = db.get(StockLedgerEntry, entry_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Stock ledger entry not found.")
@@ -193,11 +199,11 @@ def get_ledger_entry_by_id(entry_id: int, db: Session = Depends(get_db)):
 def reverse_ledger_entry_action(
     entry_id: int,
     payload: LedgerReversalRequest,
-    actor_id: str = Query("Admin", description="Authorized supervisor user"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_REVERSE)),
     db: Session = Depends(get_db),
 ):
     """
     Creates a compensating REVERSAL journal entry without altering or deleting the original record.
     """
-    rev = reverse_stock_ledger_entry(db, entry_id, payload.reason, actor_id)
+    rev = reverse_stock_ledger_entry(db, entry_id, payload.reason, user.user_id)
     return _serialize_ledger_entry(rev)

@@ -14,6 +14,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import type { Vendor, PaginatedResponse, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface VendorMasterViewProps {
   currentRole: UserRole;
@@ -54,7 +55,7 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
       params.append('page', String(page));
       params.append('size', String(pageSize));
 
-      const res = await fetch(`/api/v1/vendors?${params.toString()}`);
+      const res = await apiFetch(`/api/v1/vendors?${params.toString()}`);
       if (res.ok) {
         const data: PaginatedResponse<Vendor> = await res.json();
         setVendors(data.items);
@@ -110,11 +111,10 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
         address: formAddress.trim() || null,
       };
 
-      const res = await fetch('/api/v1/vendors', {
+      const res = await apiFetch('/api/v1/vendors', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify(payload),
       });

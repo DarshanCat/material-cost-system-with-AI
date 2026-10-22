@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Ruler, ShieldCheck, AlertCircle } from 'lucide-react';
 import type { Department, UOM } from '../types';
+import { apiFetch } from '../api/client';
 
 export const ReferenceDataView: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -11,8 +12,8 @@ export const ReferenceDataView: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch('/api/v1/departments').then((r) => r.json()),
-      fetch('/api/v1/uoms').then((r) => r.json()),
+      apiFetch('/api/v1/departments').then((r) => r.json()),
+      apiFetch('/api/v1/uoms').then((r) => r.json()),
     ])
       .then(([deptData, uomData]) => {
         setDepartments(Array.isArray(deptData) ? deptData : []);

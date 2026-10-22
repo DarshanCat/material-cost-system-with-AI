@@ -108,7 +108,7 @@ def test_compensating_reversal_lifecycle(client: TestClient, db_session: Session
 
     # Reverse entry
     rev_resp = client.post(
-        f"/api/v1/ledger/entries/{entry.id}/reverse?actor_id=Supervisor",
+        f"/api/v1/ledger/entries/{entry.id}/reverse",
         json={"reason": "Incorrect consignment weighed at weighbridge"},
     )
     assert rev_resp.status_code == 200
@@ -125,8 +125,14 @@ def test_compensating_reversal_lifecycle(client: TestClient, db_session: Session
 
     # Cannot reverse the same entry twice
     dup_rev = client.post(
-        f"/api/v1/ledger/entries/{entry.id}/reverse?actor_id=Supervisor",
+        f"/api/v1/ledger/entries/{entry.id}/reverse",
         json={"reason": "Trying second reversal"},
     )
     assert dup_rev.status_code == 409
     assert "already been reversed" in dup_rev.json()["detail"]
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

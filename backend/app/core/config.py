@@ -4,6 +4,9 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+DEFAULT_SECRET_KEY = "insecure_dev_secret_key_change_in_production"
+
+
 class Settings(BaseSettings):
     PROJECT_NAME: str = "VSPL Material Management & Costing System"
     ENVIRONMENT: str = "development"
@@ -11,7 +14,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # Security & CORS
-    SECRET_KEY: str = "insecure_dev_secret_key_change_in_production"
+    SECRET_KEY: str = DEFAULT_SECRET_KEY
+    # "none" (default, fail-closed: all protected routes 401) or "dev" (development/test only).
+    # The production provider (JWT / Entra ID / session) is pending IT Head approval.
+    AUTH_PROVIDER: str = "none"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
     ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",

@@ -1,3 +1,4 @@
+from tests.auth_helpers import bearer
 """
 Tests for Costing Run Auditability, Recalculation Integrity, and Comparison.
 Verifies:
@@ -169,7 +170,7 @@ def test_costing_api_permissions(client: TestClient, run_fixtures):
             "as_of_date": "2026-10-14",
             "denominator_policy": "METAL_TAPPED",
         },
-        headers={"X-User-Role": "Stores", "X-User-Id": "usr_stores_01"},
+        headers=bearer("Stores"),
     )
     assert resp.status_code == 403
 
@@ -182,7 +183,7 @@ def test_costing_api_permissions(client: TestClient, run_fixtures):
             "as_of_date": "2026-10-14",
             "denominator_policy": "METAL_TAPPED",
         },
-        headers={"X-User-Role": "Management", "X-User-Id": "usr_mgmt_01"},
+        headers=bearer("Management"),
     )
     assert resp_mgmt.status_code == 200
     data = resp_mgmt.json()

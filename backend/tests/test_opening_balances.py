@@ -74,3 +74,9 @@ def test_opening_balance_preview_and_posting_lifecycle(client: TestClient, db_se
     assert dup_prev.json()["can_commit"] is False
     assert dup_prev.json()["error_rows_count"] == 1
     assert "already has an established opening balance" in dup_prev.json()["findings"][0]["errors"][0]
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

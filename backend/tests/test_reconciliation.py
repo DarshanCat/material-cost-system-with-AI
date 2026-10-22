@@ -1,3 +1,4 @@
+from tests.auth_helpers import bearer
 """
 Tests for Induction Furnace Issue-to-Heat Three-Pass Reconciliation Engine.
 """
@@ -115,7 +116,7 @@ def test_reconciliation_pass1_exact_match_and_tolerance(client: TestClient, db_s
     resp = client.post(
         "/api/v1/reconciliation/run",
         json={"date_from": "2026-10-16", "date_to": "2026-10-16"},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert resp.status_code == 201, resp.text
     run_data = resp.json()
@@ -237,7 +238,7 @@ def test_reconciliation_pass2_batch_and_no_double_counting(client: TestClient, d
     resp = client.post(
         "/api/v1/reconciliation/run",
         json={"date_from": "2026-10-17", "date_to": "2026-10-17"},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert resp.status_code == 201
     run_data = resp.json()
@@ -322,7 +323,7 @@ def test_reconciliation_pass3_fuzzy_candidate_and_human_confirmation(client: Tes
     resp = client.post(
         "/api/v1/reconciliation/run",
         json={"date_from": "2026-10-18", "date_to": "2026-10-19"},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert resp.status_code == 201
     run_data = resp.json()
@@ -336,9 +337,9 @@ def test_reconciliation_pass3_fuzzy_candidate_and_human_confirmation(client: Tes
     conf_resp = client.post(
         f"/api/v1/reconciliation/candidates/{candidate['id']}/confirm",
         json={"comments": "Confirmed night shift crossover to furnace 1"},
-        headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"},
+        headers=bearer("Foundry"),
     )
     assert conf_resp.status_code == 200
     conf_data = conf_resp.json()
     assert conf_data["status"] == CandidateMatchStatus.CONFIRMED.value
-    assert conf_data["reviewed_by"] == "usr_fdy"
+    assert conf_data["reviewed_by"] == "usr_foundry_01"

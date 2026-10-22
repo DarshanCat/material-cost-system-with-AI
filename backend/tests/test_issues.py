@@ -66,7 +66,7 @@ def test_material_issue_workflow_and_heat_reference(client: TestClient, db_sessi
         ],
     }
 
-    resp = client.post("/api/v1/issues/?created_by=FurnaceOperator", json=payload)
+    resp = client.post("/api/v1/issues/", json=payload)
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["status"] == "DRAFT"
@@ -75,12 +75,12 @@ def test_material_issue_workflow_and_heat_reference(client: TestClient, db_sessi
     issue_id = data["id"]
 
     # 2. Submit issue slip
-    sub_resp = client.post(f"/api/v1/issues/{issue_id}/submit?actor_id=FurnaceOperator", json={})
+    sub_resp = client.post(f"/api/v1/issues/{issue_id}/submit", json={})
     assert sub_resp.status_code == 200
     assert sub_resp.json()["status"] == "SUBMITTED"
 
     # 3. Approve issue slip
-    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve?actor_id=DepartmentHead", json={})
+    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={})
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
 
@@ -114,6 +114,12 @@ def test_material_issue_decimal_precision_rejection(client: TestClient, db_sessi
         ],
     }
 
-    resp = client.post("/api/v1/issues/?created_by=FurnaceOperator", json=payload)
+    resp = client.post("/api/v1/issues/", json=payload)
     assert resp.status_code == 422
     assert "exceeds maximum allowed decimal places (0)" in resp.json()["detail"]
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

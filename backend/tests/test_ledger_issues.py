@@ -44,14 +44,14 @@ def test_issue_approval_blocked_on_uninitialized_stock(client: TestClient, db_se
             }
         ],
     }
-    resp = client.post("/api/v1/issues/?created_by=FurnaceOperator", json=payload)
+    resp = client.post("/api/v1/issues/", json=payload)
     assert resp.status_code == 201
     issue_id = resp.json()["id"]
 
-    client.post(f"/api/v1/issues/{issue_id}/submit?actor_id=FurnaceOperator", json={})
+    client.post(f"/api/v1/issues/{issue_id}/submit", json={})
 
     # Approving must fail because stock is uninitialized!
-    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve?actor_id=DeptHead", json={})
+    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={})
     assert app_resp.status_code == 409
     assert "Stock baseline has not been initialized" in app_resp.json()["detail"]
 
@@ -103,13 +103,19 @@ def test_issue_approval_blocked_on_insufficient_stock(client: TestClient, db_ses
             }
         ],
     }
-    resp = client.post("/api/v1/issues/?created_by=FurnaceOperator", json=payload)
+    resp = client.post("/api/v1/issues/", json=payload)
     assert resp.status_code == 201
     issue_id = resp.json()["id"]
 
-    client.post(f"/api/v1/issues/{issue_id}/submit?actor_id=FurnaceOperator", json={})
+    client.post(f"/api/v1/issues/{issue_id}/submit", json={})
 
     # Approval must be rejected with 409 Conflict
-    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve?actor_id=DeptHead", json={})
+    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={})
     assert app_resp.status_code == 409
     assert "Insufficient inventory" in app_resp.json()["detail"]
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

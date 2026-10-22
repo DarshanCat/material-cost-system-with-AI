@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.config import settings
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import check_database_connection
 from app.schemas.health import HealthResponse, DatabaseHealth
 
@@ -33,7 +34,9 @@ def get_health() -> HealthResponse:
 
 
 @router.get("/db-check", summary="Strict Database Connectivity Verification")
-def verify_db_connectivity():
+def verify_db_connectivity(
+    _user: AuthenticatedUser = Depends(require_permission(Permission.AUDIT_READ)),
+):
     """
     Strict database verification endpoint.
     Fails with HTTP 503 Service Unavailable if database connection cannot be established,

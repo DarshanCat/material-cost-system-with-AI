@@ -10,6 +10,7 @@ import {
   Link
 } from 'lucide-react';
 import type { MaterialAlias, MaterialItem, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface MaterialAliasViewProps {
   currentRole: UserRole;
@@ -39,7 +40,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
       let url = '/api/v1/material-aliases?limit=100';
       if (statusFilter !== 'ALL') url += `&status_filter=${statusFilter}`;
       if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       if (res.ok) {
         setAliases(await res.json());
       }
@@ -52,7 +53,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
 
   const fetchItems = async () => {
     try {
-      const res = await fetch('/api/v1/items?limit=500');
+      const res = await apiFetch('/api/v1/items?limit=500');
       if (res.ok) setItems(await res.json());
     } catch {
       // fallback
@@ -71,11 +72,10 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
     setFeedback(null);
 
     try {
-      const res = await fetch('/api/v1/material-aliases', {
+      const res = await apiFetch('/api/v1/material-aliases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({
           alias_text: aliasText.trim(),
@@ -103,11 +103,10 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
 
   const handleApprove = async (aliasId: number) => {
     try {
-      const res = await fetch(`/api/v1/material-aliases/${aliasId}/approve`, {
+      const res = await apiFetch(`/api/v1/material-aliases/${aliasId}/approve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({ decision_notes: 'Approved by supervisor' }),
       });
@@ -129,11 +128,10 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
     setSubmitting(true);
 
     try {
-      const res = await fetch(`/api/v1/material-aliases/${selectedAlias.id}/reject`, {
+      const res = await apiFetch(`/api/v1/material-aliases/${selectedAlias.id}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({ decision_notes: rejectionComments.trim() }),
       });
@@ -157,11 +155,10 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
   const handleDeactivate = async (aliasId: number) => {
     if (!window.confirm('Deactivate this alias mapping?')) return;
     try {
-      const res = await fetch(`/api/v1/material-aliases/${aliasId}/deactivate`, {
+      const res = await apiFetch(`/api/v1/material-aliases/${aliasId}/deactivate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
       });
       if (res.ok) {

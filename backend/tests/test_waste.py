@@ -47,7 +47,7 @@ def test_waste_disposition_lifecycle(client: TestClient, db_session: Session):
         ],
     }
 
-    resp = client.post("/api/v1/waste/?created_by=ShopSupervisor", json=payload)
+    resp = client.post("/api/v1/waste/", json=payload)
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["status"] == "DRAFT"
@@ -55,11 +55,17 @@ def test_waste_disposition_lifecycle(client: TestClient, db_session: Session):
     waste_id = data["id"]
 
     # 2. Submit
-    sub_resp = client.post(f"/api/v1/waste/{waste_id}/submit?actor_id=ShopSupervisor", json={})
+    sub_resp = client.post(f"/api/v1/waste/{waste_id}/submit", json={})
     assert sub_resp.status_code == 200
     assert sub_resp.json()["status"] == "SUBMITTED"
 
     # 3. Approve
-    app_resp = client.post(f"/api/v1/waste/{waste_id}/approve?actor_id=PlantManager", json={"comments": "Recovery verified"})
+    app_resp = client.post(f"/api/v1/waste/{waste_id}/approve", json={"comments": "Recovery verified"})
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

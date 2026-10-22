@@ -12,6 +12,7 @@ import {
   Calendar
 } from 'lucide-react';
 import type { HeatHeader, MaterialItem, UOM, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface HeatLogManagementViewProps {
   currentRole: UserRole;
@@ -66,7 +67,7 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
       let url = '/api/v1/heats?limit=100';
       if (dateFilter) url += `&date_from=${dateFilter}&date_to=${dateFilter}`;
       if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
         setHeats(data);
@@ -81,8 +82,8 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
   const fetchReferences = async () => {
     try {
       const [itemsRes, uomsRes] = await Promise.all([
-        fetch('/api/v1/items?limit=200'),
-        fetch('/api/v1/uoms')
+        apiFetch('/api/v1/items?limit=200'),
+        apiFetch('/api/v1/uoms')
       ]);
       if (itemsRes.ok) setItems(await itemsRes.json());
       if (uomsRes.ok) setUoms(await uomsRes.json());
@@ -158,11 +159,10 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
     };
 
     try {
-      const res = await fetch('/api/v1/heats', {
+      const res = await apiFetch('/api/v1/heats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify(payload),
       });

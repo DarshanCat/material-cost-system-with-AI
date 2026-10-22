@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.core.auth import router as auth_router
 from app.api.v1.endpoints import (
     health,
     departments,
@@ -21,6 +22,7 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
+api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(health.router, prefix="/health", tags=["System Health"])
 api_router.include_router(departments.router, prefix="/departments", tags=["Department Master"])
 api_router.include_router(uoms.router, prefix="/uoms", tags=["UOM Master"])

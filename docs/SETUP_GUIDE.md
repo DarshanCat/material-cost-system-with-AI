@@ -131,3 +131,7 @@ cd "C:\VSPL_MM\Material managment system\backend"
   Get-NetTCPConnection -LocalPort 8000 | Select-Object OwningProcess
   Stop-Process -Id <PID> -Force
   ```
+
+## Authentication note (Security Hardening Sprint 1)
+
+The API no longer trusts `X-User-*` headers. By default (`AUTH_PROVIDER=none`) every protected route returns HTTP 401. For local development set `ENVIRONMENT=development` and `AUTH_PROVIDER=dev` in `backend\.env` (both are in `.env.example`); the UI then signs in through the loopback-only dev endpoint. Production authentication is pending IT approval - see `docs/security/AUTHENTICATION_INTEGRATION.md`.

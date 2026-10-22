@@ -9,13 +9,14 @@ import {
   Eye
 } from 'lucide-react';
 import type { PhysicalAudit, MaterialItem, UOM, Department, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface PhysicalAuditViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ currentRole, currentUserId }) => {
+export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
   const [audits, setAudits] = useState<PhysicalAudit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -45,7 +46,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ currentRol
   const fetchAudits = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/physical-audits');
+      const res = await apiFetch('/api/v1/physical-audits');
       if (res.ok) {
         const data = await res.json();
         setAudits(data);
@@ -60,9 +61,9 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ currentRol
   const fetchReferences = async () => {
     try {
       const [iRes, uRes, dRes] = await Promise.all([
-        fetch('/api/v1/items?limit=500'),
-        fetch('/api/v1/uoms'),
-        fetch('/api/v1/departments'),
+        apiFetch('/api/v1/items?limit=500'),
+        apiFetch('/api/v1/uoms'),
+        apiFetch('/api/v1/departments'),
       ]);
       if (iRes.ok) setItems(await iRes.json());
       if (uRes.ok) setUoms(await uRes.json());
@@ -120,7 +121,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ currentRol
         lines: payloadLines,
       };
 
-      const res = await fetch(`/api/v1/physical-audits/?created_by=${currentRole}%20(${currentUserId})`, {
+      const res = await apiFetch(`/api/v1/physical-audits/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -143,10 +144,10 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ currentRol
 
   const handleAction = async (auditId: number, action: 'submit' | 'approve') => {
     try {
-      const res = await fetch(`/api/v1/physical-audits/${auditId}/${action}?actor_id=${currentRole}%20(${currentUserId})`, {
+      const res = await apiFetch(`/api/v1/physical-audits/${auditId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: `Action ${action} by ${currentRole}` }),
+        body: JSON.stringify({ comments: `Action ${action}` }),
       });
       if (res.ok) {
         fetchAudits();

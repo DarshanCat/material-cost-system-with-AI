@@ -40,5 +40,5 @@ class OpeningBalancePostRequest(BaseModel):
     baseline_date: date = Field(default_factory=lambda: date(2026, 10, 12))
     audit_reference: str = Field(..., min_length=3, description="Reference to approved physical inventory audit document")
     rows: List[OpeningBalanceItemRow]
-    approver_id: str
+    approver_id: Optional[str] = None  # ignored: overwritten server-side from the verified identity
     approver_comments: Optional[str] = None

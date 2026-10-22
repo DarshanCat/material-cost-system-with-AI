@@ -149,3 +149,9 @@ def test_excel_import_blocking_errors_prevent_commit(client: TestClient, db_sess
     assert summary["can_commit"] is False
     assert summary["error_rows_count"] == 1
     assert len(summary["findings"][0]["errors"]) >= 2
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

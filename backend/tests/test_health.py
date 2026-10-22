@@ -39,20 +39,20 @@ def test_health_with_mocked_disconnected_db(client: TestClient):
         assert data["database"]["status"] == "disconnected"
 
 
-def test_db_check_fails_clearly_when_database_unreachable(client: TestClient):
+def test_db_check_fails_clearly_when_database_unreachable(client: TestClient, admin_headers: dict):
     """Verify /db-check raises 503 with explicit error when database connection fails."""
     with patch("app.api.v1.endpoints.health.check_database_connection", return_value=(False, "Connection refused to PostgreSQL on localhost:5432")):
-        response = client.get("/api/v1/health/db-check")
+        response = client.get("/api/v1/health/db-check", headers=admin_headers)
         assert response.status_code == 503
         error_detail = response.json()["detail"]
         assert error_detail["error"] == "Database connectivity failed"
         assert "Connection refused" in error_detail["message"]
 
 
-def test_db_check_succeeds_when_database_reachable(client: TestClient):
+def test_db_check_succeeds_when_database_reachable(client: TestClient, admin_headers: dict):
     """Verify /db-check returns 200 when database connection is operational."""
     with patch("app.api.v1.endpoints.health.check_database_connection", return_value=(True, "Operational")):
-        response = client.get("/api/v1/health/db-check")
+        response = client.get("/api/v1/health/db-check", headers=admin_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "connected"

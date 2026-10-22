@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 import openpyxl
 import io
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.schemas.opening_balance import (
     OpeningBalanceItemRow,
@@ -26,7 +27,9 @@ router = APIRouter()
 
 
 @router.get("/template")
-def download_opening_balance_template():
+def download_opening_balance_template(
+    _user: AuthenticatedUser = Depends(require_permission(Permission.OPENING_BALANCE_POST)),
+):
     """Generates blank Excel template for opening balance data collection."""
     headers = ["Item Code", "Quantity", "UOM", "Baseline Date", "Notes"]
     wb = openpyxl.Workbook()
@@ -60,6 +63,7 @@ def preview_opening_balance_import(
     rows: List[OpeningBalanceItemRow],
     baseline_date: Optional[date] = Query(date(2026, 10, 12), description="Baseline date (strictly 2026-10-12)"),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.OPENING_BALANCE_POST)),
 ):
     """
     Validates proposed opening balances without writing to ledger.
@@ -72,9 +76,12 @@ def preview_opening_balance_import(
 def post_opening_balance_batch(
     payload: OpeningBalancePostRequest,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(require_permission(Permission.OPENING_BALANCE_POST)),
 ):
     """
     Atomically posts approved opening balances to the append-only stock ledger.
     """
+    # Acting user comes from the verified identity; any client-supplied approver_id is overwritten.
+    payload.approver_id = user.user_id
     result = post_approved_opening_balances(db, payload)
     return result

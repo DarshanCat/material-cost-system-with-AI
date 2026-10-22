@@ -8,6 +8,7 @@ import {
   Database
 } from 'lucide-react';
 import type { UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface OpeningBalanceViewProps {
   currentRole: UserRole;
@@ -69,7 +70,7 @@ export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentR
         };
       });
 
-      const res = await fetch(`/api/v1/opening-balances/preview?baseline_date=${baselineDate}`, {
+      const res = await apiFetch(`/api/v1/opening-balances/preview?baseline_date=${baselineDate}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rows),
@@ -114,7 +115,7 @@ export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentR
         approver_comments: approverComments || 'Approved opening stock baseline',
       };
 
-      const res = await fetch('/api/v1/opening-balances/post', {
+      const res = await apiFetch('/api/v1/opening-balances/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

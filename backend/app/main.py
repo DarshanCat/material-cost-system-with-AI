@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
+from app.core.auth import validate_security_configuration
 from app.api.v1.api import api_router
 
 # Configure basic logging
@@ -17,6 +18,7 @@ logger = logging.getLogger("vspl.main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_security_configuration()
     logger.info(
         f"Starting {settings.PROJECT_NAME} in [{settings.ENVIRONMENT}] mode "
         f"(Costing baseline start date: {settings.COSTING_START_DATE})"

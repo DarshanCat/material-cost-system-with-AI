@@ -10,13 +10,14 @@ import {
   RefreshCw
 } from 'lucide-react';
 import type { MaterialIssue, MaterialItem, UOM, Department, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface MaterialIssueViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ currentRole, currentUserId }) => {
+export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   const [issues, setIssues] = useState<MaterialIssue[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -48,7 +49,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ currentRol
   const fetchIssues = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/issues');
+      const res = await apiFetch('/api/v1/issues');
       if (res.ok) {
         const data = await res.json();
         setIssues(data);
@@ -63,9 +64,9 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ currentRol
   const fetchReferences = async () => {
     try {
       const [iRes, uRes, dRes] = await Promise.all([
-        fetch('/api/v1/items?limit=500'),
-        fetch('/api/v1/uoms'),
-        fetch('/api/v1/departments'),
+        apiFetch('/api/v1/items?limit=500'),
+        apiFetch('/api/v1/uoms'),
+        apiFetch('/api/v1/departments'),
       ]);
       if (iRes.ok) setItems(await iRes.json());
       if (uRes.ok) setUoms(await uRes.json());
@@ -126,7 +127,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ currentRol
         lines: payloadLines,
       };
 
-      const res = await fetch(`/api/v1/issues/?created_by=${currentRole}%20(${currentUserId})`, {
+      const res = await apiFetch(`/api/v1/issues/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -152,10 +153,10 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ currentRol
 
   const handleAction = async (issueId: number, action: 'submit' | 'approve' | 'cancel') => {
     try {
-      const res = await fetch(`/api/v1/issues/${issueId}/${action}?actor_id=${currentRole}`, {
+      const res = await apiFetch(`/api/v1/issues/${issueId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: `Action ${action} by ${currentRole}` }),
+        body: JSON.stringify({ comments: `Action ${action}` }),
       });
       if (res.ok) {
         fetchIssues();

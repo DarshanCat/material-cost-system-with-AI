@@ -5,6 +5,7 @@ import {
   Eye
 } from 'lucide-react';
 import type { StockBalance, StockLedgerEntry, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface LiveInventoryDashboardProps {
   currentRole: UserRole;
@@ -29,7 +30,7 @@ export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () 
       if (asOfDate) params.append('as_of_date', asOfDate);
       if (params.toString()) url += `?${params.toString()}`;
 
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
         setBalances(data);
@@ -49,7 +50,7 @@ export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () 
     setHistoryLoading(true);
     setSelectedItemName(`${itemCode} - ${itemName}`);
     try {
-      const res = await fetch(`/api/v1/ledger/entries?material_item_id=${itemId}&size=100`);
+      const res = await apiFetch(`/api/v1/ledger/entries?material_item_id=${itemId}&size=100`);
       if (res.ok) {
         const data = await res.json();
         setSelectedItemHistory(data.items);

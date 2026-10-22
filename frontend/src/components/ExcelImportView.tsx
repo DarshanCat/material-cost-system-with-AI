@@ -8,6 +8,7 @@ import {
   Database
 } from 'lucide-react';
 import type { UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface ExcelImportViewProps {
   currentRole: UserRole;
@@ -65,7 +66,7 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
       formData.append('import_type', importType);
       formData.append('file', file);
 
-      const res = await fetch('/api/v1/excel-import/validate', {
+      const res = await apiFetch('/api/v1/excel-import/validate', {
         method: 'POST',
         body: formData,
       });
@@ -95,7 +96,7 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
         created_by: `${currentRole} (${currentUserId})`,
       };
 
-      const res = await fetch('/api/v1/excel-import/commit', {
+      const res = await apiFetch('/api/v1/excel-import/commit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

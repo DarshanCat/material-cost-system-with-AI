@@ -19,6 +19,7 @@ import type {
   PaginatedResponse, 
   UserRole 
 } from '../types';
+import { apiFetch } from '../api/client';
 
 interface ItemRequestsViewProps {
   currentRole: UserRole;
@@ -67,7 +68,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
 
   // Load Reference Data (Departments and UOMs)
   useEffect(() => {
-    fetch('/api/v1/departments')
+    apiFetch('/api/v1/departments')
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         setDepartments(data);
@@ -75,7 +76,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
       })
       .catch(() => {});
 
-    fetch('/api/v1/uoms')
+    apiFetch('/api/v1/uoms')
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         setUoms(data);
@@ -94,7 +95,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
       params.append('page', String(page));
       params.append('size', String(pageSize));
 
-      const res = await fetch(`/api/v1/item-requests?${params.toString()}`);
+      const res = await apiFetch(`/api/v1/item-requests?${params.toString()}`);
       if (res.ok) {
         const data: PaginatedResponse<ItemRequest> = await res.json();
         setRequests(data.items);
@@ -117,8 +118,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
   const fetchPendingQueue = useCallback(async () => {
     if (currentRole !== 'Management' && currentRole !== 'Admin') return;
     try {
-      const res = await fetch('/api/v1/item-requests/pending', {
-        headers: { 'X-User-Role': currentRole },
+      const res = await apiFetch('/api/v1/item-requests/pending', {
       });
       if (res.ok) {
         const data: PaginatedResponse<ItemRequest> = await res.json();
@@ -165,12 +165,10 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
         justification: formJustification.trim(),
       };
 
-      const res = await fetch('/api/v1/item-requests', {
+      const res = await apiFetch('/api/v1/item-requests', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': currentUserId,
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify(payload),
       });
@@ -180,12 +178,8 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
 
         if (submitImmediately) {
           // Submit for review right away
-          const submitRes = await fetch(`/api/v1/item-requests/${createdReq.id}/submit`, {
+          const submitRes = await apiFetch(`/api/v1/item-requests/${createdReq.id}/submit`, {
             method: 'POST',
-            headers: {
-              'X-User-Id': currentUserId,
-              'X-User-Role': currentRole,
-            },
           });
           if (submitRes.ok) {
             setSuccessMsg(`Request ${createdReq.request_number} created and submitted for review.`);
@@ -217,12 +211,8 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
   // Submit Draft Action
   const handleSubmitDraft = async (reqId: number) => {
     try {
-      const res = await fetch(`/api/v1/item-requests/${reqId}/submit`, {
+      const res = await apiFetch(`/api/v1/item-requests/${reqId}/submit`, {
         method: 'POST',
-        headers: {
-          'X-User-Id': currentUserId,
-          'X-User-Role': currentRole,
-        },
       });
       if (res.ok) {
         setSuccessMsg('Request submitted for management review.');
@@ -241,12 +231,8 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
   const handleCancelRequest = async (reqId: number) => {
     if (!window.confirm('Are you sure you want to cancel this item request?')) return;
     try {
-      const res = await fetch(`/api/v1/item-requests/${reqId}/cancel`, {
+      const res = await apiFetch(`/api/v1/item-requests/${reqId}/cancel`, {
         method: 'POST',
-        headers: {
-          'X-User-Id': currentUserId,
-          'X-User-Role': currentRole,
-        },
       });
       if (res.ok) {
         setSuccessMsg('Request cancelled.');
@@ -274,12 +260,10 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
     setProcessingDecision(true);
     try {
       const endpoint = `/api/v1/item-requests/${decisionReq.id}/${decisionAction}`;
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-User-Id': currentUserId,
-          'X-User-Role': currentRole,
         },
         body: JSON.stringify({ comments: decisionComments.trim() }),
       });

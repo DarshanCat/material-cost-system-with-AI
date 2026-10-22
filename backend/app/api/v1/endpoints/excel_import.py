@@ -6,6 +6,7 @@ Provides template download, sheet upload validation preview, and atomic executio
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.schemas.excel_import import (
     ExcelImportValidationSummary,
@@ -21,7 +22,10 @@ router = APIRouter()
 
 
 @router.get("/template/{import_type}")
-def download_excel_template(import_type: str):
+def download_excel_template(
+    import_type: str,
+    _user: AuthenticatedUser = Depends(require_permission(Permission.EXCEL_IMPORT)),
+):
     """Downloads blank Excel template with headers and column formatting."""
     clean_type = import_type.upper()
     if clean_type not in ["GRN", "ISSUE", "WASTE"]:
@@ -44,6 +48,7 @@ async def validate_excel_upload(
     import_type: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.EXCEL_IMPORT)),
 ):
     """
     Validates uploaded Excel file without committing changes.
@@ -64,10 +69,13 @@ async def validate_excel_upload(
 def commit_validated_batch(
     payload: ExcelImportCommitRequest,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(require_permission(Permission.EXCEL_IMPORT)),
 ):
     """
     Commits validated rows atomically within a single transaction.
     """
+    # Acting user comes from the verified identity; any client-supplied created_by is overwritten.
+    payload.created_by = user.user_id
     try:
         result = commit_excel_import(payload, db)
         return result

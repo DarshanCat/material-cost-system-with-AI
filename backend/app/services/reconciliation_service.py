@@ -10,7 +10,7 @@ import json
 import re
 from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 from fastapi import HTTPException, status
 
 from app.models.heat import HeatHeader, HeatChargeLine, HeatChargeValidationStatus

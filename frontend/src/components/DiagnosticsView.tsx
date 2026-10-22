@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Server, Database, CheckCircle, XCircle, RefreshCw, Terminal } from 'lucide-react';
 import type { SystemHealthData } from '../types';
+import { apiFetch } from '../api/client';
 
 interface DiagnosticsViewProps {
   health: SystemHealthData | null;
@@ -20,7 +21,7 @@ export const DiagnosticsView: React.FC<DiagnosticsViewProps> = ({
     setCheckingStrict(true);
     setStrictCheckResult(null);
     try {
-      const res = await fetch('/api/v1/health/db-check');
+      const res = await apiFetch('/api/v1/health/db-check');
       const data = await res.json();
       if (res.ok) {
         setStrictCheckResult(`SUCCESS (HTTP 200): ${JSON.stringify(data, null, 2)}`);

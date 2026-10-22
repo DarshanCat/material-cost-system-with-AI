@@ -1,3 +1,4 @@
+from tests.auth_helpers import bearer
 """
 Tests for Material Description Alias Master.
 """
@@ -35,7 +36,7 @@ def test_alias_creation_and_resolution(client: TestClient, db_session: Session):
         "material_item_id": item.id,
         "status": "APPROVED",
     }
-    resp = client.post("/api/v1/material-aliases", json=payload, headers={"X-User-Role": "Stores", "X-User-Id": "usr_stores"})
+    resp = client.post("/api/v1/material-aliases", json=payload, headers=bearer("Stores"))
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["normalized_alias_key"] == "crc scrap low high mn"
@@ -81,7 +82,7 @@ def test_ambiguous_alias_collision_prevention(client: TestClient, db_session: Se
         "material_item_id": item1.id,
         "status": "APPROVED",
     }
-    resp1 = client.post("/api/v1/material-aliases", json=payload1, headers={"X-User-Role": "Stores", "X-User-Id": "usr_stores"})
+    resp1 = client.post("/api/v1/material-aliases", json=payload1, headers=bearer("Stores"))
     assert resp1.status_code == 201
 
     # Second mapping with same alias key to item2 must fail
@@ -90,7 +91,7 @@ def test_ambiguous_alias_collision_prevention(client: TestClient, db_session: Se
         "material_item_id": item2.id,
         "status": "APPROVED",
     }
-    resp2 = client.post("/api/v1/material-aliases", json=payload2, headers={"X-User-Role": "Stores", "X-User-Id": "usr_stores"})
+    resp2 = client.post("/api/v1/material-aliases", json=payload2, headers=bearer("Stores"))
     assert resp2.status_code == 409
     assert "Ambiguous multi-item aliases are prohibited" in resp2.json()["detail"]
 
@@ -125,7 +126,7 @@ def test_alias_rejection_requires_mandatory_comments(client: TestClient, db_sess
     resp_empty = client.post(
         f"/api/v1/material-aliases/{alias.id}/reject",
         json={"decision_notes": ""},
-        headers={"X-User-Role": "Management", "X-User-Id": "usr_mgmt"},
+        headers=bearer("Management"),
     )
     assert resp_empty.status_code == 422 or resp_empty.status_code == 400
 
@@ -133,7 +134,7 @@ def test_alias_rejection_requires_mandatory_comments(client: TestClient, db_sess
     resp_valid = client.post(
         f"/api/v1/material-aliases/{alias.id}/reject",
         json={"decision_notes": "Incorrect mesh size classification, please map to FeSi 70"},
-        headers={"X-User-Role": "Management", "X-User-Id": "usr_mgmt"},
+        headers=bearer("Management"),
     )
     assert resp_valid.status_code == 200
     assert resp_valid.json()["status"] == "REJECTED"

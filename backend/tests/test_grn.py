@@ -59,7 +59,7 @@ def test_grn_creation_and_approval_lifecycle(client: TestClient, db_session: Ses
         ],
     }
 
-    resp = client.post("/api/v1/grn/?created_by=StoresOfficer", json=payload)
+    resp = client.post("/api/v1/grn/", json=payload)
     assert resp.status_code == 201, resp.text
     data = resp.json()
     assert data["status"] == "DRAFT"
@@ -69,12 +69,12 @@ def test_grn_creation_and_approval_lifecycle(client: TestClient, db_session: Ses
     grn_id = data["id"]
 
     # 2. Submit GRN
-    sub_resp = client.post(f"/api/v1/grn/{grn_id}/submit?actor_id=StoresOfficer", json={"comments": "Checked physical delivery"})
+    sub_resp = client.post(f"/api/v1/grn/{grn_id}/submit", json={"comments": "Checked physical delivery"})
     assert sub_resp.status_code == 200
     assert sub_resp.json()["status"] == "SUBMITTED"
 
     # 3. Approve GRN
-    app_resp = client.post(f"/api/v1/grn/{grn_id}/approve?actor_id=PlantManager", json={"comments": "Approved for storage"})
+    app_resp = client.post(f"/api/v1/grn/{grn_id}/approve", json={"comments": "Approved for storage"})
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
     assert len(app_resp.json()["audit_logs"]) == 3  # CREATED, SUBMITTED, APPROVED
@@ -117,7 +117,7 @@ def test_grn_external_vendor_mandatory_rate_rule(client: TestClient, db_session:
         ],
     }
 
-    resp = client.post("/api/v1/grn/?created_by=StoresOfficer", json=payload)
+    resp = client.post("/api/v1/grn/", json=payload)
     assert resp.status_code == 422
     assert "requires rate per UOM" in resp.json()["detail"]
 
@@ -158,11 +158,17 @@ def test_grn_duplicate_invoice_warning_flag(client: TestClient, db_session: Sess
             }
         ],
     }
-    resp1 = client.post("/api/v1/grn/?created_by=StoresOfficer", json=payload1)
+    resp1 = client.post("/api/v1/grn/", json=payload1)
     assert resp1.status_code == 201
 
     # Second entry with identical vendor and invoice number -> creates with traceability warning
-    resp2 = client.post("/api/v1/grn/?created_by=StoresOfficer", json=payload1)
+    resp2 = client.post("/api/v1/grn/", json=payload1)
     assert resp2.status_code == 201
     assert len(resp2.json()["validation_warnings"]) > 0
     assert "Possible duplicate invoice" in resp2.json()["validation_warnings"][0]
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(admin_headers)

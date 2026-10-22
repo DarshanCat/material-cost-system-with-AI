@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.core.security import get_current_user_role, get_current_user_id
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.schemas.reconciliation import (
     ReconciliationRunRequest,
     ReconciliationRunRead,
@@ -36,21 +36,15 @@ router = APIRouter()
 def api_run_reconciliation(
     payload: ReconciliationRunRequest,
     db: Session = Depends(get_db),
-    current_role: str = Depends(get_current_user_role),
-    current_user_id: str = Depends(get_current_user_id),
+    user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_RECONCILE)),
 ):
     """
     Executes a new versioned three-pass reconciliation run.
     Restricted to Foundry, Management, Admin.
     """
-    if current_role not in ("Foundry", "Management", "Admin"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Role '{current_role}' is not authorized to trigger reconciliation",
-        )
     run = run_reconciliation(
         db=db,
-        created_by=current_user_id,
+        created_by=user.user_id,
         date_from=payload.date_from,
         date_to=payload.date_to,
         notes=payload.notes,
@@ -63,6 +57,7 @@ def api_list_reconciliation_runs(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_LOG_READ)),
 ):
     """Lists reconciliation runs with summary statistics."""
     items, _ = list_reconciliation_runs(db=db, limit=limit, offset=offset)
@@ -73,6 +68,7 @@ def api_list_reconciliation_runs(
 def api_get_reconciliation_run_detail(
     id: int,
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_LOG_READ)),
 ):
     """Retrieves full reconciliation run details with results, candidates, and exceptions."""
     run = get_reconciliation_run_detail(db, id)
@@ -89,22 +85,16 @@ def api_confirm_candidate_match(
     id: int,
     payload: CandidateMatchAction,
     db: Session = Depends(get_db),
-    current_role: str = Depends(get_current_user_role),
-    current_user_id: str = Depends(get_current_user_id),
+    user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_RECONCILE)),
 ):
     """
     Explicit human confirmation of an advisory fuzzy match candidate.
     Restricted to Foundry, Management, Admin.
     """
-    if current_role not in ("Foundry", "Management", "Admin"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Role '{current_role}' is not authorized to confirm match candidates",
-        )
     return confirm_candidate_match(
         db=db,
         candidate_id=id,
-        reviewer_id=current_user_id,
+        reviewer_id=user.user_id,
         comments=payload.comments,
     )
 
@@ -114,22 +104,16 @@ def api_reject_candidate_match(
     id: int,
     payload: CandidateMatchReject,
     db: Session = Depends(get_db),
-    current_role: str = Depends(get_current_user_role),
-    current_user_id: str = Depends(get_current_user_id),
+    user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_RECONCILE)),
 ):
     """
     Rejects an advisory candidate match. Comments mandatory.
     Restricted to Foundry, Management, Admin.
     """
-    if current_role not in ("Foundry", "Management", "Admin"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Role '{current_role}' is not authorized to reject match candidates",
-        )
     return reject_candidate_match(
         db=db,
         candidate_id=id,
-        reviewer_id=current_user_id,
+        reviewer_id=user.user_id,
         comments=payload.comments,
     )
 
@@ -139,22 +123,16 @@ def api_resolve_exception(
     id: int,
     payload: ExceptionResolutionRequest,
     db: Session = Depends(get_db),
-    current_role: str = Depends(get_current_user_role),
-    current_user_id: str = Depends(get_current_user_id),
+    user: AuthenticatedUser = Depends(require_permission(Permission.HEAT_EXCEPTION_RESOLVE)),
 ):
     """
     Resolves an open reconciliation exception.
     Restricted to Management and Admin roles.
     """
-    if current_role not in ("Management", "Admin"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Role '{current_role}' is not authorized to resolve reconciliation exceptions",
-        )
     return resolve_exception(
         db=db,
         exception_id=id,
-        resolver_id=current_user_id,
+        resolver_id=user.user_id,
         action=payload.action,
         comments=payload.comments,
     )

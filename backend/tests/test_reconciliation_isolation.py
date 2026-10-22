@@ -1,3 +1,4 @@
+from tests.auth_helpers import bearer
 """
 Non-Negotiable Inventory Rule Verification Tests.
 Proves that Phase 5 operations (Heat creation, charge logging, Excel import,
@@ -66,7 +67,7 @@ def test_heat_operations_strictly_isolated_from_stock_ledger(client: TestClient,
             }
         ]
     }
-    resp_heat = client.post("/api/v1/heats", json=heat_payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp_heat = client.post("/api/v1/heats", json=heat_payload, headers=bearer("Foundry"))
     assert resp_heat.status_code == 201
 
     # Check ledger: count MUST still be 0!
@@ -89,7 +90,7 @@ def test_heat_operations_strictly_isolated_from_stock_ledger(client: TestClient,
             }
         ]
     }
-    resp_import = client.post("/api/v1/heats/import/commit", json=import_payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp_import = client.post("/api/v1/heats/import/commit", json=import_payload, headers=bearer("Foundry"))
     assert resp_import.status_code == 201
 
     # Check ledger: count MUST still be 0!
@@ -101,7 +102,7 @@ def test_heat_operations_strictly_isolated_from_stock_ledger(client: TestClient,
         "date_from": "2026-10-20",
         "date_to": "2026-10-20",
     }
-    resp_recon = client.post("/api/v1/reconciliation/run", json=recon_payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp_recon = client.post("/api/v1/reconciliation/run", json=recon_payload, headers=bearer("Foundry"))
     assert resp_recon.status_code == 201
 
     # Check ledger: count MUST still be 0!

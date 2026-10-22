@@ -4,6 +4,9 @@ import type { UserRole, SystemHealthData } from '../types';
 interface HeaderProps {
   currentRole: UserRole;
   onRoleChange: (role: UserRole) => void;
+  /** True only when the backend offers development sign-in; otherwise no role can be chosen client-side. */
+  roleSelectorEnabled: boolean;
+  signedInAs?: string;
   health: SystemHealthData | null;
   loadingHealth: boolean;
   onRefreshHealth: () => void;
@@ -12,6 +15,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
   onRoleChange,
+  roleSelectorEnabled,
+  signedInAs,
   health,
   loadingHealth,
   onRefreshHealth,
@@ -48,9 +53,10 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        <div className="role-selector-container" title="Architectural Role Context (Backend RBAC Enforced)">
+        <div className="role-selector-container" title="Identity is verified by the server; the role below only requests a development sign-in">
           <User size={14} className="badge-icon text-muted" />
-          <span className="role-label">Active Role:</span>
+          <span className="role-label">{roleSelectorEnabled ? 'Dev sign-in as:' : 'Not signed in'}</span>
+          {roleSelectorEnabled && (
           <select 
             value={currentRole} 
             onChange={(e) => onRoleChange(e.target.value as UserRole)}
@@ -62,6 +68,8 @@ export const Header: React.FC<HeaderProps> = ({
             <option value="Management">Management</option>
             <option value="Admin">Admin</option>
           </select>
+          )}
+          {signedInAs && <span className="role-label" title="Verified by the server"> ({signedInAs})</span>}
         </div>
       </div>
     </header>

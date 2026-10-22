@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.schemas.issue import (
     MaterialIssueCreate,
@@ -80,10 +81,10 @@ def _serialize_issue(header: MaterialIssueHeader, warnings: Optional[List[str]] 
 @router.post("/", response_model=MaterialIssueResponse, status_code=status.HTTP_201_CREATED)
 def create_new_issue(
     payload: MaterialIssueCreate,
-    created_by: str = Query("Admin", description="User creating the issue slip"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_CREATE)),
     db: Session = Depends(get_db),
 ):
-    header, warnings = create_material_issue(db, payload, created_by)
+    header, warnings = create_material_issue(db, payload, user.user_id)
     return _serialize_issue(header, warnings)
 
 
@@ -97,6 +98,7 @@ def list_issues(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_READ)),
 ):
     query = select(MaterialIssueHeader).order_by(desc(MaterialIssueHeader.created_at))
     if status:
@@ -116,7 +118,11 @@ def list_issues(
 
 
 @router.get("/{issue_id}", response_model=MaterialIssueResponse)
-def get_issue_by_id(issue_id: int, db: Session = Depends(get_db)):
+def get_issue_by_id(
+    issue_id: int,
+    db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_READ)),
+):
     issue = db.get(MaterialIssueHeader, issue_id)
     if not issue:
         raise HTTPException(status_code=404, detail="Material issue slip not found")
@@ -127,10 +133,10 @@ def get_issue_by_id(issue_id: int, db: Session = Depends(get_db)):
 def submit_issue_action(
     issue_id: int,
     action: IssueStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_CREATE)),
     db: Session = Depends(get_db),
 ):
-    issue = submit_material_issue(db, issue_id, actor_id, action.comments)
+    issue = submit_material_issue(db, issue_id, user.user_id, action.comments)
     return _serialize_issue(issue)
 
 
@@ -138,10 +144,10 @@ def submit_issue_action(
 def approve_issue_action(
     issue_id: int,
     action: IssueStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_APPROVE)),
     db: Session = Depends(get_db),
 ):
-    issue = approve_material_issue(db, issue_id, actor_id, action.comments)
+    issue = approve_material_issue(db, issue_id, user.user_id, action.comments)
     return _serialize_issue(issue)
 
 
@@ -149,8 +155,8 @@ def approve_issue_action(
 def cancel_issue_action(
     issue_id: int,
     action: IssueStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_CREATE)),
     db: Session = Depends(get_db),
 ):
-    issue = cancel_material_issue(db, issue_id, actor_id, action.comments)
+    issue = cancel_material_issue(db, issue_id, user.user_id, action.comments)
     return _serialize_issue(issue)

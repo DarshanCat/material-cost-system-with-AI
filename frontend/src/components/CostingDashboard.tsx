@@ -7,6 +7,7 @@ import type {
   CostingRunSummary,
   CostingComparisonSummary,
 } from '../types';
+import { apiFetch } from '../api/client';
 
 interface CostingDashboardProps {
   currentRole: UserRole;
@@ -59,7 +60,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`/api/v1/costing/valuation?as_of_date=${dateStr}`);
+      const resp = await apiFetch(`/api/v1/costing/valuation/historical?as_of_date=${dateStr}`);
       if (!resp.ok) {
         const errData = await resp.json();
         throw new Error(errData.detail || 'Failed to fetch inventory valuation');
@@ -78,7 +79,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`/api/v1/costing/items/${itemId}/rate-history`);
+      const resp = await apiFetch(`/api/v1/costing/rates/history/${itemId}`);
       if (!resp.ok) {
         const errData = await resp.json();
         throw new Error(errData.detail || 'Failed to load rate evolution');
@@ -97,7 +98,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch('/api/v1/costing/heats');
+      const resp = await apiFetch('/api/v1/costing/heats');
       if (!resp.ok) {
         const errData = await resp.json();
         throw new Error(errData.detail || 'Failed to fetch heat costs');
@@ -116,7 +117,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch('/api/v1/costing/runs');
+      const resp = await apiFetch('/api/v1/costing/runs');
       if (!resp.ok) {
         const errData = await resp.json();
         throw new Error(errData.detail || 'Failed to fetch costing runs');
@@ -135,7 +136,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch('/api/v1/costing/exceptions');
+      const resp = await apiFetch('/api/v1/costing/exceptions');
       if (!resp.ok) {
         const errData = await resp.json();
         throw new Error(errData.detail || 'Failed to fetch exceptions');
@@ -159,7 +160,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setError(null);
     setSuccessMsg(null);
     try {
-      const resp = await fetch('/api/v1/costing/runs', {
+      const resp = await apiFetch('/api/v1/costing/runs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -195,7 +196,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(
+      const resp = await apiFetch(
         `/api/v1/costing/runs/compare?run_id_1=${compareRun1Id}&run_id_2=${compareRun2Id}`
       );
       if (!resp.ok) {

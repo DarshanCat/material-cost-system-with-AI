@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.schemas.grn import (
     GRNCreate,
@@ -78,10 +79,10 @@ def _serialize_grn(header: GRNHeader, warnings: Optional[List[str]] = None) -> G
 @router.post("/", response_model=GRNResponse, status_code=status.HTTP_201_CREATED)
 def create_new_grn(
     payload: GRNCreate,
-    created_by: str = Query("Admin", description="User creating the GRN"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_CREATE)),
     db: Session = Depends(get_db),
 ):
-    header, warnings = create_grn(db, payload, created_by)
+    header, warnings = create_grn(db, payload, user.user_id)
     return _serialize_grn(header, warnings)
 
 
@@ -94,6 +95,7 @@ def list_grns(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_READ)),
 ):
     query = select(GRNHeader).order_by(desc(GRNHeader.created_at))
     if status:
@@ -111,7 +113,11 @@ def list_grns(
 
 
 @router.get("/{grn_id}", response_model=GRNResponse)
-def get_grn_by_id(grn_id: int, db: Session = Depends(get_db)):
+def get_grn_by_id(
+    grn_id: int,
+    db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_READ)),
+):
     grn = db.get(GRNHeader, grn_id)
     if not grn:
         from fastapi import HTTPException
@@ -123,10 +129,10 @@ def get_grn_by_id(grn_id: int, db: Session = Depends(get_db)):
 def submit_grn_action(
     grn_id: int,
     action: GRNStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_CREATE)),
     db: Session = Depends(get_db),
 ):
-    grn = submit_grn(db, grn_id, actor_id, action.comments)
+    grn = submit_grn(db, grn_id, user.user_id, action.comments)
     return _serialize_grn(grn)
 
 
@@ -134,10 +140,10 @@ def submit_grn_action(
 def approve_grn_action(
     grn_id: int,
     action: GRNStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_APPROVE)),
     db: Session = Depends(get_db),
 ):
-    grn = approve_grn(db, grn_id, actor_id, action.comments)
+    grn = approve_grn(db, grn_id, user.user_id, action.comments)
     return _serialize_grn(grn)
 
 
@@ -145,8 +151,8 @@ def approve_grn_action(
 def cancel_grn_action(
     grn_id: int,
     action: GRNStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_CREATE)),
     db: Session = Depends(get_db),
 ):
-    grn = cancel_grn(db, grn_id, actor_id, action.comments)
+    grn = cancel_grn(db, grn_id, user.user_id, action.comments)
     return _serialize_grn(grn)

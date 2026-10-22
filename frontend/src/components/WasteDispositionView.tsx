@@ -8,13 +8,14 @@ import {
   RefreshCw
 } from 'lucide-react';
 import type { WasteDisposition, MaterialItem, UOM, Department, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface WasteDispositionViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const WasteDispositionView: React.FC<WasteDispositionViewProps> = ({ currentRole, currentUserId }) => {
+export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
   const [wastes, setWastes] = useState<WasteDisposition[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -46,7 +47,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = ({ curr
   const fetchWastes = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/waste');
+      const res = await apiFetch('/api/v1/waste');
       if (res.ok) {
         const data = await res.json();
         setWastes(data);
@@ -61,9 +62,9 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = ({ curr
   const fetchReferences = async () => {
     try {
       const [iRes, uRes, dRes] = await Promise.all([
-        fetch('/api/v1/items?limit=500'),
-        fetch('/api/v1/uoms'),
-        fetch('/api/v1/departments'),
+        apiFetch('/api/v1/items?limit=500'),
+        apiFetch('/api/v1/uoms'),
+        apiFetch('/api/v1/departments'),
       ]);
       if (iRes.ok) setItems(await iRes.json());
       if (uRes.ok) setUoms(await uRes.json());
@@ -124,7 +125,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = ({ curr
         lines: payloadLines,
       };
 
-      const res = await fetch(`/api/v1/waste/?created_by=${currentRole}%20(${currentUserId})`, {
+      const res = await apiFetch(`/api/v1/waste/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -147,10 +148,10 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = ({ curr
 
   const handleAction = async (wasteId: number, action: 'submit' | 'approve') => {
     try {
-      const res = await fetch(`/api/v1/waste/${wasteId}/${action}?actor_id=${currentRole}`, {
+      const res = await apiFetch(`/api/v1/waste/${wasteId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: `Action ${action} by ${currentRole}` }),
+        body: JSON.stringify({ comments: `Action ${action}` }),
       });
       if (res.ok) {
         fetchWastes();

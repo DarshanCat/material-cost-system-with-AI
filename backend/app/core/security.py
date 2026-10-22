@@ -1,28 +1,29 @@
 """
-VSPL Security & RBAC Architectural Foundation.
+VSPL Security & RBAC Foundation.
 
 Role-Based Access Control (RBAC) Specification:
 - Stores: Material receipts (GRNs), material issues, scrap/waste logs, physical stock audit entries.
 - Foundry: Heat logs, charge detail logging, issue-to-heat reconciliation view, foundry inventory view.
 - Purchase: Vendor master management, purchase rates verification, PO tracking.
-- Management: Costing reports, variance analysis, executive dashboards, inventory valuation, item approval.
+- Management: Costing reports, variance analysis, executive dashboards, inventory valuation, approvals.
 - Admin: User lifecycle, role assignments, master approval requests, system audit logs.
 
-CRITICAL ARCHITECTURAL DIRECTIVE:
-Frontend route hiding is NOT security. Backend route and service dependencies
-must enforce authentication tokens and role permission scopes at the API layer.
-No hardcoded credentials or bypass backdoors are permitted.
+IDENTITY MODEL (Security Hardening Sprint 1):
+Identity is established ONLY by a server-verified credential (`Authorization: Bearer <token>`),
+checked by the configured `AuthProvider` (see `app/core/auth.py`). Client-supplied `X-User-*`
+headers, query parameters and request bodies never establish identity or role.
+- Missing / invalid / expired credential  -> HTTP 401.
+- Verified identity whose role is unknown -> HTTP 401 (a role is never defaulted).
+- Verified identity lacking a permission  -> HTTP 403.
+- With no provider configured (AUTH_PROVIDER=none, the default) every protected route returns 401.
 
-NOTE ON CURRENT AUTHENTICATION STATUS (PHASE 2):
-Production authentication (JWT / SSO / LDAP) is scheduled for Phase 8.
-For Phase 2 development and testing, an explicit Development User Context (`DevUserContext`)
-is extracted from HTTP headers (`X-User-Id`, `X-User-Role`, `X-User-Department`).
-THIS IS NOT PRODUCTION-SECURE AND MUST NEVER BE DEPLOYED TO PRODUCTION WITHOUT PHASE 8 AUTH.
+The production authentication mechanism (JWT / Entra ID / session) is NOT yet approved by the
+IT Head. See docs/security/AUTHENTICATION_INTEGRATION.md for what is needed to plug it in.
 """
 
 from enum import Enum
 from typing import Set, Optional
-from fastapi import Header, HTTPException, status, Depends
+from fastapi import Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 
@@ -38,9 +39,14 @@ class Permission(str, Enum):
     # Material Entry
     RECEIPT_CREATE = "receipt:create"
     RECEIPT_READ = "receipt:read"
+    RECEIPT_APPROVE = "receipt:approve"
     ISSUE_CREATE = "issue:create"
     ISSUE_READ = "issue:read"
+    ISSUE_APPROVE = "issue:approve"
     WASTE_LOG = "waste:log"
+    WASTE_READ = "waste:read"
+    WASTE_APPROVE = "waste:approve"
+    EXCEL_IMPORT = "excel:import"
 
     # Master Data & Requests
     ITEM_READ = "item:read"
@@ -56,15 +62,22 @@ class Permission(str, Enum):
     VENDOR_MANAGE = "vendor:manage"
     DEPARTMENT_READ = "department:read"
     UOM_READ = "uom:read"
+    ALIAS_CREATE = "alias:create"
+    ALIAS_APPROVE = "alias:approve"
+    ALIAS_DEACTIVATE = "alias:deactivate"
 
     # Inventory Ledger
     LEDGER_READ = "ledger:read"
+    LEDGER_REVERSE = "ledger:reverse"
     STOCK_ADJUST = "stock:adjust"
+    STOCK_AUDIT_APPROVE = "stock_audit:approve"
+    OPENING_BALANCE_POST = "opening_balance:post"
 
     # Heat Reconciliation
     HEAT_LOG_CREATE = "heat_log:create"
     HEAT_LOG_READ = "heat_log:read"
     HEAT_RECONCILE = "heat:reconcile"
+    HEAT_EXCEPTION_RESOLVE = "heat:exception_resolve"
 
     # Costing & Financials
     COSTING_READ = "costing:read"
@@ -75,7 +88,12 @@ class Permission(str, Enum):
     USER_MANAGE = "user:manage"
 
 
-# Role-to-Permissions Mapping matrix
+# Role-to-Permissions Mapping matrix.
+# PROVISIONAL (needs Plant Head / Management sign-off, backlog SW-02): the approve / reverse /
+# opening-balance / import grants below were not defined in the repository's business rules.
+# They follow the only stated rules (Rule L8: physical-audit approval by Management or Admin;
+# Rule L5: reversal by an "authorized supervisor") and otherwise keep the narrowest role set
+# that still lets each module work. Admin holds every permission.
 ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
     UserRole.STORES: {
         Permission.RECEIPT_CREATE,
@@ -83,6 +101,8 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.ISSUE_CREATE,
         Permission.ISSUE_READ,
         Permission.WASTE_LOG,
+        Permission.WASTE_READ,
+        Permission.EXCEL_IMPORT,
         Permission.LEDGER_READ,
         Permission.STOCK_ADJUST,
         Permission.ITEM_READ,
@@ -93,6 +113,9 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.VENDOR_READ,
         Permission.DEPARTMENT_READ,
         Permission.UOM_READ,
+        Permission.ALIAS_CREATE,
+        Permission.ALIAS_DEACTIVATE,
+        Permission.HEAT_LOG_READ,
     },
     UserRole.FOUNDRY: {
         Permission.HEAT_LOG_CREATE,
@@ -107,6 +130,7 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.ITEM_REQUEST_READ,
         Permission.DEPARTMENT_READ,
         Permission.UOM_READ,
+        Permission.ALIAS_CREATE,
     },
     UserRole.PURCHASE: {
         Permission.VENDOR_MANAGE,
@@ -123,9 +147,18 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
     },
     UserRole.MANAGEMENT: {
         Permission.RECEIPT_READ,
+        Permission.RECEIPT_APPROVE,
         Permission.ISSUE_READ,
+        Permission.ISSUE_APPROVE,
+        Permission.WASTE_READ,
+        Permission.WASTE_APPROVE,
         Permission.LEDGER_READ,
+        Permission.LEDGER_REVERSE,
+        Permission.STOCK_AUDIT_APPROVE,
+        Permission.HEAT_LOG_CREATE,
         Permission.HEAT_LOG_READ,
+        Permission.HEAT_RECONCILE,
+        Permission.HEAT_EXCEPTION_RESOLVE,
         Permission.COSTING_READ,
         Permission.COSTING_CALCULATE,
         Permission.AUDIT_READ,
@@ -139,47 +172,55 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.VENDOR_READ,
         Permission.DEPARTMENT_READ,
         Permission.UOM_READ,
+        Permission.ALIAS_CREATE,
+        Permission.ALIAS_APPROVE,
+        Permission.ALIAS_DEACTIVATE,
     },
     UserRole.ADMIN: set(Permission),  # All permissions
 }
 
 
-class DevUserContext(BaseModel):
+class AuthenticatedUser(BaseModel):
     """
-    Explicit Development & Testing User Context.
-    Identifies the actor during Phase 2 development.
+    Verified identity of the caller, produced only by an AuthProvider.
+    Never construct this from request headers, query parameters or bodies.
     """
     user_id: str
     role: UserRole
     department: str
 
 
-def get_current_user_context(
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-    x_user_role: Optional[str] = Header(None, alias="X-User-Role"),
-    x_user_department: Optional[str] = Header(None, alias="X-User-Department"),
-) -> DevUserContext:
-    """
-    FastAPI dependency extracting the user context from request headers for local development.
-    Defaults to an operational Stores user if headers are omitted in dev mode.
-    """
-    user_id = x_user_id or "dev_stores_user"
-    role_str = x_user_role or UserRole.STORES.value
-    department = x_user_department or "General/Stores"
+# Backward-compatible name used by services and endpoints.
+DevUserContext = AuthenticatedUser
 
-    try:
-        role = UserRole(role_str)
-    except ValueError:
-        role = UserRole.STORES
 
-    return DevUserContext(user_id=user_id, role=role, department=department)
+def _unauthorized(detail: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def get_current_user_context(request: Request) -> AuthenticatedUser:
+    """
+    FastAPI dependency returning the verified caller, or raising 401.
+    Delegates to the configured AuthProvider; fails closed when none is configured.
+    """
+    # Imported lazily: auth.py imports UserRole/AuthenticatedUser from this module.
+    from app.core.auth import get_auth_provider
+
+    user: Optional[AuthenticatedUser] = get_auth_provider().authenticate(request)
+    if user is None:
+        raise _unauthorized("Authentication required: missing, invalid or expired credentials.")
+    return user
 
 
 def require_permission(required_permission: Permission):
     """
-    Dependency generator enforcing granular backend authorization based on user role.
+    Dependency generator enforcing authentication (401) and granular authorization (403).
     """
-    def permission_checker(user: DevUserContext = Depends(get_current_user_context)) -> DevUserContext:
+    def permission_checker(user: AuthenticatedUser = Depends(get_current_user_context)) -> AuthenticatedUser:
         user_permissions = ROLE_PERMISSIONS.get(user.role, set())
         if required_permission not in user_permissions:
             raise HTTPException(
@@ -191,12 +232,11 @@ def require_permission(required_permission: Permission):
     return permission_checker
 
 
-def get_current_user_role(context: DevUserContext = Depends(get_current_user_context)) -> str:
-    """Helper dependency returning current user role string."""
+def get_current_user_role(context: AuthenticatedUser = Depends(get_current_user_context)) -> str:
+    """Helper dependency returning the verified role string."""
     return context.role.value
 
 
-def get_current_user_id(context: DevUserContext = Depends(get_current_user_context)) -> str:
-    """Helper dependency returning current user id string."""
+def get_current_user_id(context: AuthenticatedUser = Depends(get_current_user_context)) -> str:
+    """Helper dependency returning the verified user id string."""
     return context.user_id
-

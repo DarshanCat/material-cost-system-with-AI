@@ -9,13 +9,14 @@ import {
   RefreshCw
 } from 'lucide-react';
 import type { GRN, MaterialItem, UOM, Vendor, UserRole } from '../types';
+import { apiFetch } from '../api/client';
 
 interface GRNManagementViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const GRNManagementView: React.FC<GRNManagementViewProps> = ({ currentRole, currentUserId }) => {
+export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
   const [grns, setGrns] = useState<GRN[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [items, setItems] = useState<MaterialItem[]>([]);
@@ -50,7 +51,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = ({ currentRol
   const fetchGRNs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/grn');
+      const res = await apiFetch('/api/v1/grn');
       if (res.ok) {
         const data = await res.json();
         setGrns(data);
@@ -65,9 +66,9 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = ({ currentRol
   const fetchReferences = async () => {
     try {
       const [iRes, uRes, vRes] = await Promise.all([
-        fetch('/api/v1/items?limit=500'),
-        fetch('/api/v1/uoms'),
-        fetch('/api/v1/vendors?size=200'),
+        apiFetch('/api/v1/items?limit=500'),
+        apiFetch('/api/v1/uoms'),
+        apiFetch('/api/v1/vendors?size=200'),
       ]);
       if (iRes.ok) setItems(await iRes.json());
       if (uRes.ok) setUoms(await uRes.json());
@@ -136,7 +137,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = ({ currentRol
         lines: payloadLines,
       };
 
-      const res = await fetch(`/api/v1/grn/?created_by=${currentRole}%20(${currentUserId})`, {
+      const res = await apiFetch(`/api/v1/grn/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -163,10 +164,10 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = ({ currentRol
 
   const handleAction = async (grnId: number, action: 'submit' | 'approve' | 'cancel') => {
     try {
-      const res = await fetch(`/api/v1/grn/${grnId}/${action}?actor_id=${currentRole}`, {
+      const res = await apiFetch(`/api/v1/grn/${grnId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: `Action ${action} by ${currentRole}` }),
+        body: JSON.stringify({ comments: `Action ${action}` }),
       });
       if (res.ok) {
         fetchGRNs();

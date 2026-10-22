@@ -1,3 +1,4 @@
+from tests.auth_helpers import bearer
 """
 Tests for Induction Furnace Heat Log and charge details.
 """
@@ -64,7 +65,7 @@ def test_heat_creation_and_normalization(client: TestClient, db_session: Session
         ]
     }
 
-    resp = client.post("/api/v1/heats", json=payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp = client.post("/api/v1/heats", json=payload, headers=bearer("Foundry"))
     assert resp.status_code == 201, resp.text
     data = resp.json()
 
@@ -93,11 +94,11 @@ def test_duplicate_heat_prevention(client: TestClient, db_session: Session):
         ]
     }
 
-    resp1 = client.post("/api/v1/heats", json=payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp1 = client.post("/api/v1/heats", json=payload, headers=bearer("Foundry"))
     assert resp1.status_code == 201
 
     # Exact duplicate
-    resp2 = client.post("/api/v1/heats", json=payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp2 = client.post("/api/v1/heats", json=payload, headers=bearer("Foundry"))
     assert resp2.status_code == 409
 
     # Normalized collision without prefix: '102603-3722' resolves to 'H-102603-3722'
@@ -112,7 +113,7 @@ def test_duplicate_heat_prevention(client: TestClient, db_session: Session):
             }
         ]
     }
-    resp3 = client.post("/api/v1/heats", json=payload_colliding, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp3 = client.post("/api/v1/heats", json=payload_colliding, headers=bearer("Foundry"))
     assert resp3.status_code == 409
 
 
@@ -132,5 +133,5 @@ def test_heat_charge_positive_quantity_enforcement(client: TestClient, db_sessio
         ]
     }
 
-    resp = client.post("/api/v1/heats", json=payload, headers={"X-User-Role": "Foundry", "X-User-Id": "usr_fdy"})
+    resp = client.post("/api/v1/heats", json=payload, headers=bearer("Foundry"))
     assert resp.status_code == 422

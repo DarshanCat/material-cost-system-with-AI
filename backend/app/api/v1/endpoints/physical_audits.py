@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 
+from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
 from app.models.physical_audit import PhysicalAuditHeader
 from app.schemas.physical_audit import (
@@ -78,10 +79,10 @@ def _serialize_audit(audit: PhysicalAuditHeader) -> PhysicalAuditResponse:
 @router.post("/", response_model=PhysicalAuditResponse, status_code=status.HTTP_201_CREATED)
 def create_new_physical_audit(
     payload: PhysicalAuditCreate,
-    created_by: str = Query("Admin", description="User recording physical count"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.STOCK_ADJUST)),
     db: Session = Depends(get_db),
 ):
-    audit = create_physical_audit(db, payload, created_by)
+    audit = create_physical_audit(db, payload, user.user_id)
     return _serialize_audit(audit)
 
 
@@ -94,6 +95,7 @@ def list_physical_audits(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
 ):
     query = select(PhysicalAuditHeader).order_by(desc(PhysicalAuditHeader.created_at))
     if status:
@@ -110,7 +112,11 @@ def list_physical_audits(
 
 
 @router.get("/{audit_id}", response_model=PhysicalAuditResponse)
-def get_physical_audit_by_id(audit_id: int, db: Session = Depends(get_db)):
+def get_physical_audit_by_id(
+    audit_id: int,
+    db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
+):
     audit = db.get(PhysicalAuditHeader, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Physical audit record not found.")
@@ -121,10 +127,10 @@ def get_physical_audit_by_id(audit_id: int, db: Session = Depends(get_db)):
 def submit_physical_audit_action(
     audit_id: int,
     action: PhysicalAuditStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.STOCK_ADJUST)),
     db: Session = Depends(get_db),
 ):
-    audit = submit_physical_audit(db, audit_id, actor_id, action.comments)
+    audit = submit_physical_audit(db, audit_id, user.user_id, action.comments)
     return _serialize_audit(audit)
 
 
@@ -132,8 +138,8 @@ def submit_physical_audit_action(
 def approve_physical_audit_action(
     audit_id: int,
     action: PhysicalAuditStatusAction,
-    actor_id: str = Query("Admin"),
+    user: AuthenticatedUser = Depends(require_permission(Permission.STOCK_AUDIT_APPROVE)),
     db: Session = Depends(get_db),
 ):
-    audit = approve_physical_audit(db, audit_id, actor_id, action.comments)
+    audit = approve_physical_audit(db, audit_id, user.user_id, action.comments)
     return _serialize_audit(audit)
