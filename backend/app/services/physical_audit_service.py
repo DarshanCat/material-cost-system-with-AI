@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
+from app.services.maker_checker import enforce_maker_checker, PHYSICAL_AUDIT
+from app.services.posting_guard import ledger_write_guard
 from app.models.physical_audit import (
     PhysicalAuditHeader,
     PhysicalAuditLine,
@@ -142,12 +144,23 @@ def approve_physical_audit(
     actor_id: str,
     comments: Optional[str] = None,
 ) -> PhysicalAuditHeader:
+    with ledger_write_guard(db):
+        return _approve_physical_audit(db, audit_id, actor_id, comments)
+
+
+def _approve_physical_audit(
+    db: Session,
+    audit_id: int,
+    actor_id: str,
+    comments: Optional[str] = None,
+) -> PhysicalAuditHeader:
     """
     Approves physical audit and atomically posts variance adjustment entries to stock ledger.
     """
-    audit = db.get(PhysicalAuditHeader, audit_id)
+    audit = db.get(PhysicalAuditHeader, audit_id, with_for_update=True)
     if not audit:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Physical audit not found.")
+    enforce_maker_checker(PHYSICAL_AUDIT, audit.created_by, actor_id, f"physical audit {audit.audit_number}")
     if audit.status != AuditStatus.SUBMITTED.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -16,7 +16,7 @@ from app.models.item import MaterialItem
 from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
 
 
-def test_physical_audit_variance_and_adjustment_posting(client: TestClient, db_session: Session):
+def test_physical_audit_variance_and_adjustment_posting(client: TestClient, db_session: Session, management_headers: dict):
     dept = db_session.query(Department).filter_by(code="FDY").first()
     uom = db_session.query(UOM).filter_by(code="KG").first()
 
@@ -80,7 +80,7 @@ def test_physical_audit_variance_and_adjustment_posting(client: TestClient, db_s
     assert sub_resp.status_code == 200
 
     # 3. Approve -> Posts adjustment to ledger
-    app_resp = client.post(f"/api/v1/physical-audits/{audit_id}/approve", json={"comments": "Variance approved"})
+    app_resp = client.post(f"/api/v1/physical-audits/{audit_id}/approve", json={"comments": "Variance approved"}, headers=management_headers)
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
 

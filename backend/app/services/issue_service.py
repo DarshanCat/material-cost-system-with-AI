@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
+from app.services.maker_checker import enforce_maker_checker, ISSUE
+from app.services.posting_guard import ledger_write_guard
 from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueAuditLog, IssueStatus
 from app.models.department import Department
 from app.models.item import MaterialItem
@@ -141,9 +143,15 @@ def submit_material_issue(db: Session, issue_id: int, actor_id: str, comments: O
 
 
 def approve_material_issue(db: Session, issue_id: int, actor_id: str, comments: Optional[str] = None) -> MaterialIssueHeader:
-    issue = db.get(MaterialIssueHeader, issue_id)
+    with ledger_write_guard(db):
+        return _approve_material_issue(db, issue_id, actor_id, comments)
+
+
+def _approve_material_issue(db: Session, issue_id: int, actor_id: str, comments: Optional[str] = None) -> MaterialIssueHeader:
+    issue = db.get(MaterialIssueHeader, issue_id, with_for_update=True)
     if not issue:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Issue slip not found.")
+    enforce_maker_checker(ISSUE, issue.created_by, actor_id, f"issue slip {issue.issue_slip_number}")
     if issue.status != IssueStatus.SUBMITTED.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

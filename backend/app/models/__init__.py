@@ -129,3 +129,8 @@ __all__ = [
     "PartCostStatus",
     "CostingRunStatus",
 ]
+
+# Append-only protection for the stock ledger (ORM guard + SQLite triggers); see app/db/ledger_guard.py
+from app.db.ledger_guard import install_ledger_guard  # noqa: E402
+
+install_ledger_guard()

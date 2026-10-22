@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
+from app.services.maker_checker import enforce_maker_checker, GRN
+from app.services.posting_guard import ledger_write_guard
 from app.models.grn import GRNHeader, GRNLineItem, GRNAuditLog, GRNStatus, GRNSourceType
 from app.models.vendor import Vendor
 from app.models.item import MaterialItem
@@ -169,9 +171,15 @@ def submit_grn(db: Session, grn_id: int, actor_id: str, comments: Optional[str] 
 
 
 def approve_grn(db: Session, grn_id: int, actor_id: str, comments: Optional[str] = None) -> GRNHeader:
-    grn = db.get(GRNHeader, grn_id)
+    with ledger_write_guard(db):
+        return _approve_grn(db, grn_id, actor_id, comments)
+
+
+def _approve_grn(db: Session, grn_id: int, actor_id: str, comments: Optional[str] = None) -> GRNHeader:
+    grn = db.get(GRNHeader, grn_id, with_for_update=True)
     if not grn:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="GRN not found.")
+    enforce_maker_checker(GRN, grn.created_by, actor_id, f"GRN {grn.grn_number}")
     if grn.status != GRNStatus.SUBMITTED.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

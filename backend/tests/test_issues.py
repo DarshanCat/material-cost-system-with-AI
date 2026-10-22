@@ -14,7 +14,7 @@ from app.models.uom import UOM
 from app.models.item import MaterialItem
 
 
-def test_material_issue_workflow_and_heat_reference(client: TestClient, db_session: Session):
+def test_material_issue_workflow_and_heat_reference(client: TestClient, db_session: Session, management_headers: dict):
     dept_fdy = db_session.query(Department).filter_by(code="FDY").first()
     dept_ms = db_session.query(Department).filter_by(code="MSP").first()
     uom_kg = db_session.query(UOM).filter_by(code="KG").first()
@@ -80,7 +80,7 @@ def test_material_issue_workflow_and_heat_reference(client: TestClient, db_sessi
     assert sub_resp.json()["status"] == "SUBMITTED"
 
     # 3. Approve issue slip
-    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={})
+    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={}, headers=management_headers)
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
 

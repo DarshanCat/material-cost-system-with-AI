@@ -14,7 +14,7 @@ from app.models.item import MaterialItem
 from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
 
 
-def test_issue_approval_blocked_on_uninitialized_stock(client: TestClient, db_session: Session):
+def test_issue_approval_blocked_on_uninitialized_stock(client: TestClient, db_session: Session, management_headers: dict):
     dept_fdy = db_session.query(Department).filter_by(code="FDY").first()
     dept_ms = db_session.query(Department).filter_by(code="MSP").first()
     uom_kg = db_session.query(UOM).filter_by(code="KG").first()
@@ -51,12 +51,12 @@ def test_issue_approval_blocked_on_uninitialized_stock(client: TestClient, db_se
     client.post(f"/api/v1/issues/{issue_id}/submit", json={})
 
     # Approving must fail because stock is uninitialized!
-    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={})
+    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={}, headers=management_headers)
     assert app_resp.status_code == 409
     assert "Stock baseline has not been initialized" in app_resp.json()["detail"]
 
 
-def test_issue_approval_blocked_on_insufficient_stock(client: TestClient, db_session: Session):
+def test_issue_approval_blocked_on_insufficient_stock(client: TestClient, db_session: Session, management_headers: dict):
     dept_fdy = db_session.query(Department).filter_by(code="FDY").first()
     dept_ms = db_session.query(Department).filter_by(code="MSP").first()
     uom_kg = db_session.query(UOM).filter_by(code="KG").first()
@@ -110,7 +110,7 @@ def test_issue_approval_blocked_on_insufficient_stock(client: TestClient, db_ses
     client.post(f"/api/v1/issues/{issue_id}/submit", json={})
 
     # Approval must be rejected with 409 Conflict
-    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={})
+    app_resp = client.post(f"/api/v1/issues/{issue_id}/approve", json={}, headers=management_headers)
     assert app_resp.status_code == 409
     assert "Insufficient inventory" in app_resp.json()["detail"]
 

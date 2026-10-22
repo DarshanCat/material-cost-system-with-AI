@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from fastapi import HTTPException, status
 
+from app.services.posting_guard import ledger_write_guard
 from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
 from app.models.item import MaterialItem
 from app.models.uom import UOM
@@ -104,6 +105,14 @@ def preview_opening_balances(
 
 
 def post_approved_opening_balances(
+    db: Session,
+    request: OpeningBalancePostRequest,
+) -> Dict[str, Any]:
+    with ledger_write_guard(db):
+        return _post_approved_opening_balances(db, request)
+
+
+def _post_approved_opening_balances(
     db: Session,
     request: OpeningBalancePostRequest,
 ) -> Dict[str, Any]:

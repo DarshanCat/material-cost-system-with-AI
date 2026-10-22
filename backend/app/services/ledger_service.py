@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func, and_, desc
 from fastapi import HTTPException, status
 
+from app.services.posting_guard import ledger_write_guard
 from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
 from app.models.item import MaterialItem
 from app.models.uom import UOM
@@ -324,12 +325,23 @@ def reverse_stock_ledger_entry(
     reason: str,
     actor_id: str,
 ) -> StockLedgerEntry:
+    with ledger_write_guard(db):
+        return _reverse_stock_ledger_entry(db, entry_id, reason, actor_id)
+
+
+def _reverse_stock_ledger_entry(
+    db: Session,
+    entry_id: int,
+    reason: str,
+    actor_id: str,
+) -> StockLedgerEntry:
     """
     Creates a compensating REVERSAL entry with opposite sign.
     Guarantees original entry is never deleted or updated.
     Prevents duplicate reversal of the same entry.
     """
-    original = db.get(StockLedgerEntry, entry_id)
+    # Lock the original row so concurrent reversal requests serialise (effective on PostgreSQL only).
+    original = db.get(StockLedgerEntry, entry_id, with_for_update=True)
     if not original:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ledger entry not found.")
 

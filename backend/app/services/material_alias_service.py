@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func, and_
 from fastapi import HTTPException, status
 
+from app.services.maker_checker import enforce_maker_checker, ALIAS
+from app.services.posting_guard import ledger_write_guard
 from app.models.material_alias import MaterialAlias, MaterialAliasAuditLog, AliasApprovalStatus
 from app.models.item import MaterialItem
 from app.services.validators import normalize_alias_key
@@ -110,17 +112,28 @@ def approve_material_alias(
     reviewer_id: str,
     comments: Optional[str] = None,
 ) -> MaterialAlias:
+    with ledger_write_guard(db):
+        return _approve_material_alias(db, alias_id, reviewer_id, comments)
+
+
+def _approve_material_alias(
+    db: Session,
+    alias_id: int,
+    reviewer_id: str,
+    comments: Optional[str] = None,
+) -> MaterialAlias:
     """
     Approves a pending alias mapping.
     """
     alias = db.execute(
-        select(MaterialAlias).where(MaterialAlias.id == alias_id)
+        select(MaterialAlias).where(MaterialAlias.id == alias_id).with_for_update()
     ).scalar_one_or_none()
     if not alias:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Material alias ID {alias_id} not found",
         )
+    enforce_maker_checker(ALIAS, alias.created_by, reviewer_id, f"material alias {alias.id}")
     if alias.status == AliasApprovalStatus.APPROVED.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

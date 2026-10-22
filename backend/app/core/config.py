@@ -58,6 +58,9 @@ class Settings(BaseSettings):
 
     # Business Constants (Mandatory per VSPL Business Rules)
     COSTING_START_DATE: str = "2026-10-12"
+    # Comma-separated document types where the creator may not approve their own document.
+    # Provisional default (pending management sign-off); supported: GRN, ISSUE, WASTE, PHYSICAL_AUDIT, ALIAS.
+    MAKER_CHECKER_DOCUMENTS: str = "GRN,ISSUE,WASTE,PHYSICAL_AUDIT"
     ALLOW_NEGATIVE_STOCK: bool = False  # Strict default per VSPL inventory governance
 
     model_config = SettingsConfigDict(

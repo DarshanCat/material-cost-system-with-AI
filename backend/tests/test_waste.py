@@ -14,7 +14,7 @@ from app.models.uom import UOM
 from app.models.item import MaterialItem
 
 
-def test_waste_disposition_lifecycle(client: TestClient, db_session: Session):
+def test_waste_disposition_lifecycle(client: TestClient, db_session: Session, management_headers: dict):
     dept_ms = db_session.query(Department).filter_by(code="MSP").first()
     uom_kg = db_session.query(UOM).filter_by(code="KG").first()
 
@@ -60,7 +60,7 @@ def test_waste_disposition_lifecycle(client: TestClient, db_session: Session):
     assert sub_resp.json()["status"] == "SUBMITTED"
 
     # 3. Approve
-    app_resp = client.post(f"/api/v1/waste/{waste_id}/approve", json={"comments": "Recovery verified"})
+    app_resp = client.post(f"/api/v1/waste/{waste_id}/approve", json={"comments": "Recovery verified"}, headers=management_headers)
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
 

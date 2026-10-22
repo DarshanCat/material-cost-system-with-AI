@@ -17,7 +17,7 @@ from app.services.validators import normalize_vendor_name
 from app.models.grn import GRNHeader, GRNStatus
 
 
-def test_grn_creation_and_approval_lifecycle(client: TestClient, db_session: Session):
+def test_grn_creation_and_approval_lifecycle(client: TestClient, db_session: Session, management_headers: dict):
     # Setup test vendor and item
     vendor = Vendor(
         name="Tata Steel Ltd",
@@ -74,7 +74,7 @@ def test_grn_creation_and_approval_lifecycle(client: TestClient, db_session: Ses
     assert sub_resp.json()["status"] == "SUBMITTED"
 
     # 3. Approve GRN
-    app_resp = client.post(f"/api/v1/grn/{grn_id}/approve", json={"comments": "Approved for storage"})
+    app_resp = client.post(f"/api/v1/grn/{grn_id}/approve", json={"comments": "Approved for storage"}, headers=management_headers)
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
     assert len(app_resp.json()["audit_logs"]) == 3  # CREATED, SUBMITTED, APPROVED

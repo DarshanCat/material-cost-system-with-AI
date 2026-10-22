@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
+from app.services.maker_checker import enforce_maker_checker, WASTE
+from app.services.posting_guard import ledger_write_guard
 from app.models.waste import (
     WasteDispositionHeader,
     WasteDispositionLineItem,
@@ -143,9 +145,15 @@ def submit_waste_disposition(db: Session, waste_id: int, actor_id: str, comments
 
 
 def approve_waste_disposition(db: Session, waste_id: int, actor_id: str, comments: Optional[str] = None) -> WasteDispositionHeader:
-    waste = db.get(WasteDispositionHeader, waste_id)
+    with ledger_write_guard(db):
+        return _approve_waste_disposition(db, waste_id, actor_id, comments)
+
+
+def _approve_waste_disposition(db: Session, waste_id: int, actor_id: str, comments: Optional[str] = None) -> WasteDispositionHeader:
+    waste = db.get(WasteDispositionHeader, waste_id, with_for_update=True)
     if not waste:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Waste record not found.")
+    enforce_maker_checker(WASTE, waste.created_by, actor_id, f"waste disposition {waste.waste_number}")
     if waste.status != WasteStatus.SUBMITTED.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
