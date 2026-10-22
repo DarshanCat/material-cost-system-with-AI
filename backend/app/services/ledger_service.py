@@ -20,18 +20,17 @@ from app.models.issue import MaterialIssueHeader, IssueStatus
 from app.models.waste import WasteDispositionHeader, WasteStatus, DispositionType
 from app.models.physical_audit import PhysicalAuditHeader, AuditStatus
 from app.core.config import settings
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    generate_posting_group_id,
+    generate_reversal_posting_group_id,
+)
 
 
 def generate_ledger_entry_number(db: Session, tx_date: date) -> str:
     """Generates sequential document serial: STK-YYYYMMDD-XXXX."""
-    date_str = tx_date.strftime("%Y%m%d")
-    prefix = f"STK-{date_str}-"
-    
-    count_today = db.execute(
-        select(func.count(StockLedgerEntry.id)).where(StockLedgerEntry.entry_number.like(f"{prefix}%"))
-    ).scalar_one()
-    
-    return f"{prefix}{count_today + 1:04d}"
+    return generate_document_number(db, DocumentType.LEDGER, tx_date)
 
 
 def get_material_stock_balance(
@@ -87,7 +86,7 @@ def post_grn_to_ledger(
         # Already posted idempotently
         return existing_postings
 
-    posting_group = f"POST-GRN-{grn.id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    posting_group = generate_posting_group_id("GRN", grn.id)
     created_entries: List[StockLedgerEntry] = []
     
     movement_type = (
@@ -166,7 +165,7 @@ def post_issue_to_ledger(
                     detail=f"Insufficient inventory for '{item_code}': Required {line.quantity}, available {current_bal}. Negative stock is disallowed by VSPL governance policy.",
                 )
 
-    posting_group = f"POST-ISS-{issue.id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    posting_group = generate_posting_group_id("ISS", issue.id)
     created_entries: List[StockLedgerEntry] = []
 
     for line in issue.lines:
@@ -226,7 +225,7 @@ def post_waste_to_ledger(
     if existing_postings:
         return existing_postings
 
-    posting_group = f"POST-WST-{waste.id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    posting_group = generate_posting_group_id("WST", waste.id)
     created_entries: List[StockLedgerEntry] = []
 
     for line in waste.lines:
@@ -288,7 +287,7 @@ def post_audit_adjustment_to_ledger(
     if existing_postings:
         return existing_postings
 
-    posting_group = f"POST-AUD-{audit.id}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    posting_group = generate_posting_group_id("AUD", audit.id)
     created_entries: List[StockLedgerEntry] = []
 
     for line in audit.lines:
@@ -372,7 +371,7 @@ def _reverse_stock_ledger_entry(
 
     today = date.today()
     entry_num = generate_ledger_entry_number(db, today)
-    posting_group = f"REV-{original.entry_number}-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    posting_group = generate_reversal_posting_group_id(original.entry_number)
 
     reversal_entry = StockLedgerEntry(
         entry_number=entry_num,

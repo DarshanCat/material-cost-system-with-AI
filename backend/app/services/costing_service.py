@@ -39,6 +39,11 @@ from app.models.costing import (
     PartCostStatus,
     CostingRunStatus,
 )
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 RATE_PRECISION = Decimal("0.0001")
 VALUE_PRECISION = Decimal("0.01")
@@ -76,14 +81,7 @@ def movement_sort_priority(movement_type: str, quantity_delta: Decimal) -> int:
 
 def generate_costing_run_number(db: Session, as_of: date) -> str:
     """Generates sequential serial: CRUN-YYYYMMDD-XXXX."""
-    date_str = as_of.strftime("%Y%m%d")
-    prefix = f"CRUN-{date_str}-"
-    
-    count_today = db.execute(
-        select(func.count(CostingRun.id)).where(CostingRun.run_number.like(f"{prefix}%"))
-    ).scalar_one()
-    
-    return f"{prefix}{count_today + 1:04d}"
+    return generate_document_number(db, DocumentType.COSTING_RUN, as_of)
 
 
 def reconstruct_item_rate_evolution(
@@ -519,22 +517,29 @@ def execute_costing_run(
     5. Calculates part costs for all parts produced in period.
     6. Persists entire run under CostingRun without mutating stock ledger or heat sources.
     """
-    run_num = generate_costing_run_number(db, as_of_date)
-    costing_run = CostingRun(
-        run_number=run_num,
-        calculation_version="v1.0.0",
-        period_start=period_start,
-        period_end=period_end,
-        as_of_date=as_of_date,
-        denominator_policy=denominator_policy,
-        internal_recovery_policy="POLICY_PENDING",
-        cost_scope=CostScope.MATERIAL_ONLY.value,
-        status=CostingRunStatus.IN_PROGRESS.value,
-        summary_notes=notes,
-        created_by=actor_id,
+    def _create_run(run_num: str) -> CostingRun:
+        run = CostingRun(
+            run_number=run_num,
+            calculation_version="v1.0.0",
+            period_start=period_start,
+            period_end=period_end,
+            as_of_date=as_of_date,
+            denominator_policy=denominator_policy,
+            internal_recovery_policy="POLICY_PENDING",
+            cost_scope=CostScope.MATERIAL_ONLY.value,
+            status=CostingRunStatus.IN_PROGRESS.value,
+            summary_notes=notes,
+            created_by=actor_id,
+        )
+        db.add(run)
+        return run
+
+    costing_run = execute_with_document_number_retry(
+        db=db,
+        doc_type=DocumentType.COSTING_RUN,
+        create_fn=_create_run,
+        target_date=as_of_date,
     )
-    db.add(costing_run)
-    db.flush()
 
     # 1. Evaluate all active material items
     active_items = db.execute(select(MaterialItem).where(MaterialItem.is_active == True)).scalars().all()

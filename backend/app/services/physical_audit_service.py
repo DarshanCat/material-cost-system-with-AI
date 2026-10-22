@@ -1,12 +1,10 @@
 """
-Physical Inventory Stock Audit Service.
-Calculates variance = (Physical Count - System Balance at Cutoff) and
-posts approved adjustments to the stock ledger.
+Service for Physical Inventory Audits, variance calculation, and ledger adjustments.
 """
 
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
@@ -24,18 +22,16 @@ from app.models.uom import UOM
 from app.models.department import Department
 from app.schemas.physical_audit import PhysicalAuditCreate
 from app.services.ledger_service import get_material_stock_balance, post_audit_adjustment_to_ledger
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 
 def generate_audit_number(db: Session, audit_date: date) -> str:
     """Generates sequential document serial: AUD-YYYYMMDD-XXXX."""
-    date_str = audit_date.strftime("%Y%m%d")
-    prefix = f"AUD-{date_str}-"
-    
-    count_today = db.execute(
-        select(func.count(PhysicalAuditHeader.id)).where(PhysicalAuditHeader.audit_number.like(f"{prefix}%"))
-    ).scalar_one()
-    
-    return f"{prefix}{count_today + 1:04d}"
+    return generate_document_number(db, DocumentType.AUDIT, audit_date)
 
 
 def create_physical_audit(
@@ -47,19 +43,8 @@ def create_physical_audit(
     Creates draft physical inventory count record.
     Calculates system balance as of audit cutoff date and variance.
     """
-    audit_num = generate_audit_number(db, data.audit_date)
-
-    header = PhysicalAuditHeader(
-        audit_number=audit_num,
-        audit_date=data.audit_date,
-        department_id=data.department_id,
-        notes=data.notes,
-        status=AuditStatus.DRAFT.value,
-        created_by=created_by,
-    )
-    db.add(header)
-    db.flush()
-
+    # 1. Pre-validate lines and calculate variances
+    validated_lines = []
     for idx, line in enumerate(data.lines, start=1):
         item = db.get(MaterialItem, line.material_item_id)
         if not item:
@@ -76,32 +61,53 @@ def create_physical_audit(
 
         # Compute system quantity at audit cutoff date
         sys_qty, _, _, _ = get_material_stock_balance(db, line.material_item_id, as_of_date=data.audit_date)
-        
-        # Variance formula: Physical Count - System Quantity
         variance = line.physical_quantity - sys_qty
+        validated_lines.append((idx, line, sys_qty, variance))
 
-        audit_line = PhysicalAuditLine(
-            audit_id=header.id,
-            line_number=idx,
-            material_item_id=line.material_item_id,
-            uom_id=line.uom_id,
-            system_quantity=sys_qty,
-            physical_quantity=line.physical_quantity,
-            variance=variance,
-            reason=line.reason,
-            remarks=line.remarks,
+    # 2. Create document using bounded savepoint retry for collision safety
+    def _create(audit_num: str) -> PhysicalAuditHeader:
+        header = PhysicalAuditHeader(
+            audit_number=audit_num,
+            audit_date=data.audit_date,
+            department_id=data.department_id,
+            notes=data.notes,
+            status=AuditStatus.DRAFT.value,
+            created_by=created_by,
         )
-        db.add(audit_line)
+        db.add(header)
+        db.flush()
 
-    audit_log = PhysicalAuditAuditLog(
-        audit_id=header.id,
-        action="CREATED",
-        from_status=None,
-        to_status=AuditStatus.DRAFT.value,
-        actor_id=created_by,
-        comments="Physical audit recorded with calculated cutoff variances.",
+        for idx, line, sys_qty, variance in validated_lines:
+            audit_line = PhysicalAuditLine(
+                audit_id=header.id,
+                line_number=idx,
+                material_item_id=line.material_item_id,
+                uom_id=line.uom_id,
+                system_quantity=sys_qty,
+                physical_quantity=line.physical_quantity,
+                variance=variance,
+                reason=line.reason,
+                remarks=line.remarks,
+            )
+            db.add(audit_line)
+
+        audit_log = PhysicalAuditAuditLog(
+            audit_id=header.id,
+            action="CREATED",
+            from_status=None,
+            to_status=AuditStatus.DRAFT.value,
+            actor_id=created_by,
+            comments="Physical audit recorded with calculated cutoff variances.",
+        )
+        db.add(audit_log)
+        return header
+
+    header = execute_with_document_number_retry(
+        db=db,
+        doc_type=DocumentType.AUDIT,
+        create_fn=_create,
+        target_date=data.audit_date,
     )
-    db.add(audit_log)
     db.commit()
     db.refresh(header)
     return header

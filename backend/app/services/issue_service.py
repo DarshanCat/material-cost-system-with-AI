@@ -1,5 +1,5 @@
 """
-Service for Material Issue transactions and state lifecycle.
+Service for Material Issue operations, department validation, and lifecycle transitions.
 """
 
 from datetime import date, datetime, timezone
@@ -11,25 +11,28 @@ from fastapi import HTTPException, status
 
 from app.services.maker_checker import enforce_maker_checker, ISSUE
 from app.services.posting_guard import ledger_write_guard
-from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueAuditLog, IssueStatus
+from app.models.issue import (
+    MaterialIssueHeader,
+    MaterialIssueLineItem,
+    IssueAuditLog,
+    IssueStatus,
+)
 from app.models.department import Department
 from app.models.item import MaterialItem
 from app.models.uom import UOM
 from app.schemas.issue import MaterialIssueCreate
 from app.services.decimal_validator import validate_and_flag_quantity
 from app.services.duplicate_detector import check_issue_slip_duplicate
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 
 def generate_issue_slip_number(db: Session, issue_date: date) -> str:
     """Generates sequential document number: ISS-YYYYMMDD-XXXX."""
-    date_str = issue_date.strftime("%Y%m%d")
-    prefix = f"ISS-{date_str}-"
-    
-    count_today = db.execute(
-        select(func.count(MaterialIssueHeader.id)).where(MaterialIssueHeader.issue_slip_number.like(f"{prefix}%"))
-    ).scalar_one()
-    
-    return f"{prefix}{count_today + 1:04d}"
+    return generate_document_number(db, DocumentType.ISSUE, issue_date)
 
 
 def create_material_issue(
@@ -51,23 +54,8 @@ def create_material_issue(
             detail=f"Receiving Department ID {data.receiving_department_id} not found.",
         )
 
-    # 2. Sequential Slip Number
-    slip_number = generate_issue_slip_number(db, data.issue_date)
-
-    header = MaterialIssueHeader(
-        issue_slip_number=slip_number,
-        issue_date=data.issue_date,
-        issuing_department_id=data.issuing_department_id,
-        receiving_department_id=data.receiving_department_id,
-        heat_reference_number=data.heat_reference_number,
-        notes=data.notes,
-        status=IssueStatus.DRAFT.value,
-        created_by=created_by,
-    )
-    db.add(header)
-    db.flush()
-
-    # 3. Process line items
+    # 2. Pre-validate line items before entering transaction retry block
+    validated_lines = []
     for idx, line in enumerate(data.lines, start=1):
         item = db.get(MaterialItem, line.material_item_id)
         if not item:
@@ -91,26 +79,51 @@ def create_material_issue(
         for w in qty_result.warnings:
             warnings.append(f"Line {idx} ({item.item_code}): {w}")
 
-        line_rec = MaterialIssueLineItem(
-            issue_id=header.id,
-            line_number=idx,
-            material_item_id=line.material_item_id,
-            uom_id=line.uom_id,
-            quantity=line.quantity,
-            remarks=line.remarks,
-        )
-        db.add(line_rec)
+        validated_lines.append(line)
 
-    # Initial audit
-    audit = IssueAuditLog(
-        issue_id=header.id,
-        action="CREATED",
-        from_status=None,
-        to_status=IssueStatus.DRAFT.value,
-        actor_id=created_by,
-        comments="Material issue slip created in draft status.",
+    # 3. Create document using bounded savepoint retry for collision safety
+    def _create(slip_number: str) -> MaterialIssueHeader:
+        header = MaterialIssueHeader(
+            issue_slip_number=slip_number,
+            issue_date=data.issue_date,
+            issuing_department_id=data.issuing_department_id,
+            receiving_department_id=data.receiving_department_id,
+            heat_reference_number=data.heat_reference_number,
+            notes=data.notes,
+            status=IssueStatus.DRAFT.value,
+            created_by=created_by,
+        )
+        db.add(header)
+        db.flush()
+
+        for idx, line in enumerate(validated_lines, start=1):
+            line_rec = MaterialIssueLineItem(
+                issue_id=header.id,
+                line_number=idx,
+                material_item_id=line.material_item_id,
+                uom_id=line.uom_id,
+                quantity=line.quantity,
+                remarks=line.remarks,
+            )
+            db.add(line_rec)
+
+        audit = IssueAuditLog(
+            issue_id=header.id,
+            action="CREATED",
+            from_status=None,
+            to_status=IssueStatus.DRAFT.value,
+            actor_id=created_by,
+            comments="Material issue slip created in draft status.",
+        )
+        db.add(audit)
+        return header
+
+    header = execute_with_document_number_retry(
+        db=db,
+        doc_type=DocumentType.ISSUE,
+        create_fn=_create,
+        target_date=data.issue_date,
     )
-    db.add(audit)
     db.commit()
     db.refresh(header)
     return header, warnings

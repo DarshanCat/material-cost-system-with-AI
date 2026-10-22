@@ -30,6 +30,11 @@ from app.models.reconciliation import (
 )
 from app.services.validators import normalize_heat_number, normalize_alias_key
 from app.services.material_alias_service import resolve_material_by_description
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 
 # Precedence tolerance constants per business rules
@@ -128,20 +133,27 @@ def run_reconciliation(
     Pass 3: Advisory fuzzy match candidate generation (never auto-confirmed)
     """
     run_timestamp = datetime.now(timezone.utc)
-    run_number = f"REC-{run_timestamp.strftime('%Y%m%d')}-{int(run_timestamp.timestamp() % 10000):04d}"
-    
-    run = ReconciliationRun(
-        run_number=run_number,
-        algorithm_version="v1.0-3pass-deterministic",
-        date_from=date_from,
-        date_to=date_to,
-        status="IN_PROGRESS",
-        notes=notes,
-        created_by=created_by,
-        created_at=run_timestamp,
+
+    def _create_run(run_num: str) -> ReconciliationRun:
+        run_obj = ReconciliationRun(
+            run_number=run_num,
+            algorithm_version="v1.0-3pass-deterministic",
+            date_from=date_from,
+            date_to=date_to,
+            status="IN_PROGRESS",
+            notes=notes,
+            created_by=created_by,
+            created_at=run_timestamp,
+        )
+        db.add(run_obj)
+        return run_obj
+
+    run = execute_with_document_number_retry(
+        db=db,
+        doc_type=DocumentType.RECONCILIATION_RUN,
+        create_fn=_create_run,
+        target_date=run_timestamp.date(),
     )
-    db.add(run)
-    db.flush()
 
     # 1. Fetch relevant Issue Slips (Approved issues)
     issue_stmt = (

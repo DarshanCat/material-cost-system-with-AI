@@ -1,5 +1,5 @@
 """
-Service for Waste Disposition transactions and approval states.
+Service for Waste Disposition operations and lifecycle transitions.
 """
 
 from datetime import date, datetime, timezone
@@ -24,18 +24,16 @@ from app.models.item import MaterialItem
 from app.models.uom import UOM
 from app.schemas.waste import WasteDispositionCreate
 from app.services.decimal_validator import validate_and_flag_quantity
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 
 def generate_waste_number(db: Session, disposition_date: date) -> str:
     """Generates sequential document number: WST-YYYYMMDD-XXXX."""
-    date_str = disposition_date.strftime("%Y%m%d")
-    prefix = f"WST-{date_str}-"
-    
-    count_today = db.execute(
-        select(func.count(WasteDispositionHeader.id)).where(WasteDispositionHeader.waste_number.like(f"{prefix}%"))
-    ).scalar_one()
-    
-    return f"{prefix}{count_today + 1:04d}"
+    return generate_document_number(db, DocumentType.WASTE, disposition_date)
 
 
 def create_waste_disposition(
@@ -51,24 +49,8 @@ def create_waste_disposition(
             detail=f"Source Department ID {data.source_department_id} not found.",
         )
 
-    # 2. Sequential Waste Number
-    waste_num = generate_waste_number(db, data.disposition_date)
-
-    header = WasteDispositionHeader(
-        waste_number=waste_num,
-        disposition_date=data.disposition_date,
-        waste_type=data.waste_type.value,
-        disposition_type=data.disposition_type.value,
-        source_department_id=data.source_department_id,
-        destination_notes=data.destination_notes,
-        notes=data.notes,
-        status=WasteStatus.DRAFT.value,
-        created_by=created_by,
-    )
-    db.add(header)
-    db.flush()
-
-    # 3. Process line items
+    # 2. Pre-validate line items before entering transaction retry block
+    validated_lines = []
     for idx, line in enumerate(data.lines, start=1):
         item = db.get(MaterialItem, line.material_item_id)
         if not item:
@@ -92,27 +74,53 @@ def create_waste_disposition(
         for w in qty_result.warnings:
             warnings.append(f"Line {idx} ({item.item_code}): {w}")
 
-        line_rec = WasteDispositionLineItem(
-            waste_id=header.id,
-            line_number=idx,
-            material_item_id=line.material_item_id,
-            uom_id=line.uom_id,
-            quantity=line.quantity,
-            reason=line.reason,
-            remarks=line.remarks,
-        )
-        db.add(line_rec)
+        validated_lines.append(line)
 
-    # Initial audit
-    audit = WasteAuditLog(
-        waste_id=header.id,
-        action="CREATED",
-        from_status=None,
-        to_status=WasteStatus.DRAFT.value,
-        actor_id=created_by,
-        comments="Waste disposition record created in draft status.",
+    # 3. Create document using bounded savepoint retry for collision safety
+    def _create(waste_num: str) -> WasteDispositionHeader:
+        header = WasteDispositionHeader(
+            waste_number=waste_num,
+            disposition_date=data.disposition_date,
+            waste_type=data.waste_type.value,
+            disposition_type=data.disposition_type.value,
+            source_department_id=data.source_department_id,
+            destination_notes=data.destination_notes,
+            notes=data.notes,
+            status=WasteStatus.DRAFT.value,
+            created_by=created_by,
+        )
+        db.add(header)
+        db.flush()
+
+        for idx, line in enumerate(validated_lines, start=1):
+            line_rec = WasteDispositionLineItem(
+                waste_id=header.id,
+                line_number=idx,
+                material_item_id=line.material_item_id,
+                uom_id=line.uom_id,
+                quantity=line.quantity,
+                reason=line.reason,
+                remarks=line.remarks,
+            )
+            db.add(line_rec)
+
+        audit = WasteAuditLog(
+            waste_id=header.id,
+            action="CREATED",
+            from_status=None,
+            to_status=WasteStatus.DRAFT.value,
+            actor_id=created_by,
+            comments="Waste disposition record created in draft status.",
+        )
+        db.add(audit)
+        return header
+
+    header = execute_with_document_number_retry(
+        db=db,
+        doc_type=DocumentType.WASTE,
+        create_fn=_create,
+        target_date=data.disposition_date,
     )
-    db.add(audit)
     db.commit()
     db.refresh(header)
     return header, warnings

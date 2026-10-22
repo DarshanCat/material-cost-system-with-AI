@@ -23,6 +23,7 @@ from app.schemas.opening_balance import (
 )
 from app.services.decimal_validator import validate_and_flag_quantity
 from app.services.ledger_service import generate_ledger_entry_number
+from app.services.document_number_service import generate_posting_group_id
 
 
 def preview_opening_balances(
@@ -130,7 +131,7 @@ def _post_approved_opening_balances(
     items_by_code = {item.item_code.upper(): item for item in db.execute(select(MaterialItem)).scalars().all()}
     uoms_by_code = {u.code.upper(): u for u in db.execute(select(UOM)).scalars().all()}
 
-    posting_group = f"OPENING-BAL-{request.baseline_date.strftime('%Y%m%d')}-{datetime.now(timezone.utc).strftime('%H%M%S')}"
+    posting_group = generate_posting_group_id("OB", request.baseline_date.strftime("%Y%m%d"))
     created_entries = []
 
     for idx, row in enumerate(request.rows, start=1):

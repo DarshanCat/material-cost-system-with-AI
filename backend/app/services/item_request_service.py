@@ -17,6 +17,11 @@ from app.models.item import MaterialItem
 from app.models.item_request import ItemRequest, ItemRequestAuditLog, RequestStatus
 from app.core.security import DevUserContext
 from app.services.validators import get_category_code
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 
 class ItemRequestService:
@@ -25,11 +30,7 @@ class ItemRequestService:
 
     def generate_request_number(self) -> str:
         """Generates next request number: REQ-YYYYMMDD-XXXX."""
-        today_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-        count = self.db.scalar(
-            select(func.count(ItemRequest.id)).where(ItemRequest.request_number.like(f"REQ-{today_str}-%"))
-        ) or 0
-        return f"REQ-{today_str}-{count + 1:04d}"
+        return generate_document_number(self.db, DocumentType.ITEM_REQUEST)
 
     def generate_next_item_code(self, department_id: int, category: str) -> str:
         """
@@ -78,35 +79,42 @@ class ItemRequestService:
         if not uom or not uom.is_active:
             raise HTTPException(status_code=400, detail="Invalid or inactive UOM specified.")
 
-        request_number = self.generate_request_number()
-        req = ItemRequest(
-            request_number=request_number,
-            requested_name=requested_name.strip(),
-            proposed_department_id=proposed_department_id,
-            proposed_category=proposed_category.strip().upper(),
-            proposed_subcategory=proposed_subcategory.strip().upper() if proposed_subcategory else None,
-            proposed_uom_id=proposed_uom_id,
-            justification=justification.strip(),
-            requester_id=actor.user_id,
-            requester_role=actor.role.value,
-            requester_department=actor.department,
-            status=RequestStatus.DRAFT.value,
-        )
-        self.db.add(req)
-        self.db.flush()
+        def _create(req_number: str) -> ItemRequest:
+            req = ItemRequest(
+                request_number=req_number,
+                requested_name=requested_name.strip(),
+                proposed_department_id=proposed_department_id,
+                proposed_category=proposed_category.strip().upper(),
+                proposed_subcategory=proposed_subcategory.strip().upper() if proposed_subcategory else None,
+                proposed_uom_id=proposed_uom_id,
+                justification=justification.strip(),
+                requester_id=actor.user_id,
+                requester_role=actor.role.value,
+                requester_department=actor.department,
+                status=RequestStatus.DRAFT.value,
+            )
+            self.db.add(req)
+            self.db.flush()
 
-        # Audit Log
-        audit = ItemRequestAuditLog(
-            request_id=req.id,
-            action="CREATED",
-            from_status=None,
-            to_status=RequestStatus.DRAFT.value,
-            actor_id=actor.user_id,
-            actor_role=actor.role.value,
-            comments="Draft item request initiated.",
-            timestamp=datetime.now(timezone.utc),
+            # Audit Log
+            audit = ItemRequestAuditLog(
+                request_id=req.id,
+                action="CREATED",
+                from_status=None,
+                to_status=RequestStatus.DRAFT.value,
+                actor_id=actor.user_id,
+                actor_role=actor.role.value,
+                comments="Draft item request initiated.",
+                timestamp=datetime.now(timezone.utc),
+            )
+            self.db.add(audit)
+            return req
+
+        req = execute_with_document_number_retry(
+            db=self.db,
+            doc_type=DocumentType.ITEM_REQUEST,
+            create_fn=_create,
         )
-        self.db.add(audit)
         self.db.commit()
         self.db.refresh(req)
         return req

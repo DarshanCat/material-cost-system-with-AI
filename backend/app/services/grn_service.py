@@ -18,18 +18,16 @@ from app.models.uom import UOM
 from app.schemas.grn import GRNCreate, GRNUpdate
 from app.services.decimal_validator import validate_and_flag_quantity, validate_rate_and_gst
 from app.services.duplicate_detector import check_grn_invoice_duplicate
+from app.services.document_number_service import (
+    DocumentType,
+    generate_document_number,
+    execute_with_document_number_retry,
+)
 
 
 def generate_grn_number(db: Session, receipt_date: date) -> str:
     """Generates sequential document number: GRN-YYYYMMDD-XXXX."""
-    date_str = receipt_date.strftime("%Y%m%d")
-    prefix = f"GRN-{date_str}-"
-    
-    count_today = db.execute(
-        select(func.count(GRNHeader.id)).where(GRNHeader.grn_number.like(f"{prefix}%"))
-    ).scalar_one()
-    
-    return f"{prefix}{count_today + 1:04d}"
+    return generate_document_number(db, DocumentType.GRN, receipt_date)
 
 
 def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader, List[str]]:
@@ -57,25 +55,8 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
             if dup_check.has_conflict:
                 warnings.append(dup_check.message)
 
-    # 2. Generate document number
-    grn_number = generate_grn_number(db, data.receipt_date)
-
-    header = GRNHeader(
-        grn_number=grn_number,
-        receipt_date=data.receipt_date,
-        source_type=data.source_type.value,
-        vendor_id=data.vendor_id,
-        vendor_invoice_no=data.vendor_invoice_no.strip() if data.vendor_invoice_no else None,
-        invoice_date=data.invoice_date,
-        reference_document=data.reference_document,
-        notes=data.notes,
-        status=GRNStatus.DRAFT.value,
-        created_by=created_by,
-    )
-    db.add(header)
-    db.flush()
-
-    # 3. Process line items with strict decimal validation
+    # 2. Pre-validate line items before entering transaction retry block
+    validated_lines = []
     for idx, line in enumerate(data.lines, start=1):
         item = db.get(MaterialItem, line.material_item_id)
         if not item:
@@ -112,28 +93,55 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
         for w in rate_result.warnings:
             warnings.append(f"Line {idx} ({item.item_code}): {w}")
 
-        line_record = GRNLineItem(
-            grn_id=header.id,
-            line_number=idx,
-            material_item_id=line.material_item_id,
-            uom_id=line.uom_id,
-            quantity=line.quantity,
-            rate_ex_gst=line.rate_ex_gst,
-            gst_percent=line.gst_percent,
-            remarks=line.remarks,
-        )
-        db.add(line_record)
+        validated_lines.append(line)
 
-    # Initial audit log
-    audit = GRNAuditLog(
-        grn_id=header.id,
-        action="CREATED",
-        from_status=None,
-        to_status=GRNStatus.DRAFT.value,
-        actor_id=created_by,
-        comments="GRN created in draft status.",
+    # 3. Create document using bounded savepoint retry for collision safety
+    def _create(grn_num: str) -> GRNHeader:
+        header = GRNHeader(
+            grn_number=grn_num,
+            receipt_date=data.receipt_date,
+            source_type=data.source_type.value,
+            vendor_id=data.vendor_id,
+            vendor_invoice_no=data.vendor_invoice_no.strip() if data.vendor_invoice_no else None,
+            invoice_date=data.invoice_date,
+            reference_document=data.reference_document,
+            notes=data.notes,
+            status=GRNStatus.DRAFT.value,
+            created_by=created_by,
+        )
+        db.add(header)
+        db.flush()
+
+        for idx, line in enumerate(validated_lines, start=1):
+            line_record = GRNLineItem(
+                grn_id=header.id,
+                line_number=idx,
+                material_item_id=line.material_item_id,
+                uom_id=line.uom_id,
+                quantity=line.quantity,
+                rate_ex_gst=line.rate_ex_gst,
+                gst_percent=line.gst_percent,
+                remarks=line.remarks,
+            )
+            db.add(line_record)
+
+        audit = GRNAuditLog(
+            grn_id=header.id,
+            action="CREATED",
+            from_status=None,
+            to_status=GRNStatus.DRAFT.value,
+            actor_id=created_by,
+            comments="GRN created in draft status.",
+        )
+        db.add(audit)
+        return header
+
+    header = execute_with_document_number_retry(
+        db=db,
+        doc_type=DocumentType.GRN,
+        create_fn=_create,
+        target_date=data.receipt_date,
     )
-    db.add(audit)
     db.commit()
     db.refresh(header)
     return header, warnings
