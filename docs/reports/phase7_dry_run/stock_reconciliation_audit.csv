@@ -1,0 +1,392 @@
+Item Code,Item Name,Legacy Code,UOM,Master Ledger Opening,Master Ledger Received,Master Ledger Issued,Master Ledger Waste,Master Ledger Closing,Legacy Stock Details Receipt,Legacy Stock Details Issue,Legacy Stock Details Stock,Reconciliation Status,Reconciliation Notes
+FDY-RM-001,Bial,FRM01,Kg,0,0,0,0,0,650,0,650,VARIANCE,Stock mismatch: Legacy Stock=650 vs Master Ledger Closing=0
+FDY-RM-002,Borings-450/10,FRM02,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-003,Borings-450/10,FRM03,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-004,Borings-500,FRM04,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-005,Borings-500/10,FRM05,Kg,0,0,0,0,0,0,2,-2,VARIANCE,Stock mismatch: Legacy Stock=-2 vs Master Ledger Closing=0
+FDY-RM-006,Copper,FRM06,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-007,CRC Scrap-Low High MN,FRM07,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-008,CRC Scrap-Low MN,FRM08,Kg,0,0,500,0,-500,0,0,0,VARIANCE,Stock mismatch: Legacy Stock=0 vs Master Ledger Closing=-500
+FDY-RM-009,Gattings-450/10,FRM09,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-010,Gattings-450/10,FRM10,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-011,Gattings-500,FRM11,Kg,0,0,300,0,-300,0,0,0,VARIANCE,Stock mismatch: Legacy Stock=0 vs Master Ledger Closing=-300
+FDY-RM-012,Gattings-500/10,FRM12,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-013,Graphite Carbonizer,FRM13,Kg,0,0,0,0,0,100,0,100,VARIANCE,Stock mismatch: Legacy Stock=100 vs Master Ledger Closing=0
+FDY-RM-014,Inoculant 15,FRM14,Kg,0,0,2,0,-2,92.5,0,92.5,VARIANCE,Stock mismatch: Legacy Stock=92.5 vs Master Ledger Closing=-2
+FDY-RM-015,Inoculant 250,FRM15,Kg,0,0,0,0,0,550,0,550,VARIANCE,Stock mismatch: Legacy Stock=550 vs Master Ledger Closing=0
+FDY-RM-016,Magnesium,FRM16,Kg,0,0,15,0,-15,550,0,550,VARIANCE,Stock mismatch: Legacy Stock=550 vs Master Ledger Closing=-15
+FDY-RM-017,Manganese,FRM17,Kg,0,0,3,0,-3,20,0,20,VARIANCE,Stock mismatch: Legacy Stock=20 vs Master Ledger Closing=-3
+FDY-RM-018,MS -Scrap,FRM18,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-019,Pig Iron,FRM19,Kg,0,0,150,0,-150,0,0,0,VARIANCE,Stock mismatch: Legacy Stock=0 vs Master Ledger Closing=-150
+FDY-RM-020,Silicon,FRM20,Kg,0,0,5,0,-5,26,0,26,VARIANCE,Stock mismatch: Legacy Stock=26 vs Master Ledger Closing=-5
+FDY-RM-021,Slax,FRM21,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-022,Ziman,FRM22,Kg,0,0,0,0,0,600,0,600,VARIANCE,Stock mismatch: Legacy Stock=600 vs Master Ledger Closing=0
+FDY-RM-023,Nickel,FRM23,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-024,Ferro Moly,FRM24,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-025,Ferro Phosphorus,FRM25,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-RM-026,Ferro Chrome,FRM26,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-LN-001,SVLHTC(MGS),CON01,Kg,0,0,0,0,0,675,1,674,VARIANCE,Stock mismatch: Legacy Stock=674 vs Master Ledger Closing=0
+FDY-LN-002,Quick Cast,FLM02,Kg,0,0,0,0,0,500,0,500,VARIANCE,Stock mismatch: Legacy Stock=500 vs Master Ledger Closing=0
+FDY-LN-003,AR Heat,FLM03,Kg,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+FDY-LN-004,Mica Sheet,FLM04,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-LN-005,SS Needles,FLM05,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-LN-006,Red Mud,FLM06,Kg,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+FDY-LN-007,Former,FLM07,Kg,0,0,0,0,0,675,0,675,VARIANCE,Stock mismatch: Legacy Stock=675 vs Master Ledger Closing=0
+FDY-LN-008,Anms Wha,FLM08,Kg,0,0,0,0,0,250,0,250,VARIANCE,Stock mismatch: Legacy Stock=250 vs Master Ledger Closing=0
+FDY-LN-009,Minro Plast,FLM09,Kg,0,0,0,0,0,135,0,135,VARIANCE,Stock mismatch: Legacy Stock=135 vs Master Ledger Closing=0
+FDY-LN-010,Terrocote,FLM10,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-MD-001,Pre Coated Sand,FMM01,Kg,0,0,0,0,0,6300,0,6300,VARIANCE,Stock mismatch: Legacy Stock=6300 vs Master Ledger Closing=0
+FDY-MD-002,Chromite Sand,FMM02,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-MD-003,Holcote-100,FMM03,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-MD-004,Die Cote,FMM04,Kg,0,0,0,0,0,150,0,150,VARIANCE,Stock mismatch: Legacy Stock=150 vs Master Ledger Closing=0
+FDY-CN-001,CF Blanket,FC01,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-002,Mould Sealing Rope,FC02,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-003,Emery Paper,FC03,Kg,0,25,2,5,18,5,4,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=18
+FDY-CN-004,Tempo Brush,FC04,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-005,Gas Pipe Brass Holder,FC05,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-006,Top Pins,FC06,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-007,Bottom Pins,FC07,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-008,MS Flat (Slag Removal),FC08,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-009,Hand Mugs,FC09,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-010,Cutting Blade 24 Inch,FC10,Kg,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+FDY-CN-011,Cutting Blade 20 Inch,FC11,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-012,Cutting Blade 18 Inch,FC12,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-013,Grinding Wheel 7 Inch,FC13,Kg,0,0,0,0,0,45,10,35,VARIANCE,Stock mismatch: Legacy Stock=35 vs Master Ledger Closing=0
+FDY-CN-014,Grinding Wheel 5 Inch,FC14,Kg,0,0,0,0,0,25,0,25,VARIANCE,Stock mismatch: Legacy Stock=25 vs Master Ledger Closing=0
+FDY-CN-015,Grinding Wheel 4 Inch,FC15,Kg,0,0,0,0,0,9,0,9,VARIANCE,Stock mismatch: Legacy Stock=9 vs Master Ledger Closing=0
+FDY-CN-016,Flop Disk 5 Inch,FC16,Kg,0,0,0,0,0,90,10,80,VARIANCE,Stock mismatch: Legacy Stock=80 vs Master Ledger Closing=0
+FDY-CN-017,Flop Disk 4 Inch,FC17,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-018,Tempo Brush,FC18,Kg,0,0,0,0,0,6,0,6,VARIANCE,Stock mismatch: Legacy Stock=6 vs Master Ledger Closing=0
+FDY-CN-019,Welding Coil,FC19,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-CN-020,Wire Brush,FC20,Kg,0,0,0,0,0,36,0,36,VARIANCE,Stock mismatch: Legacy Stock=36 vs Master Ledger Closing=0
+FDY-CN-021,Stone Grinding Wheel 6mm X 20 MM,FC21,Kg,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-CB-001,Band Saw Blade 3/4 3505,CON01,Nos,0,0,0,0,0,675,1,674,VARIANCE,Stock mismatch: Legacy Stock=674 vs Master Ledger Closing=0
+MCS-CB-002,Band Saw Blade 3/4 4100,CON02,Nos,0,0,0,0,0,0,1,-1,VARIANCE,Stock mismatch: Legacy Stock=-1 vs Master Ledger Closing=0
+MCS-CB-003,Cutting Shaft,CON03,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-CB-004,"Power Hax Blade 24""",CON04,Nos,0,0,0,0,0,11,1,10,VARIANCE,Stock mismatch: Legacy Stock=10 vs Master Ledger Closing=0
+MCS-CB-005,"Power Hax Blade 20""",CON05,Nos,0,0,0,0,0,11,1,10,VARIANCE,Stock mismatch: Legacy Stock=10 vs Master Ledger Closing=0
+MCS-CB-006,"Power Hax Blade 16""",CON06,Nos,0,0,0,0,0,12,0,12,VARIANCE,Stock mismatch: Legacy Stock=12 vs Master Ledger Closing=0
+MCS-CB-007,"Power Hax Blade 18""",CON07,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+MCS-CB-008,"Power Hax Blade 21""",CON08,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-CB-009,Tenryu TCT C/Saw Blade Dia 420X2.8X2.3X50X60T,CON09,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-001,Rust Preventive Oil-RPL 120,CON10,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-002,WD Spray,CON11,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-003,Co2 Magic,CON12,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-004,DM Water,CON13,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-005,Thinner,CON14,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-006,SYSTEM-68,CON15,Ltr,0,0,0,0,0,210,10,200,VARIANCE,Stock mismatch: Legacy Stock=200 vs Master Ledger Closing=0
+MNT-OL-007,Trim Micrsol,CON16,Ltr,0,0,0,0,0,0,20,-20,VARIANCE,Stock mismatch: Legacy Stock=-20 vs Master Ledger Closing=0
+MNT-OL-008,Gear Oil,CON17,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-009,32 Grade Oil,CON18,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-010,Jam Oil,CON19,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-011,Best System 68-Machine Shop,CON20,Ltr,0,0,0,0,0,0,20,-20,VARIANCE,Stock mismatch: Legacy Stock=-20 vs Master Ledger Closing=0
+MNT-OL-012,Hicut 590 Oil-Machine Shop,CON21,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-013,Mist Oil-Circular Saw Cutting Machine,CON22,Ltr,0,0,0,0,0,50,0,50,VARIANCE,Stock mismatch: Legacy Stock=50 vs Master Ledger Closing=0
+MNT-OL-014,Suprabha Rust Preventive Oil-Debburing,CON23,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-015,Hiclean-LS40(Stansoil) -Debburing,CON24,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-OL-016,Hiclean-LS40(Stansoil) -Debburing,CON25,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+PKD-PK-001,Axxanol(Zerust)-Packing,CON26,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+PKD-PK-002,Ferrocote-Packing Dispatch,CON27,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-001,Nilon Brush 10 MM,CON28,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-002,Black Paint,CON29,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+FDY-PT-003,Red Oil Paint,CON30,Nos,0,0,0,0,0,0,1,-1,VARIANCE,Stock mismatch: Legacy Stock=-1 vs Master Ledger Closing=0
+FDY-PT-004,White Paint,CON31,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-005,Yellow Paint,CON32,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+FDY-PT-006,Blue Paint,CON33,Nos,0,0,0,0,0,19,0,19,VARIANCE,Stock mismatch: Legacy Stock=19 vs Master Ledger Closing=0
+FDY-PT-007,Red Paint,CON34,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-008,Green Paint,CON35,Nos,0,0,0,0,0,7,0,7,VARIANCE,Stock mismatch: Legacy Stock=7 vs Master Ledger Closing=0
+FDY-PT-009,"6"" Brush",CON36,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-010,"3"" Brush",CON37,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-011,"2"" Brush",CON38,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+FDY-PT-012,"1"" Brush",CON39,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+QLY-QC-001,Lavigated Alumina,CON40,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+QLY-QC-002,Silica Gel,CON41,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+QLY-QC-003,Ethanol,CON42,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+QLY-QC-004,Orion Developer 115D,CON43,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+QLY-QC-005,Orion Panatrate 115P,CON44,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-001,Helmet-Yellow,CON45,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-002,Helmet-White,CON46,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-003,Mask-Green,CON47,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-004,Cotton Gloves,CON48,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-005,Safety Goggles,CON49,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-006,Hand Gloves PU Coated,CON50,Nos,0,0,0,0,0,0,7,-7,VARIANCE,Stock mismatch: Legacy Stock=-7 vs Master Ledger Closing=0
+GEN-SF-007,Leather Hand Gloves Left Hand,CON51,Nos,0,0,0,0,0,250,15,235,VARIANCE,Stock mismatch: Legacy Stock=235 vs Master Ledger Closing=0
+GEN-SF-008,Leg Guard,CON52,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-009,Safety Belt,CON53,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-010,Tiger Shoe 11 Inches,CON54,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-011,Tiger Shoe 7 Inches,CON55,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-012,Tiger Shoe 8 Inches,CON56,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-013,Tiger Shoe 9 Inches,CON57,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-014,"Foundry Safetex Shoe 10""",CON58,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-015,"Foundry Safetex Shoe 7""",CON59,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-016,"Foundry Safetex Shoe 8""",CON60,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-017,"Foundry Safetex Shoe 9""",CON61,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-018,"Foundry Green Soul Shoe 10""",CON62,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-019,"Foundry Green Soul Shoe 11""",CON63,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-020,"Foundry Green Soul Shoe 7""",CON64,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-021,"Foundry Green Soul Shoe 8""",CON65,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-022,"Foundry Green Soul Shoe 9""",CON66,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+GEN-SF-023,Appron,CON67,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+PKD-PK-003,Axxanol(Zerust)-Packing,CON68,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+PKD-PK-004,Ferrocote-Packing Dispatch,CON69,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-001,Bearing 32212,CON70,Nos,0,0,0,0,0,10,0,10,VARIANCE,Stock mismatch: Legacy Stock=10 vs Master Ledger Closing=0
+MNT-BR-002,Bearing 6200 2Z/C3,CON71,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-003,Bearing 6210/2Z /C3,CON72,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-004,Bearing 6202-2Z,CON73,Nos,0,0,0,0,0,4,0,4,VARIANCE,Stock mismatch: Legacy Stock=4 vs Master Ledger Closing=0
+MNT-BR-005,Bearing 6202-2Z/C3,CON74,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-006,Bearing 6205 -2Z,CON75,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-007,Bearing 6211-2 Z,CON76,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-008,Bearing 6310- 2Z,CON77,Nos,0,0,0,0,0,6,0,6,VARIANCE,Stock mismatch: Legacy Stock=6 vs Master Ledger Closing=0
+MNT-BR-009,Bearing 1206-ABC,CON78,Nos,0,0,0,0,0,6,0,6,VARIANCE,Stock mismatch: Legacy Stock=6 vs Master Ledger Closing=0
+MNT-BR-010,Bearing 30204 -J2/Q,CON79,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-011,Bearing 30206-J2/Q,CON80,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BR-012,Bearing 32210-J2/Q,CON81,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-013,Bearing 32214-J2/Q,CON82,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+MNT-BR-014,Bearing 6006-2RS1,CON83,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-015,Bearing 6006-2Z,CON84,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+MNT-BR-016,Bearing 6012-2Z,CON85,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-017,Bearing 6206-2Z,CON86,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-018,Bearing 62082Z,CON87,Nos,0,0,0,0,0,4,0,4,VARIANCE,Stock mismatch: Legacy Stock=4 vs Master Ledger Closing=0
+MNT-BR-019,Bearing 62092z,CON88,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BR-020,Bearing 62122z/c3,CON89,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-021,Bearing GEM-04,CON90,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-022,Bearing GEM-05,CON91,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-023,Bearing GEM-51205,CON92,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BR-024,Bearing KKU51107,CON93,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-025,Bearing 63052Z,CON94,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-026,Bearing 6007 /2Z,CON95,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-027,Bearing 32216 SKF,CON96,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BR-028,Bearing 32218 SKF,CON97,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+MNT-BR-029,Bearing 32218 NTN,CON98,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-030,Bearing 32216 NTN,CON99,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-031,Bearing 60052Z,CON100,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-032,Bearing 566/563/Q-1,CON101,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+MNT-BR-033,Bearing 62012Z,CON102,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-034,Bearing VKT 8001,CON103,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-035,Bearing 330201,CON104,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-036,Bearing 566/563/Q,CON105,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BL-001,Belt C-68,CON106,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+MNT-BL-002,Belt B -44,CON107,Nos,0,0,0,0,0,8,0,8,VARIANCE,Stock mismatch: Legacy Stock=8 vs Master Ledger Closing=0
+MNT-BL-003,Belt A-49,CON108,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BL-004,Belt B-49,CON109,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BL-005,Belt B -50,CON110,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+MNT-BL-006,Belt B-52,CON111,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BL-007,Belt B- 54,CON112,Nos,0,0,0,0,0,23,0,23,VARIANCE,Stock mismatch: Legacy Stock=23 vs Master Ledger Closing=0
+MNT-BL-008,Belt B-55,CON113,Nos,0,0,0,0,0,18,0,18,VARIANCE,Stock mismatch: Legacy Stock=18 vs Master Ledger Closing=0
+MNT-BL-009,Belt B-58,CON114,Nos,0,0,0,0,0,15,0,15,VARIANCE,Stock mismatch: Legacy Stock=15 vs Master Ledger Closing=0
+MNT-BL-010,Belt B-57,CON115,Nos,0,0,0,0,0,10,0,10,VARIANCE,Stock mismatch: Legacy Stock=10 vs Master Ledger Closing=0
+MNT-BL-011,Belt B-65,CON116,Nos,0,0,0,0,0,15,0,15,VARIANCE,Stock mismatch: Legacy Stock=15 vs Master Ledger Closing=0
+MNT-BL-012,Belt B-66,CON117,Nos,0,0,0,0,0,15,0,15,VARIANCE,Stock mismatch: Legacy Stock=15 vs Master Ledger Closing=0
+MNT-BL-013,Belt B-67,CON118,Nos,0,0,0,0,0,22,0,22,VARIANCE,Stock mismatch: Legacy Stock=22 vs Master Ledger Closing=0
+MNT-BL-014,Belt B-71,CON119,Nos,0,0,0,0,0,8,0,8,VARIANCE,Stock mismatch: Legacy Stock=8 vs Master Ledger Closing=0
+MNT-BL-015,Belt A-72,CON120,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+MNT-BL-016,Belt B-73,CON121,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+MNT-BL-017,Belt B-82,CON122,Nos,0,0,0,0,0,29,0,29,VARIANCE,Stock mismatch: Legacy Stock=29 vs Master Ledger Closing=0
+MNT-BL-018,Belt B-81,CON123,Nos,0,0,0,0,0,29,0,29,VARIANCE,Stock mismatch: Legacy Stock=29 vs Master Ledger Closing=0
+MNT-BL-019,Belt C-70,CON124,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BL-020,Belt C-71,CON125,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+MNT-BL-021,Belt C-76,CON126,Nos,0,0,0,0,0,4,0,4,VARIANCE,Stock mismatch: Legacy Stock=4 vs Master Ledger Closing=0
+MNT-BL-022,Belt C-66,CON127,Nos,0,0,0,0,0,18,0,18,VARIANCE,Stock mismatch: Legacy Stock=18 vs Master Ledger Closing=0
+MNT-BL-023,Belt B-100,CON128,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BL-024,Belt B-59,CON129,Nos,0,0,0,0,0,8,0,8,VARIANCE,Stock mismatch: Legacy Stock=8 vs Master Ledger Closing=0
+MNT-BL-025,Belt B-68,CON130,Nos,0,0,0,0,0,15,0,15,VARIANCE,Stock mismatch: Legacy Stock=15 vs Master Ledger Closing=0
+MNT-BL-026,Belt B-92,CON131,Nos,0,0,0,0,0,8,0,8,VARIANCE,Stock mismatch: Legacy Stock=8 vs Master Ledger Closing=0
+MNT-BN-001,SS Washer(For Antena),CON132,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-002,M12x50 MS Bolt,CON133,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-003,M12 Nut,CON134,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-004,M12 Washer,CON135,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-005,M16 Washer,CON136,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-006,M10 Washer SS,CON137,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-007,M10x100 MS Bolt,CON138,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-008,1/2 Nut,CON139,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-009,M8/20 Allen Bolt,CON140,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-010,M12/25 Allen Bolt,CON141,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-011,M12/20 Allen Bolt,CON142,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-012,M12/80 Allen Bolt,CON143,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-013,M8 x30 Allen Bolt,CON144,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-014,M10 HT Nut,CON145,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-015,M10x35 Allen Bolt,CON146,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-016,M12/100 Allen Bolt,CON147,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-017,MS Washer,CON148,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-018,m14X40 Allen Bolt,CON149,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-019,M20 Spring Washer,CON150,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-020,M20/65 HT Bolt,CON151,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-021,M10/30 Allen Bolt,CON152,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-022,M12/100 Anchor Bolt,CON153,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-023,M12X125 A Bolt,CON154,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-024,M20/90 Anchor Bolt,CON155,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-025,M12/25 CSK Screw,CON156,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-026,M30 Washer,CON157,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-027,M30 Nut,CON158,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-028,M20/300 Bolt,CON159,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-029,5/8X200 Bolt,CON160,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-030,M30/300 Fondation Bolt,CON161,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-031,5/8 Washer,CON162,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-032,5/8 Nut,CON163,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-033,M14/50 Allen Bolt,CON164,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-034,M14/50 CSK Bolt,CON165,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-035,M30 Nut,CON166,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-036,M20 Washer,CON167,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-037,M14/50 Bolt,CON168,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-038,M14 Nut,CON169,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-039,M14 Spring Washer,CON170,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-040,M14x35 Allen Bolt,CON171,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-041,M14/60 CSK Bolt,CON172,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-042,5/16 Washer,CON173,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-043,M10x40 Allen Bolt,CON174,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-044,M14 Washer,CON175,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-045,"5/16X50 "" Bolt",CON176,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-046,M8/60MS Bolt,CON177,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-047,5/16 Nut,CON178,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-048,SS M10X75 Bolt,CON179,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-049,SS M10 Nut,CON180,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-050,SS M10 Washer,CON181,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-051,3/8X38 Bolt & Nut,CON182,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-052,M8X30 MS Bolt,CON183,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-053,"1/2"" X50 MS Bolt",CON184,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-054,5/8X150 Bolt,CON185,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-055,"1/2"" Washer",CON186,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-056,M8X40 MS Bolt,CON187,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-057,M8X50 MS Bolt,CON188,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-058,MS Nut,CON189,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-059,M10X50 MS Bolt,CON190,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-060,M8X75 MS Bolt,CON191,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-061,3/8X50 Bolt,CON192,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-062,3/8 Washer,CON193,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-063,3/8 Nut,CON194,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-064,M10X75 HT Bolt,CON195,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-065,M12X50 CSK Bolt,CON196,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-066,6MM Inch Bolt,CON197,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-067,M16 SP Washer,CON198,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-068,5/16X1.5M16 SP Washer Bolt,CON199,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-069,1/2'X25 Bolt,CON200,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-070,M8 Copper Washer,CON201,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-071,M16X60 Bolt,CON202,Nos,0,0,0,0,0,0,1,-1,VARIANCE,Stock mismatch: Legacy Stock=-1 vs Master Ledger Closing=0
+MNT-BN-072,M16 Nut,CON203,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-073,M20X50 CSK Screw,CON204,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-074,M12 T Nut,CON205,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-075,M20X30 Bolt,CON206,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-076,M6X30 Bolt,CON207,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-077,M10X50 HT Bolt,CON208,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-078,M6X20 Grab Screw,CON209,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-079,M8X20 Grab Screw,CON210,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-080,M12X20 Grab Screw,CON211,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-081,M12X25 Grab Screw,CON212,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-082,"1/2""X60 Bolt",CON213,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-083,M10 T Nut,CON214,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-084,MS12 SS Nut,CON215,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-085,M12 Washer,CON216,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-086,"1/2""X50 T Bolt",CON217,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-087,M16X50 Nut,CON218,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-088,M10X150 SS Bolt,CON219,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-089,M10 SS Nut,CON220,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-090,M8X15 Allen Bolt,CON221,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-091,M4X12 Allen Bolt,CON222,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-092,M6X50 Allen,CON223,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-093,M6 Washer,CON224,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-094,M6X40 Allen Bolt,CON225,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-095,M6X20 Allen Bolt,CON226,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-096,M8X50 Allen Bolt,CON227,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-097,M8X40 Allen Bolt,CON228,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-098,M4X20 Allen Bolt,CON229,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-099,M6X30 Allen Bolt,CON230,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-100,M12X50 Allen Bolt,CON231,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-101,"1/2""X100 Core Bolt",CON232,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-102,M12 Washer,CON233,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-103,M10 Nut,CON234,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-104,M12 HT Nut,CON235,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-105,M16 Washer,CON236,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-106,M10 Washer,CON237,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-107,M12 Spring Washer,CON238,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-108,M12 Nut,CON239,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-109,M10X80 Allen Bolt,CON240,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-110,M12X50 MS Bolt,CON241,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-111,M12x40 Allen Bolt,CON242,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-112,M10X40 MS Bolt,CON243,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-113,M12X35 Allen Bolt,CON244,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-114,M20x40 Allen Bolt,CON245,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-115,M12X30 Allen Bolt,CON246,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-116,M12x90 Allen Bolt,CON247,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-117,M12x40 Allen Bolt,CON248,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-118,M12X50 Allen Bolt,CON249,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-119,"Screw Rod 14""",CON250,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-120,"Screw Rod 22""",CON251,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-121,"Tool Post Bolt 1/2""",CON252,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-122,WNMG Top Screw,CON253,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-123,TNMG Screw,CON254,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-124,TNMG Top Screw,CON255,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-125,CNMG Screw Top Screw,CON256,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BN-126,CNMG Top SCREW-6 MM,CON257,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-001,WNMG080408-GHUC5115,CON258,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-002,WNMG080412-GHUC5115,CON259,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-003,CCMT 09T308FGCT 3000,CON260,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-004,WNMG080404-GHUC5115,CON261,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-005,WNMG080404-SARAMIT,CON262,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-006,TNMG160408 Saramit,CON263,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-007,TNMG160408 Carbites,CON264,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-008,TNMG 160404-MAUC5115-TNMG331MA,CON265,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-009,TNMG160404 FH AP25N,CON266,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-010,MMT 16 ER200150-SVP15TF,CON267,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-011,CCMT09T304 AP25N -CCMT 32.51,CON268,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-012,CCMT060204AP25N-21.51,CON269,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-013,CNMG 120408-HSCNMG 432HS,CON270,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-014,CCMT09T308 MPUE6110 CCMT 32 52MPM,CON271,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-015,CCMT09T304-MPUE6110-CCMT-32 51MPM,CON272,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-016,CCMT060204 CT,CON273,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-017,Tdxu 4E0.04 TT 9030,CON274,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-018,TDXU3E 0.3 TT 9030,CON275,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-019,GX16 2E3 00N0 30 M40CTP1340,CON276,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-020,3ER1.5 Iso VTX,CON277,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-021,3ER2.0 Iso VTX,CON278,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-022,VNMG 160404 MP UE6110 VNMG 331MP,CON279,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-023,VNMG 160404 FG CT 3000 Saramit,CON280,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-024,GY2M0300F030N-GU VP10RT W3 MM,CON281,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-025,WMTS405M 4U03PT Apmt 1604 PRD Pa 120,CON282,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-026,APMT1604PDR PAI120,CON283,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-027,VBMT160404 MP Ue 6110,CON284,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-028,WNMG Sim,CON285,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-029,WNMG Top Clamp,CON286,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-030,WNMG Pin,CON287,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-031,CNMG Shim,CON288,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-032,TNMG Sim,CON289,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-033,TNMG Pin,CON290,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-034,TNMG Top Clamp,CON291,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-035,Carbide Tips,CON292,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-036,VNMG Sim,CON293,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-037,WG 0412 M 04u04 PT,CON294,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-038,CNMG 120408-TM-T9125,CON295,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-039,CNMG Top Clamp,CON296,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-040,Milling Tips -Triangle,CON297,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+MCS-IT-041,Milling Tip -Square,CON298,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+UTL-FU-001,Diesel,CON299,Ltr,0,0,0,0,0,0,0,0,MATCH,Balances align
+MNT-BR-037,Bearing 6008-2Z,CON300,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+MNT-BR-038,Bearing 6004-2Z,CON301,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BR-039,Bearing 2209CW33 (2kg),CON302,Nos,0,0,0,0,0,3,0,3,VARIANCE,Stock mismatch: Legacy Stock=3 vs Master Ledger Closing=0
+MNT-BR-040,Bearing 6201 VSJ-350,CON303,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-041,Bearing 51109 (SKF),CON304,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-042,Bearing 6207-2Z/C3,CON305,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-043,Bearing 51107 (NBC),CON306,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-044,Bearing VKT 8001 (30210),CON307,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-045,Bearing 32210 52/1Q,CON308,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+MNT-BR-046,Bearing 30205 52/Q,CON309,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+MNT-BR-047,Bearing NBC-6012RSS,CON310,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+PKD-PK-005,Bubble Roll,CON311,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+PKD-PK-006,Cutan Box,CON312,Nos,0,0,0,0,0,0,0,0,MATCH,Balances align
+PKD-PK-007,Packing Tape Brown,CON313,Nos,0,0,0,0,0,93,0,93,VARIANCE,Stock mismatch: Legacy Stock=93 vs Master Ledger Closing=0
+PKD-PK-008,Packing Tape White,CON314,Nos,0,0,0,0,0,50,0,50,VARIANCE,Stock mismatch: Legacy Stock=50 vs Master Ledger Closing=0
+MNT-BL-027,Belt B-53,CON315,Nos,0,0,0,0,0,15,0,15,VARIANCE,Stock mismatch: Legacy Stock=15 vs Master Ledger Closing=0
+MNT-BL-028,Belt B-83,CON316,Nos,0,0,0,0,0,14,0,14,VARIANCE,Stock mismatch: Legacy Stock=14 vs Master Ledger Closing=0
+FDY-PT-013,Aluminium Paint,CON317,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+FDY-PT-014,Golden Yellow,CON318,Nos,0,0,0,0,0,10,0,10,VARIANCE,Stock mismatch: Legacy Stock=10 vs Master Ledger Closing=0
+FDY-PT-015,Bus Green,CON319,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+FDY-PT-016,Bit Blue,CON320,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+FDY-PT-017,Crack Seal,CON321,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+FDY-PT-018,P.O. Red,CON322,Nos,0,0,0,0,0,4,0,4,VARIANCE,Stock mismatch: Legacy Stock=4 vs Master Ledger Closing=0
+FDY-PT-019,Smoke Grey,CON323,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+FDY-PT-020,Apcolite Gloss,CON324,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+FDY-PT-021,Apcolite Premium Emulsion,CON325,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0
+FDY-PT-022,Gemlac Synthetic,CON326,Nos,0,0,0,0,0,4,0,4,VARIANCE,Stock mismatch: Legacy Stock=4 vs Master Ledger Closing=0
+FDY-PT-023,Beyond Colour,CON327,Nos,0,0,0,0,0,2,0,2,VARIANCE,Stock mismatch: Legacy Stock=2 vs Master Ledger Closing=0
+FDY-PT-024,Aluminium Paint,CON328,Nos,0,0,0,0,0,4,0,4,VARIANCE,Stock mismatch: Legacy Stock=4 vs Master Ledger Closing=0
+FDY-PT-025,Apex Floor Guard,CON329,Nos,0,0,0,0,0,5,0,5,VARIANCE,Stock mismatch: Legacy Stock=5 vs Master Ledger Closing=0
+FDY-PT-026,Red Oxide,CON330,Nos,0,0,0,0,0,1,0,1,VARIANCE,Stock mismatch: Legacy Stock=1 vs Master Ledger Closing=0

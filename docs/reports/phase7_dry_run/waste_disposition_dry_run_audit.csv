@@ -1,0 +1,7 @@
+Row #,Date,Disposal Note No,Item Description,Item Code,UOM,Quantity,Waste Type,Classification Status,Audit Notes
+2,2026-07-14 00:00:00,WD-0001,Emery Paper,FDY-CN-003,Kg,5,Scrap Sale,VALID_NEW_CANDIDATE,Valid waste record
+3,,,Tenryu TCT C/Saw Blade Dia 420X2.8X2.3X50X60T,MCS-CB-009,Nos,1,Scrap Sale,MANUAL_REVIEW,Missing disposition date; Missing disposal note number
+4,,,Borings-450/10,FDY-RM-002,Kg,,Destroyed,INVALID_SOURCE,Missing disposition date; Missing disposal note number; Missing quantity
+5,,,Belt B -44,MNT-BL-002,Nos,2,Destroyed,MANUAL_REVIEW,Missing disposition date; Missing disposal note number
+6,,,Cutting Blade 18 Inch,FDY-CN-012,Kg,1,Scrap Sale,MANUAL_REVIEW,Missing disposition date; Missing disposal note number
+7,,,Cutting Blade 24 Inch,FDY-CN-010,Kg,1,Scrap Sale,MANUAL_REVIEW,Missing disposition date; Missing disposal note number

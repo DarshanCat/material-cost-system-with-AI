@@ -1,0 +1,5 @@
+Row #,Date,GRN No,Vendor Name,Supplier Invoice No,PO No,Item Description,Item Code,UOM,Quantity,Classification Status,Audit Notes
+2,2026-07-14 00:00:00,2599,MM Tools,096,110726-02,Emery Paper,FDY-CN-003,Kg,25,VALID_NEW_CANDIDATE,RATE_MISSING: Sheet has no rate_ex_gst column (costing blocker)
+3,2026-07-14 00:00:00,2622,sreenathji,GMP2926002828,300426-10,3306PMKT-Generator,NOT FOUND,,1,UNMAPPED,Unmapped item code 'NOT FOUND'; RATE_MISSING: Sheet has no rate_ex_gst column (costing blocker)
+4,,,,454,070726-11,Tool Post,NOT FOUND,,4,UNMAPPED,Missing receipt date; Missing GRN document number; Unmapped item code 'NOT FOUND'; RATE_MISSING: Sheet has no rate_ex_gst column (costing blocker)
+5,,,,384,140726-02,crca scrap,NOT FOUND,kg,15200,UNMAPPED,Missing receipt date; Missing GRN document number; Unmapped item code 'NOT FOUND'; RATE_MISSING: Sheet has no rate_ex_gst column (costing blocker)

@@ -1,0 +1,60 @@
+{
+  "total_manifest_rows": 616,
+  "stage2_primary_counts": {
+    "VALID_NEW_CANDIDATE": 545,
+    "INVALID_SOURCE": 37,
+    "UNMAPPED": 3,
+    "MANUAL_REVIEW": 31
+  },
+  "stage2_readiness_counts": {
+    "ELIGIBLE": 515,
+    "BLOCKED": 35,
+    "PENDING_REVIEW": 66
+  },
+  "stage2_crosstab": {
+    "VALID_NEW_CANDIDATE x ELIGIBLE": 515,
+    "INVALID_SOURCE x BLOCKED": 35,
+    "UNMAPPED x PENDING_REVIEW": 3,
+    "MANUAL_REVIEW x PENDING_REVIEW": 31,
+    "VALID_NEW_CANDIDATE x PENDING_REVIEW": 30,
+    "INVALID_SOURCE x PENDING_REVIEW": 2
+  },
+  "recheck_primary_counts": {
+    "MANUAL_REVIEW": 63,
+    "VALID_NEW_CANDIDATE": 510,
+    "INVALID_SOURCE": 38,
+    "UNMAPPED": 3,
+    "CONFLICT": 2
+  },
+  "recheck_readiness_counts": {
+    "HELD_MANUAL_REVIEW": 68,
+    "HELD_PENDING_DECISION": 163,
+    "ROW_CLEAN_PENDING_CUTOFF_POLICY": 347,
+    "BLOCKED_SOURCE_DEFECT": 38
+  },
+  "recheck_crosstab": {
+    "MANUAL_REVIEW x HELD_MANUAL_REVIEW": 63,
+    "VALID_NEW_CANDIDATE x HELD_PENDING_DECISION": 163,
+    "VALID_NEW_CANDIDATE x ROW_CLEAN_PENDING_CUTOFF_POLICY": 347,
+    "INVALID_SOURCE x BLOCKED_SOURCE_DEFECT": 38,
+    "UNMAPPED x HELD_MANUAL_REVIEW": 3,
+    "CONFLICT x HELD_MANUAL_REVIEW": 2
+  },
+  "transition_matrix": {
+    "Stage2_VALID_NEW_CANDIDATE -> Recheck_MANUAL_REVIEW": 36,
+    "Stage2_VALID_NEW_CANDIDATE -> Recheck_VALID_NEW_CANDIDATE": 506,
+    "Stage2_INVALID_SOURCE -> Recheck_INVALID_SOURCE": 37,
+    "Stage2_UNMAPPED -> Recheck_UNMAPPED": 3,
+    "Stage2_MANUAL_REVIEW -> Recheck_MANUAL_REVIEW": 27,
+    "Stage2_VALID_NEW_CANDIDATE -> Recheck_CONFLICT": 2,
+    "Stage2_MANUAL_REVIEW -> Recheck_VALID_NEW_CANDIDATE": 4,
+    "Stage2_VALID_NEW_CANDIDATE -> Recheck_INVALID_SOURCE": 1
+  },
+  "source_fingerprints": {
+    "ITEM_MASTER": "6005441b7b022cc8b6e4e65b2d2563ca4462e2448eb3c66d5fdf40552c6e8ccd",
+    "MATERIAL_ENTRY": "97c6448db72fa65bdc09ec0956c9dbb7d645de7a854cf5c20d072b3df8376cb4",
+    "HEAT_LOG": "356e8c536a3c3cb853869804d65dd2381df7e7ec3731e798b7b26be2345f881d",
+    "MASTER_LEDGER": "7cb034054d5b4c4e471558b6e1c52b4c0ec7dc786d9b9a555aed42193d984600",
+    "STORE_INVENTORY": "40194dcf05ea29efb42f61aae7c25787a6f0ad482bca4b2bdfa777c7a6874b6d"
+  }
+}

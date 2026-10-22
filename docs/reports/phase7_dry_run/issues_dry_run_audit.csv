@@ -1,0 +1,559 @@
+Row #,Date,Issue Slip No,Item Description,Item Code,Canonical Item Code,UOM,Quantity,Consuming Section,Work Order,Department,Classification Status,Audit Notes
+2,2026-07-13 00:00:00,132607,Emery Paper,FDY-CN-003,FDY-CN-003,Kg,220,Foundry - Fettling/Deburring,WO-1730,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+3,2026-07-14 00:00:00,072609-1937,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,220,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+4,2026-07-14 00:00:00,072609-1936,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+5,2026-07-14 00:00:00,072609-1935,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+6,2026-07-14 00:00:00,072609-1934,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+7,2026-07-14 00:00:00,072609-1933,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,220,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+8,2026-07-14 00:00:00,072609-1932,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+9,2026-07-14 00:00:00,072609-1931,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+10,2026-07-14 00:00:00,072609-1930,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+11,2026-07-14 00:00:00,072609-1929,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,220,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+12,2026-07-14 00:00:00,072609-1928,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+13,2026-07-14 00:00:00,072609-1927,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+14,2026-07-14 00:00:00,072609-1926,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+15,2026-07-14 00:00:00,072609-1925,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,217,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+16,2026-07-14 00:00:00,072609-1924,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+17,2026-07-14 00:00:00,072609-1923,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,208,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+18,2026-07-14 00:00:00,072609-1922,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,208,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+19,2026-07-14 00:00:00,072609-1921,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,221,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+20,2026-07-14 00:00:00,072609-1920,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,218,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+21,2026-07-14 00:00:00,072609-1919,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,223,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+22,2026-07-14 00:00:00,072609-1918,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,259,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+23,2026-07-14 00:00:00,072609-1917,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,222,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+24,2026-07-14 00:00:00,072609-1916,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,215,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+25,2026-07-14 00:00:00,072609-1915,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,223,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+26,2026-07-14 00:00:00,072609-1914,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,259,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+27,2026-07-14 00:00:00,072609-1913,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,225,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+28,2026-07-14 00:00:00,072609-1912,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,218,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+29,2026-07-14 00:00:00,072609-1911,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,220,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+30,2026-07-14 00:00:00,072609-1910,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,256,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+31,2026-07-14 00:00:00,072609-1937,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,110,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+32,2026-07-14 00:00:00,072609-1936,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,106,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+33,2026-07-14 00:00:00,072609-1935,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+34,2026-07-14 00:00:00,072609-1934,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+35,2026-07-14 00:00:00,072609-1933,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,220,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+36,2026-07-14 00:00:00,072609-1932,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,106,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+37,2026-07-14 00:00:00,072609-1931,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+38,2026-07-14 00:00:00,072609-1930,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,100,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+39,2026-07-14 00:00:00,072609-1929,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,110,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+40,2026-07-14 00:00:00,072609-1928,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,106,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+41,2026-07-14 00:00:00,072609-1927,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,100,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+42,2026-07-14 00:00:00,072609-1926,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,100,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+43,2026-07-14 00:00:00,072609-1925,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,110,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+44,2026-07-14 00:00:00,072609-1924,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,107,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+45,2026-07-14 00:00:00,072609-1923,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+46,2026-07-14 00:00:00,072609-1922,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+47,2026-07-14 00:00:00,072609-1921,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,108,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+48,2026-07-14 00:00:00,072609-1920,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,106,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+49,2026-07-14 00:00:00,072609-1919,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,108,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+50,2026-07-14 00:00:00,072609-1918,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,56,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+51,2026-07-14 00:00:00,072609-1917,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,109,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+52,2026-07-14 00:00:00,072609-1916,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,106,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+53,2026-07-14 00:00:00,072609-1915,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,108,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+54,2026-07-14 00:00:00,072609-1914,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,51,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+55,2026-07-14 00:00:00,072609-1913,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,109,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+56,2026-07-14 00:00:00,072609-1912,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,106,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+57,2026-07-14 00:00:00,072609-1911,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,110,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+58,2026-07-14 00:00:00,072609-1910,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,51,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+59,2026-07-14 00:00:00,072609-1937,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,219,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+60,2026-07-14 00:00:00,072609-1936,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+61,2026-07-14 00:00:00,072609-1935,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+62,2026-07-14 00:00:00,072609-1934,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+63,2026-07-14 00:00:00,072609-1933,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,221,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+64,2026-07-14 00:00:00,072609-1932,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+65,2026-07-14 00:00:00,072609-1931,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+66,2026-07-14 00:00:00,072609-1930,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,203,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+67,2026-07-14 00:00:00,072609-1929,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,222,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+68,2026-07-14 00:00:00,072609-1928,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,211,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+69,2026-07-14 00:00:00,072609-1927,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+70,2026-07-14 00:00:00,072609-1926,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+71,2026-07-14 00:00:00,072609-1925,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,217,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+72,2026-07-14 00:00:00,072609-1924,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,209,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+73,2026-07-14 00:00:00,072609-1923,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+74,2026-07-14 00:00:00,072609-1922,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+75,2026-07-14 00:00:00,072609-1921,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,223,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+76,2026-07-14 00:00:00,072609-1920,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,215,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+77,2026-07-14 00:00:00,072609-1919,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,217,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+78,2026-07-14 00:00:00,072609-1918,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+79,2026-07-14 00:00:00,072609-1917,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,222,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+80,2026-07-14 00:00:00,072609-1916,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,212,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+81,2026-07-14 00:00:00,072609-1915,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,220,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+82,2026-07-14 00:00:00,072609-1914,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,211,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+83,2026-07-14 00:00:00,072609-1913,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,226,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+84,2026-07-14 00:00:00,072609-1912,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,212,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+85,2026-07-14 00:00:00,072609-1911,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,222,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+86,2026-07-14 00:00:00,072609-1910,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,210,,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+87,2026-07-14 00:00:00,072609-1937,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+88,2026-07-14 00:00:00,072609-1936,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+89,2026-07-14 00:00:00,072609-1935,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,12,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+90,2026-07-14 00:00:00,072609-1934,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+91,2026-07-14 00:00:00,072609-1933,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+92,2026-07-14 00:00:00,072609-1932,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+93,2026-07-14 00:00:00,072609-1931,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+94,2026-07-14 00:00:00,072609-1930,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+95,2026-07-14 00:00:00,072609-1929,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+96,2026-07-14 00:00:00,072609-1928,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+97,2026-07-14 00:00:00,072609-1927,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+98,2026-07-14 00:00:00,072609-1926,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+99,2026-07-14 00:00:00,072609-1925,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+100,2026-07-14 00:00:00,072609-1924,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+101,2026-07-14 00:00:00,072609-1923,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+102,2026-07-14 00:00:00,072609-1922,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+103,2026-07-14 00:00:00,072609-1921,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+104,2026-07-14 00:00:00,072609-1920,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+105,2026-07-14 00:00:00,072609-1919,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+106,2026-07-14 00:00:00,072609-1918,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,10,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+107,2026-07-14 00:00:00,072609-1917,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+108,2026-07-14 00:00:00,072609-1916,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+109,2026-07-14 00:00:00,072609-1915,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+110,2026-07-14 00:00:00,072609-1914,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,10,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+111,2026-07-14 00:00:00,072609-1913,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+112,2026-07-14 00:00:00,072609-1912,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+113,2026-07-14 00:00:00,072609-1911,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+114,2026-07-14 00:00:00,072609-1910,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,10,,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+115,2026-07-14 00:00:00,072609-1937,Silicon,FDY-RM-020,FDY-RM-020,Kg,3,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+116,2026-07-14 00:00:00,072609-1936,Silicon,FDY-RM-020,FDY-RM-020,Kg,3,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+117,2026-07-14 00:00:00,072609-1935,Silicon,FDY-RM-020,FDY-RM-020,Kg,3,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+118,2026-07-14 00:00:00,072609-1934,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+119,2026-07-14 00:00:00,072609-1933,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+120,2026-07-14 00:00:00,072609-1932,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+121,2026-07-14 00:00:00,072609-1931,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+122,2026-07-14 00:00:00,072609-1930,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+123,2026-07-14 00:00:00,072609-1929,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+124,2026-07-14 00:00:00,072609-1928,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+125,2026-07-14 00:00:00,072609-1927,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+126,2026-07-14 00:00:00,072609-1926,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+127,2026-07-14 00:00:00,072609-1925,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.52,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+128,2026-07-14 00:00:00,072609-1924,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.51,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+129,2026-07-14 00:00:00,072609-1923,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.44,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+130,2026-07-14 00:00:00,072609-1922,Silicon,FDY-RM-020,FDY-RM-020,Kg,1.86,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+131,2026-07-14 00:00:00,072609-1921,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+132,2026-07-14 00:00:00,072609-1920,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.43,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+133,2026-07-14 00:00:00,072609-1919,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+134,2026-07-14 00:00:00,072609-1918,Silicon,FDY-RM-020,FDY-RM-020,Kg,3.26,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+135,2026-07-14 00:00:00,072609-1917,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+136,2026-07-14 00:00:00,072609-1916,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.43,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+137,2026-07-14 00:00:00,072609-1915,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+138,2026-07-14 00:00:00,072609-1914,Silicon,FDY-RM-020,FDY-RM-020,Kg,3.26,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+139,2026-07-14 00:00:00,072609-1913,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+140,2026-07-14 00:00:00,072609-1912,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.43,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+141,2026-07-14 00:00:00,072609-1911,Silicon,FDY-RM-020,FDY-RM-020,Kg,0,Foundry - Melting/Pouring,,,INVALID_SOURCE,Non-positive quantity: 0
+142,2026-07-14 00:00:00,072609-1910,Silicon,FDY-RM-020,FDY-RM-020,Kg,3,,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+143,2026-07-14 00:00:00,072609-1937,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+144,2026-07-14 00:00:00,072609-1936,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+145,2026-07-14 00:00:00,072609-1935,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+146,2026-07-14 00:00:00,072609-1934,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+147,2026-07-14 00:00:00,072609-1933,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+148,2026-07-14 00:00:00,072609-1932,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+149,2026-07-14 00:00:00,072609-1931,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+150,2026-07-14 00:00:00,072609-1930,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+151,2026-07-14 00:00:00,072609-1929,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+152,2026-07-14 00:00:00,072609-1928,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+153,2026-07-14 00:00:00,072609-1927,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+154,2026-07-14 00:00:00,072609-1926,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+155,2026-07-14 00:00:00,072609-1925,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+156,2026-07-14 00:00:00,072609-1924,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.12,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+157,2026-07-14 00:00:00,072609-1923,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+158,2026-07-14 00:00:00,072609-1922,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+159,2026-07-14 00:00:00,072609-1921,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+160,2026-07-14 00:00:00,072609-1920,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+161,2026-07-14 00:00:00,072609-1919,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+162,2026-07-14 00:00:00,072609-1918,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+163,2026-07-14 00:00:00,072609-1917,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+164,2026-07-14 00:00:00,072609-1916,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+165,2026-07-14 00:00:00,072609-1915,Manganese,FDY-RM-017,FDY-RM-017,Kg,1.4,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+166,2026-07-14 00:00:00,072609-1914,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+167,2026-07-14 00:00:00,072609-1913,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+168,2026-07-14 00:00:00,072609-1912,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+169,2026-07-14 00:00:00,072609-1911,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,,INVALID_SOURCE,Non-positive quantity: 0
+170,2026-07-14 00:00:00,072609-1910,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,,,,INVALID_SOURCE,Non-positive quantity: 0
+171,2026-07-14 00:00:00,072609-1937,manganese,FDY-RM-017,FDY-RM-017,Kg,5.2,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+172,2026-07-14 00:00:00,072609-1936,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+173,2026-07-14 00:00:00,072609-1935,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+174,2026-07-14 00:00:00,072609-1934,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+175,2026-07-14 00:00:00,072609-1933,manganese,FDY-RM-017,FDY-RM-017,Kg,5.2,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+176,2026-07-14 00:00:00,072609-1932,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+177,2026-07-14 00:00:00,072609-1931,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+178,2026-07-14 00:00:00,072609-1930,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+179,2026-07-14 00:00:00,072609-1929,manganese,FDY-RM-017,FDY-RM-017,Kg,5.2,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+180,2026-07-14 00:00:00,072609-1928,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+181,2026-07-14 00:00:00,072609-1927,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+182,2026-07-14 00:00:00,072609-1926,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+183,2026-07-14 00:00:00,072609-1925,manganese,FDY-RM-017,FDY-RM-017,Kg,5.16,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+184,2026-07-14 00:00:00,072609-1924,manganese,FDY-RM-017,FDY-RM-017,Kg,4.96,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+185,2026-07-14 00:00:00,072609-1923,manganese,FDY-RM-017,FDY-RM-017,Kg,4.86,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+186,2026-07-14 00:00:00,072609-1922,manganese,FDY-RM-017,FDY-RM-017,Kg,4.81,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+187,2026-07-14 00:00:00,072609-1921,manganese,FDY-RM-017,FDY-RM-017,Kg,5.16,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+188,2026-07-14 00:00:00,072609-1920,manganese,FDY-RM-017,FDY-RM-017,Kg,5.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+189,2026-07-14 00:00:00,072609-1919,manganese,FDY-RM-017,FDY-RM-017,Kg,5.15,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+190,2026-07-14 00:00:00,072609-1918,manganese,FDY-RM-017,FDY-RM-017,Kg,4.86,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+191,2026-07-14 00:00:00,072609-1917,manganese,FDY-RM-017,FDY-RM-017,Kg,5.2,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+192,2026-07-14 00:00:00,072609-1916,manganese,FDY-RM-017,FDY-RM-017,Kg,5.64,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+193,2026-07-14 00:00:00,072609-1915,manganese,FDY-RM-017,FDY-RM-017,Kg,5.15,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+194,2026-07-14 00:00:00,072609-1914,manganese,FDY-RM-017,FDY-RM-017,Kg,4.86,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+195,2026-07-14 00:00:00,072609-1913,manganese,FDY-RM-017,FDY-RM-017,Kg,5.2,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+196,2026-07-14 00:00:00,072609-1912,manganese,FDY-RM-017,FDY-RM-017,Kg,5.04,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+197,2026-07-14 00:00:00,072609-1911,manganese,FDY-RM-017,FDY-RM-017,Kg,5.15,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+198,2026-07-14 00:00:00,072609-1910,manganese,FDY-RM-017,FDY-RM-017,Kg,5,,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+199,2026-07-14 00:00:00,072609-1937,Copper,FDY-RM-006,FDY-RM-006,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+200,2026-07-14 00:00:00,072609-1937,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+201,2026-07-14 00:00:00,072609-1936,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+202,2026-07-14 00:00:00,072609-1935,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+203,2026-07-14 00:00:00,072609-1934,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+204,2026-07-14 00:00:00,072609-1933,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+205,2026-07-14 00:00:00,072609-1932,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+206,2026-07-14 00:00:00,072609-1931,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+207,2026-07-14 00:00:00,072609-1930,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+208,2026-07-14 00:00:00,072609-1929,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+209,2026-07-14 00:00:00,072609-1928,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+210,2026-07-14 00:00:00,072609-1927,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+211,2026-07-14 00:00:00,072609-1926,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+212,2026-07-14 00:00:00,072609-1925,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+213,2026-07-14 00:00:00,072609-1924,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+214,2026-07-14 00:00:00,072609-1923,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+215,2026-07-14 00:00:00,072609-1922,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+216,2026-07-14 00:00:00,072609-1921,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+217,2026-07-14 00:00:00,072609-1920,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+218,2026-07-14 00:00:00,072609-1919,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+219,2026-07-14 00:00:00,072609-1918,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+220,2026-07-14 00:00:00,072609-1917,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+221,2026-07-14 00:00:00,072609-1916,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+222,2026-07-14 00:00:00,072609-1915,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+223,2026-07-14 00:00:00,072609-1914,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+224,2026-07-14 00:00:00,072609-1913,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+225,2026-07-14 00:00:00,072609-1912,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+226,2026-07-14 00:00:00,072609-1911,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+227,2026-07-14 00:00:00,072609-1910,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+228,2026-07-14 00:00:00,072609-1937,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+229,2026-07-14 00:00:00,072609-1936,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+230,2026-07-14 00:00:00,072609-1935,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+231,2026-07-14 00:00:00,072609-1934,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+232,2026-07-14 00:00:00,072609-1933,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+233,2026-07-14 00:00:00,072609-1932,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+234,2026-07-14 00:00:00,072609-1931,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+235,2026-07-14 00:00:00,072609-1930,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+236,2026-07-14 00:00:00,072609-1929,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+237,2026-07-14 00:00:00,072609-1928,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+238,2026-07-14 00:00:00,072609-1927,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+239,2026-07-14 00:00:00,072609-1926,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+240,2026-07-14 00:00:00,072609-1925,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+241,2026-07-14 00:00:00,072609-1924,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+242,2026-07-14 00:00:00,072609-1923,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+243,2026-07-14 00:00:00,072609-1922,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+244,2026-07-14 00:00:00,072609-1921,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+245,2026-07-14 00:00:00,072609-1920,Bial,FDY-RM-001,FDY-RM-001,Kg,1.06,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+246,2026-07-14 00:00:00,072609-1919,Bial,FDY-RM-001,FDY-RM-001,Kg,1.08,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+247,2026-07-14 00:00:00,072609-1918,Bial,FDY-RM-001,FDY-RM-001,Kg,1.02,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+248,2026-07-14 00:00:00,072609-1917,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+249,2026-07-14 00:00:00,072609-1916,Bial,FDY-RM-001,FDY-RM-001,Kg,1.06,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+250,2026-07-14 00:00:00,072609-1915,Bial,FDY-RM-001,FDY-RM-001,Kg,1.08,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+251,2026-07-14 00:00:00,072609-1914,Bial,FDY-RM-001,FDY-RM-001,Kg,1.02,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+252,2026-07-14 00:00:00,072609-1913,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+253,2026-07-14 00:00:00,072609-1912,Bial,FDY-RM-001,FDY-RM-001,Kg,1.06,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+254,2026-07-14 00:00:00,072609-1911,Bial,FDY-RM-001,FDY-RM-001,Kg,1.08,Foundry - Melting/Pouring,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+255,2026-07-14 00:00:00,072609-1910,Bial,FDY-RM-001,FDY-RM-001,Kg,1.02,,,,VALID_NEW_CANDIDATE,Conforms to issue schema
+256,2026-07-14 00:00:00,072609-1937,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+257,2026-07-14 00:00:00,072609-1936,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+258,2026-07-14 00:00:00,072609-1935,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+259,2026-07-14 00:00:00,072609-1934,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+260,2026-07-14 00:00:00,072609-1933,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+261,2026-07-14 00:00:00,072609-1932,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+262,2026-07-14 00:00:00,072609-1931,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+263,2026-07-14 00:00:00,072609-1930,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+264,2026-07-14 00:00:00,072609-1929,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+265,2026-07-14 00:00:00,072609-1928,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+266,2026-07-14 00:00:00,072609-1927,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+267,2026-07-14 00:00:00,072609-1926,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+268,2026-07-14 00:00:00,072609-1925,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+269,2026-07-14 00:00:00,072609-1924,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+270,2026-07-14 00:00:00,072609-1923,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+271,2026-07-14 00:00:00,072609-1922,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+272,2026-07-14 00:00:00,072609-1921,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+273,2026-07-14 00:00:00,072609-1920,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.06,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+274,2026-07-14 00:00:00,072609-1919,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.08,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+275,2026-07-14 00:00:00,072609-1918,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.02,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+276,2026-07-14 00:00:00,072609-1917,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+277,2026-07-14 00:00:00,072609-1916,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.06,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+278,2026-07-14 00:00:00,072609-1915,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.08,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+279,2026-07-14 00:00:00,072609-1914,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.02,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+280,2026-07-14 00:00:00,072609-1913,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+281,2026-07-14 00:00:00,072609-1912,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.06,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+282,2026-07-14 00:00:00,072609-1911,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.08,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+283,2026-07-14 00:00:00,072609-1910,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.02,,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+284,2026-07-14 00:00:00,1139,Cutting Blade 20 Inch,FDY-CN-011,FDY-CN-011,Kg,1,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+285,2026-07-14 00:00:00,1139,Cutting Blade 24 Inch,FDY-CN-010,FDY-CN-010,Kg,1,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+286,2026-07-14 00:00:00,1139,Hand Gloves PU Coated,GEN-SF-006,GEN-SF-006,Nos,3,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+287,2026-07-14 00:00:00,1139,P.O. Red,FDY-PT-018,FDY-PT-018,Nos,1,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+288,2026-07-14 00:00:00,1142,Mould Sealing Rope,FDY-CN-002,FDY-CN-002,Kg,20,Foundry - Moulding,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+289,2026-07-14 00:00:00,319,Grinding Wheel 7 Inch,FDY-CN-013,FDY-CN-013,Kg,5,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+290,2026-07-14 00:00:00,2506,Tenryu TCT C/Saw Blade Dia 420X2.8X2.3X50X60T,MCS-CB-009,MCS-CB-009,Nos,1,Machine Shop - PM Cell (F2),,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+291,2026-07-14 00:00:00,726091938,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+292,2026-07-14 00:00:00,726091939,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+293,2026-07-14 00:00:00,726091940,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,247,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+294,2026-07-14 00:00:00,726091941,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,257,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+295,2026-07-14 00:00:00,726091942,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,217,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+296,2026-07-14 00:00:00,726091943,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+297,2026-07-14 00:00:00,726091944,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,259,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+298,2026-07-14 00:00:00,726091945,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,227,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+299,2026-07-14 00:00:00,726091946,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+300,2026-07-14 00:00:00,726091947,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,240,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+301,2026-07-14 00:00:00,726091948,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,219,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+302,2026-07-14 00:00:00,726091949,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,249,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+303,2026-07-14 00:00:00,726091950,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+304,2026-07-14 00:00:00,726091951,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,212,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+305,2026-07-14 00:00:00,726091952,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,254,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+306,2026-07-14 00:00:00,726091953,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Malformed quantity: None
+307,2026-07-14 00:00:00,726091954,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,201,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+308,2026-07-14 00:00:00,726091955,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+309,2026-07-14 00:00:00,726091956,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+310,2026-07-14 00:00:00,726091957,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,220,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+311,2026-07-14 00:00:00,726091958,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+312,2026-07-14 00:00:00,726091959,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+313,2026-07-14 00:00:00,726091960,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,211,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+314,2026-07-15 00:00:00,726091961,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,272,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+315,2026-07-15 00:00:00,726091962,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,265,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+316,2026-07-15 00:00:00,726091963,CRC Scrap-Low MN,FDY-RM-008,FDY-RM-008,Kg,310,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+317,2026-07-14 00:00:00,726091938,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,100,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+318,2026-07-14 00:00:00,726091939,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+319,2026-07-14 00:00:00,726091940,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+320,2026-07-14 00:00:00,726091941,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,109,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+321,2026-07-14 00:00:00,726091942,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+322,2026-07-14 00:00:00,726091943,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+323,2026-07-14 00:00:00,726091944,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+324,2026-07-14 00:00:00,726091945,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+325,2026-07-14 00:00:00,726091946,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+326,2026-07-14 00:00:00,726091947,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+327,2026-07-14 00:00:00,726091948,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+328,2026-07-14 00:00:00,726091949,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,109,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+329,2026-07-14 00:00:00,726091950,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+330,2026-07-14 00:00:00,726091951,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+331,2026-07-14 00:00:00,726091952,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+332,2026-07-14 00:00:00,726091953,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Malformed quantity: None
+333,2026-07-14 00:00:00,726091954,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,105,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+334,2026-07-14 00:00:00,726091955,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,102,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+335,2026-07-14 00:00:00,726091956,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,104,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+336,2026-07-14 00:00:00,726091957,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,110,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+337,2026-07-14 00:00:00,726091958,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,100,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+338,2026-07-14 00:00:00,726091959,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,101,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+339,2026-07-14 00:00:00,726091960,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,105,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+340,2026-07-14 00:00:00,726091961,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,56,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+341,2026-07-14 00:00:00,726091962,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,54,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+342,2026-07-14 00:00:00,726091963,Gattings-450/10,FDY-RM-009,FDY-RM-009,Kg,52,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+343,2026-07-14 00:00:00,726091938,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+344,2026-07-14 00:00:00,726091939,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+345,2026-07-14 00:00:00,726091940,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,215,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+346,2026-07-14 00:00:00,726091941,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,223,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+347,2026-07-14 00:00:00,726091942,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+348,2026-07-14 00:00:00,726091943,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+349,2026-07-14 00:00:00,726091944,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+350,2026-07-14 00:00:00,726091945,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,225,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+351,2026-07-14 00:00:00,726091946,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+352,2026-07-14 00:00:00,726091947,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,205,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+353,2026-07-14 00:00:00,726091948,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,212,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+354,2026-07-14 00:00:00,726091949,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,223,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+355,2026-07-14 00:00:00,726091950,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,202,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+356,2026-07-14 00:00:00,726091951,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+357,2026-07-14 00:00:00,726091952,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,209,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+358,2026-07-14 00:00:00,726091953,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Malformed quantity: None
+359,2026-07-14 00:00:00,726091954,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,204,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+360,2026-07-14 00:00:00,726091955,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+361,2026-07-14 00:00:00,726091956,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+362,2026-07-14 00:00:00,726091957,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,219,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+363,2026-07-14 00:00:00,726091958,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,206,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+364,2026-07-14 00:00:00,726091959,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,200,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+365,2026-07-14 00:00:00,726091960,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+366,2026-07-15 00:00:00,726091961,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,216,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+367,2026-07-15 00:00:00,726091962,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,210,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+368,2026-07-15 00:00:00,726091963,Borings-450/10,FDY-RM-002,FDY-RM-002,Kg,150,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+369,2026-07-14 00:00:00,726091938,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+370,2026-07-14 00:00:00,726091939,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+371,2026-07-14 00:00:00,726091940,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+372,2026-07-14 00:00:00,726091941,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+373,2026-07-14 00:00:00,726091942,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+374,2026-07-14 00:00:00,726091943,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+375,2026-07-14 00:00:00,726091944,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+376,2026-07-14 00:00:00,726091945,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+377,2026-07-14 00:00:00,726091946,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+378,2026-07-14 00:00:00,726091947,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8.5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+379,2026-07-14 00:00:00,726091948,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+380,2026-07-14 00:00:00,726091949,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+381,2026-07-14 00:00:00,726091950,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,10,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+382,2026-07-14 00:00:00,726091951,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+383,2026-07-14 00:00:00,726091952,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+384,2026-07-14 00:00:00,726091953,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Malformed quantity: None
+385,2026-07-14 00:00:00,726091954,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+386,2026-07-14 00:00:00,726091955,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+387,2026-07-14 00:00:00,726091956,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+388,2026-07-14 00:00:00,726091957,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+389,2026-07-14 00:00:00,726091958,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+390,2026-07-14 00:00:00,726091959,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+391,2026-07-14 00:00:00,726091960,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+392,2026-07-15 00:00:00,726091961,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,11,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+393,2026-07-15 00:00:00,726091962,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,11,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+394,2026-07-15 00:00:00,726091963,Graphite Carbonizer,FDY-RM-013,FDY-RM-013,Kg,12,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+395,2026-07-14 00:00:00,726091938,Silicon,FDY-RM-020,FDY-RM-020,Kg,3.183,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+396,2026-07-14 00:00:00,726091939,Silicon,FDY-RM-020,FDY-RM-020,Kg,3.49,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+397,2026-07-14 00:00:00,726091940,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.51,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+398,2026-07-14 00:00:00,726091941,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+399,2026-07-14 00:00:00,726091942,Silicon,FDY-RM-020,FDY-RM-020,Kg,1.4,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+400,2026-07-14 00:00:00,726091943,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.49,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+401,2026-07-14 00:00:00,726091944,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.51,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+402,2026-07-14 00:00:00,726091945,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+403,2026-07-14 00:00:00,726091946,Silicon,FDY-RM-020,FDY-RM-020,Kg,3.66,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+404,2026-07-14 00:00:00,726091947,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.49,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+405,2026-07-14 00:00:00,726091948,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.51,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+406,2026-07-14 00:00:00,726091949,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.53,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+407,2026-07-14 00:00:00,726091950,Silicon,FDY-RM-020,FDY-RM-020,Kg,3.76,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+408,2026-07-14 00:00:00,726091951,Silicon,FDY-RM-020,FDY-RM-020,Kg,1.1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+409,2026-07-14 00:00:00,726091952,Silicon,FDY-RM-020,FDY-RM-020,Kg,0.735,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+410,2026-07-15 00:00:00,726091963,Silicon,FDY-RM-020,FDY-RM-020,Kg,3,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+411,2026-07-14 00:00:00,726091940,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+412,2026-07-14 00:00:00,726091941,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+413,2026-07-14 00:00:00,726091942,Manganese,FDY-RM-017,FDY-RM-017,Kg,1.789,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+414,2026-07-14 00:00:00,726091943,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+415,2026-07-14 00:00:00,726091944,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+416,2026-07-14 00:00:00,726091945,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+417,2026-07-14 00:00:00,726091946,Manganese,FDY-RM-017,FDY-RM-017,Kg,1.7,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+418,2026-07-14 00:00:00,726091947,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+419,2026-07-14 00:00:00,726091948,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+420,2026-07-14 00:00:00,726091949,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+421,2026-07-14 00:00:00,726091950,Manganese,FDY-RM-017,FDY-RM-017,Kg,1.74,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+422,2026-07-14 00:00:00,726091951,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+423,2026-07-14 00:00:00,726091952,Manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+424,2026-07-14 00:00:00,726091953,Manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+425,2026-07-14 00:00:00,726091954,Manganese,FDY-RM-017,FDY-RM-017,Kg,1.85,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+426,2026-07-15 00:00:00,726091962,Manganese,FDY-RM-017,FDY-RM-017,Kg,1.9,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+427,2026-07-14 00:00:00,726091938,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+428,2026-07-14 00:00:00,726091939,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+429,2026-07-14 00:00:00,726091941,manganese,FDY-RM-017,FDY-RM-017,Kg,14,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+430,2026-07-14 00:00:00,726091942,manganese,FDY-RM-017,FDY-RM-017,Kg,4.81,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+431,2026-07-14 00:00:00,726091943,manganese,FDY-RM-017,FDY-RM-017,Kg,0.13,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+432,2026-07-14 00:00:00,726091944,manganese,FDY-RM-017,FDY-RM-017,Kg,4.96,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+433,2026-07-14 00:00:00,726091945,manganese,FDY-RM-017,FDY-RM-017,Kg,5.16,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+434,2026-07-14 00:00:00,726091946,manganese,FDY-RM-017,FDY-RM-017,Kg,4.81,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+435,2026-07-14 00:00:00,726091947,manganese,FDY-RM-017,FDY-RM-017,Kg,4.8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+436,2026-07-14 00:00:00,726091948,manganese,FDY-RM-017,FDY-RM-017,Kg,4.96,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+437,2026-07-14 00:00:00,726091949,manganese,FDY-RM-017,FDY-RM-017,Kg,5.16,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+438,2026-07-14 00:00:00,726091950,manganese,FDY-RM-017,FDY-RM-017,Kg,4.81,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+439,2026-07-14 00:00:00,726091951,manganese,FDY-RM-017,FDY-RM-017,Kg,4.8,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+440,2026-07-14 00:00:00,726091952,manganese,FDY-RM-017,FDY-RM-017,Kg,4.96,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+441,2026-07-14 00:00:00,726091953,manganese,FDY-RM-017,FDY-RM-017,Kg,0,Foundry - Melting/Pouring,,Foundry,INVALID_SOURCE,Non-positive quantity: 0
+442,2026-07-14 00:00:00,726091954,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+443,2026-07-14 00:00:00,726091955,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+444,2026-07-14 00:00:00,726091956,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+445,2026-07-14 00:00:00,726091957,manganese,FDY-RM-017,FDY-RM-017,Kg,5.16,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+446,2026-07-14 00:00:00,726091958,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+447,2026-07-14 00:00:00,726091959,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+448,2026-07-14 00:00:00,726091960,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+449,2026-07-15 00:00:00,726091961,manganese,FDY-RM-017,FDY-RM-017,Kg,5.1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+450,2026-07-15 00:00:00,726091962,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+451,2026-07-15 00:00:00,726091963,manganese,FDY-RM-017,FDY-RM-017,Kg,5,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+452,2026-07-14 00:00:00,726091938,Copper,FDY-RM-006,FDY-RM-006,Kg,1.81,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+453,2026-07-14 00:00:00,726091942,Copper,FDY-RM-006,FDY-RM-006,Kg,4.81,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+454,2026-07-14 00:00:00,726091946,Copper,FDY-RM-006,FDY-RM-006,Kg,2.4,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+455,2026-07-14 00:00:00,726091950,Copper,FDY-RM-006,FDY-RM-006,Kg,2.389,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+456,2026-07-14 00:00:00,726091954,Copper,FDY-RM-006,FDY-RM-006,Kg,2.2,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+457,2026-07-14 00:00:00,726091958,Copper,FDY-RM-006,FDY-RM-006,Kg,2.15,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+458,2026-07-15 00:00:00,726101962,Copper,FDY-RM-006,FDY-RM-006,Kg,1.63,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+459,2026-07-14 00:00:00,726091938,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+460,2026-07-14 00:00:00,726091939,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+461,2026-07-14 00:00:00,726091940,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+462,2026-07-14 00:00:00,726091941,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+463,2026-07-14 00:00:00,726091942,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+464,2026-07-14 00:00:00,726091943,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+465,2026-07-14 00:00:00,726091944,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+466,2026-07-14 00:00:00,726091945,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+467,2026-07-14 00:00:00,726091946,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+468,2026-07-14 00:00:00,726091947,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+469,2026-07-14 00:00:00,726091948,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+470,2026-07-14 00:00:00,726091949,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+471,2026-07-14 00:00:00,726091950,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+472,2026-07-14 00:00:00,726091951,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+473,2026-07-14 00:00:00,726091952,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+474,2026-07-14 00:00:00,726091953,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+475,2026-07-14 00:00:00,726091954,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+476,2026-07-14 00:00:00,726091955,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+477,2026-07-14 00:00:00,726091956,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+478,2026-07-14 00:00:00,726091957,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+479,2026-07-14 00:00:00,726091958,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+480,2026-07-14 00:00:00,726091959,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+481,2026-07-14 00:00:00,726091960,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+482,2026-07-15 00:00:00,726091961,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+483,2026-07-15 00:00:00,726091962,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+484,2026-07-15 00:00:00,726091963,Ziman,FDY-RM-022,FDY-RM-022,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+485,2026-07-14 00:00:00,726091938,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+486,2026-07-14 00:00:00,726091939,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+487,2026-07-14 00:00:00,726091940,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+488,2026-07-14 00:00:00,726091941,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+489,2026-07-14 00:00:00,726091942,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+490,2026-07-14 00:00:00,726091943,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+491,2026-07-14 00:00:00,726091944,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+492,2026-07-14 00:00:00,726091945,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+493,2026-07-14 00:00:00,726091946,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+494,2026-07-14 00:00:00,726091947,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+495,2026-07-14 00:00:00,726091948,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+496,2026-07-14 00:00:00,726091949,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+497,2026-07-14 00:00:00,726091950,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+498,2026-07-14 00:00:00,726091951,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+499,2026-07-14 00:00:00,726091952,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+500,2026-07-14 00:00:00,726091953,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+501,2026-07-14 00:00:00,726091954,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+502,2026-07-14 00:00:00,726091955,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+503,2026-07-14 00:00:00,726091956,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+504,2026-07-14 00:00:00,726091957,Bial,FDY-RM-001,FDY-RM-001,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+505,2026-07-14 00:00:00,726091958,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+506,2026-07-14 00:00:00,726091959,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+507,2026-07-14 00:00:00,726091960,Bial,FDY-RM-001,FDY-RM-001,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+508,2026-07-15 00:00:00,726091961,Bial,FDY-RM-001,FDY-RM-001,Kg,1.07,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+509,2026-07-15 00:00:00,726091962,Bial,FDY-RM-001,FDY-RM-001,Kg,1.05,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+510,2026-07-15 00:00:00,726091963,Bial,FDY-RM-001,FDY-RM-001,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+511,2026-07-14 00:00:00,726091938,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+512,2026-07-14 00:00:00,726091939,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+513,2026-07-14 00:00:00,726091940,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+514,2026-07-14 00:00:00,726091941,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+515,2026-07-14 00:00:00,726091942,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+516,2026-07-14 00:00:00,726091943,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+517,2026-07-14 00:00:00,726091944,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+518,2026-07-14 00:00:00,726091945,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+519,2026-07-14 00:00:00,726091946,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+520,2026-07-14 00:00:00,726091947,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+521,2026-07-14 00:00:00,726091948,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+522,2026-07-14 00:00:00,726091949,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+523,2026-07-14 00:00:00,726091950,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+524,2026-07-14 00:00:00,726091951,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+525,2026-07-14 00:00:00,726091952,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+526,2026-07-14 00:00:00,726091953,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+527,2026-07-14 00:00:00,726091954,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+528,2026-07-14 00:00:00,726091955,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+529,2026-07-14 00:00:00,726091956,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+530,2026-07-14 00:00:00,726091957,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+531,2026-07-14 00:00:00,726091958,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.09,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+532,2026-07-14 00:00:00,726091959,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+533,2026-07-14 00:00:00,726091960,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.04,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+534,2026-07-15 00:00:00,726091961,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.07,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+535,2026-07-15 00:00:00,726091962,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.05,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+536,2026-07-15 00:00:00,726091963,Inoculant 250,FDY-RM-015,FDY-RM-015,Kg,1.01,Foundry - Melting/Pouring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+537,7-16-20236,327,cable 1.5sq mm,NOT FOUND,,nos,4,Foundry - segrigation,,Foundry,UNMAPPED,Invalid or unparseable transaction date; Missing or unmapped item code
+538,7-16-20236,327,plug 3 pin,NOT FOUND,,nos,1,Foundry - segrigation,,Foundry,UNMAPPED,Invalid or unparseable transaction date; Missing or unmapped item code
+539,7-16-20236,910,Belt B -44,MNT-BL-002,MNT-BL-002,Nos,2,Machine Shop - CNC/VMC/HMC (F3),,Machine Shop,INVALID_SOURCE,Invalid or unparseable transaction date
+540,7-16-20236,325,Stone Grinding Wheel 6mm X 20 MM,FDY-CN-021,FDY-CN-021,NOS,1,Foundry - segrigation,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+541,7-16-20236,325,"Power Hax Blade 20""",MCS-CB-005,MCS-CB-005,Nos,1,Foundry - segrigation,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+542,7-16-20236,325,Grinding Wheel 7 Inch,FDY-CN-013,FDY-CN-013,nos,5,Foundry - segrigation,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+543,7-16-20236,1149,Mould Sealing Rope,FDY-CN-002,FDY-CN-002,KG,20,Foundry - Moulding,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+544,7-16-20236,326,Blue Paint,FDY-PT-006,FDY-PT-006,LTR,1,Special Process,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+545,7-16-20236,2725,Cutan Box,PKD-PK-006,PKD-PK-006,Nos,30,Dispatch/Packing,,Packing/Dispatch,INVALID_SOURCE,Invalid or unparseable transaction date
+546,7-16-20236,2725,Bubble Roll,PKD-PK-005,PKD-PK-005,roll,1,Dispatch/Packing,,Packing/Dispatch,INVALID_SOURCE,Invalid or unparseable transaction date
+547,7-16-20236,1148,Holcote-100,FDY-MD-003,FDY-MD-003,Kg,50,Foundry - Moulding,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+548,7-16-20236,1148,Blue Paint,FDY-PT-006,FDY-PT-006,ltr,1,Foundry - Moulding,,Foundry,INVALID_SOURCE,Invalid or unparseable transaction date
+549,2026-07-15 00:00:00,1147,Holcote-100,FDY-MD-003,FDY-MD-003,Kg,25,Foundry - Moulding,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+550,2026-07-15 00:00:00,320,Tempo Brush,FDY-CN-004,FDY-CN-004,nos,2,Foundry - segrigation,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+551,2026-07-15 00:00:00,320,Safety Goggles,GEN-SF-005,GEN-SF-005,Nos,3,Foundry - segrigation,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+552,2026-07-15 00:00:00,1815,Best System 68-Machine Shop,MNT-OL-011,MNT-OL-011,Ltr,20,Machine Shop - CNC/VMC/HMC (F3),,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+553,2026-07-15 00:00:00,1144,Cutting Blade 18 Inch,FDY-CN-012,FDY-CN-012,nos,1,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+554,2026-07-15 00:00:00,1144,Cutting Blade 24 Inch,FDY-CN-010,FDY-CN-010,Kg,1,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+555,2026-07-15 00:00:00,1220,Quick Cast,FDY-LN-002,FDY-LN-002,Kg,125,,,TMS,VALID_NEW_CANDIDATE,Conforms to issue schema
+556,2026-07-15 00:00:00,1220,Minro Plast,FDY-LN-009,FDY-LN-009,Kg,25,,,TMS,VALID_NEW_CANDIDATE,Conforms to issue schema
+557,2026-07-15 00:00:00,1220,WD Spray,MNT-OL-002,MNT-OL-002,Ltr,1,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+558,2026-07-15 00:00:00,1161,Emery Paper,FDY-CN-003,FDY-CN-003,nos,3,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
+559,2026-07-15 00:00:00,1161,Holcote-100,FDY-MD-003,FDY-MD-003,Kg,80,Foundry - Fettling/Deburring,,Foundry,VALID_NEW_CANDIDATE,Conforms to issue schema
