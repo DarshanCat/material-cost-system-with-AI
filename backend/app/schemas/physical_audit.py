@@ -33,6 +33,9 @@ class PhysicalAuditLineResponse(PhysicalAuditLineBase):
     item_code: Optional[str] = None
     item_name: Optional[str] = None
     uom_code: Optional[str] = None
+    live_system_quantity: Optional[Decimal] = None
+    live_discrepancy: Optional[Decimal] = None
+    discrepancy_drift: Optional[Decimal] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -67,6 +70,9 @@ class PhysicalAuditResponse(BaseModel):
     created_by: str
     created_at: datetime
     updated_at: datetime
+    requires_supervisor_override: Optional[bool] = None
+    supervisor_override_by: Optional[str] = None
+    supervisor_override_at: Optional[datetime] = None
     lines: List[PhysicalAuditLineResponse] = []
     audit_logs: List[PhysicalAuditAuditLogResponse] = []
 
@@ -75,3 +81,4 @@ class PhysicalAuditResponse(BaseModel):
 
 class PhysicalAuditStatusAction(BaseModel):
     comments: Optional[str] = None
+    supervisor_override: bool = False

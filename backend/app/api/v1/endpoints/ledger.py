@@ -6,7 +6,7 @@ from typing import List, Optional
 from datetime import date
 from decimal import Decimal
 from fastapi import APIRouter, Depends, Query, status, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, desc
 
 from app.core.security import AuthenticatedUser, Permission, require_permission
@@ -22,6 +22,7 @@ from app.schemas.ledger import (
 )
 from app.services.ledger_service import (
     get_material_stock_balance,
+    get_batch_material_stock_balances,
     reverse_stock_ledger_entry,
 )
 
@@ -64,8 +65,16 @@ def get_all_stock_balances(
 ):
     """
     Computes stock balances for all material items strictly derived from append-only ledger entries.
+    Executes in O(1) query complexity using grouped SQL aggregation and relationship eager loading.
     """
-    query = select(MaterialItem).where(MaterialItem.is_active == True)
+    query = (
+        select(MaterialItem)
+        .options(
+            joinedload(MaterialItem.department),
+            joinedload(MaterialItem.base_uom),
+        )
+        .where(MaterialItem.is_active == True)
+    )
     if department_id:
         query = query.where(MaterialItem.department_id == department_id)
     if q:
@@ -74,10 +83,19 @@ def get_all_stock_balances(
         )
 
     items = db.execute(query).scalars().all()
-    results: List[StockBalanceResponse] = []
+    if not items:
+        return []
 
+    item_ids = [item.id for item in items]
+    balances_map = get_batch_material_stock_balances(
+        db, material_item_ids=item_ids, as_of_date=as_of_date
+    )
+
+    results: List[StockBalanceResponse] = []
     for item in items:
-        bal, is_init, last_date, move_count = get_material_stock_balance(db, item.id, as_of_date)
+        bal, is_init, last_date, move_count = balances_map.get(
+            item.id, (Decimal("0.0000"), False, None, 0)
+        )
         
         if not is_init:
             status_str = "UNINITIALIZED"
@@ -115,7 +133,15 @@ def get_single_item_stock_balance(
     db: Session = Depends(get_db),
     _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
 ):
-    item = db.get(MaterialItem, item_id)
+    query = (
+        select(MaterialItem)
+        .options(
+            joinedload(MaterialItem.department),
+            joinedload(MaterialItem.base_uom),
+        )
+        .where(MaterialItem.id == item_id)
+    )
+    item = db.execute(query).scalar_one_or_none()
     if not item:
         raise HTTPException(status_code=404, detail="Material item not found.")
 

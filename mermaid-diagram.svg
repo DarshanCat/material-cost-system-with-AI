@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 532.4460000000001 686.5" width="532.4460000000001" height="686.5" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="_start" data-to="PROPOSED" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="POST /opening-valuations
+(version = max(v) + 1, creator recorded)" points="271.21500000000003,68 271.21500000000003,198.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="PROPOSED" data-to="APPROVED" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="POST /opening-valuations/{id}/approve
+(Independent approver, maker-checker check)" points="252.36733333333333,235.5 252.36733333333333,271.5 155,271.5 155,366.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="PROPOSED" data-to="REJECTED" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="POST /opening-valuations/{id}/reject
+(Independent approver, mandatory reason)" points="290.0626666666667,235.5 290.0626666666667,271.5 387.43,271.5 387.43,366.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="APPROVED" data-to="SUPERSEDED" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="When version N+1 is approved
+(atomic transition, superseded_by_id set)" points="155,403 155,533.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="SUPERSEDED" data-to="_end" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="155,570.5 155,618.5" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="REJECTED" data-to="_end2" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="387.43,403 387.43,451" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="_start" data-to="PROPOSED" data-label="POST /opening-valuations
+(version = max(v) + 1, creator recorded)">
+  <rect x="171.21499999999997" y="111.00000000000001" width="199.41400000000007" height="44.6" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="270.922" y="133.3" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)"><tspan x="270.922" dy="-3.3000000000000007">POST /opening-valuations</tspan><tspan x="270.922" dy="14.3">(version = max(v) + 1, creator recorded)</tspan></text>
+</g>
+<g class="edge-label" data-from="PROPOSED" data-to="APPROVED" data-label="POST /opening-valuations/{id}/approve
+(Independent approver, maker-checker check)">
+  <rect x="36" y="278.5" width="237.43" height="44.6" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="154.715" y="300.8" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)"><tspan x="154.715" dy="-3.3000000000000007">POST /opening-valuations/{id}/approve</tspan><tspan x="154.715" dy="14.3">(Independent approver, maker-checker check)</tspan></text>
+</g>
+<g class="edge-label" data-from="PROPOSED" data-to="REJECTED" data-label="POST /opening-valuations/{id}/reject
+(Independent approver, mandatory reason)">
+  <rect x="277.43" y="278.5" width="219.01600000000008" height="44.6" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="386.93800000000005" y="300.8" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)"><tspan x="386.93800000000005" dy="-3.3000000000000007">POST /opening-valuations/{id}/reject</tspan><tspan x="386.93800000000005" dy="14.3">(Independent approver, mandatory reason)</tspan></text>
+</g>
+<g class="edge-label" data-from="APPROVED" data-to="SUPERSEDED" data-label="When version N+1 is approved
+(atomic transition, superseded_by_id set)">
+  <rect x="50" y="446" width="209.512" height="44.6" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="154.756" y="468.3" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)"><tspan x="154.756" dy="-3.3000000000000007">When version N+1 is approved</tspan><tspan x="154.756" dy="14.3">(atomic transition, superseded_by_id set)</tspan></text>
+</g>
+<g class="node" data-id="_start" data-label="" data-shape="state-start">
+  <circle cx="271.21500000000003" cy="54" r="12" fill="var(--_text)" stroke="none" />
+</g>
+<g class="node" data-id="PROPOSED" data-label="PROPOSED" data-shape="rounded">
+  <rect x="214.672" y="198.6" width="113.086" height="36.900000000000006" rx="6" ry="6" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="271.215" y="217.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">PROPOSED</text>
+</g>
+<g class="node" data-id="APPROVED" data-label="APPROVED" data-shape="rounded">
+  <rect x="98.457" y="366.1" width="113.086" height="36.900000000000006" rx="6" ry="6" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="155" y="384.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">APPROVED</text>
+</g>
+<g class="node" data-id="REJECTED" data-label="REJECTED" data-shape="rounded">
+  <rect x="330.887" y="366.1" width="113.086" height="36.900000000000006" rx="6" ry="6" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="387.43" y="384.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">REJECTED</text>
+</g>
+<g class="node" data-id="SUPERSEDED" data-label="SUPERSEDED" data-shape="rounded">
+  <rect x="89.565" y="533.6" width="130.86999999999998" height="36.900000000000006" rx="6" ry="6" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="155" y="552.0500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">SUPERSEDED</text>
+</g>
+<g class="node" data-id="_end" data-label="" data-shape="state-end">
+  <circle cx="155" cy="632.5" r="12" fill="none" stroke="var(--_text)" stroke-width="1.5" />
+  <circle cx="155" cy="632.5" r="8" fill="var(--_text)" stroke="none" />
+</g>
+<g class="node" data-id="_end2" data-label="" data-shape="state-end">
+  <circle cx="387.43" cy="465" r="12" fill="none" stroke="var(--_text)" stroke-width="1.5" />
+  <circle cx="387.43" cy="465" r="8" fill="var(--_text)" stroke="none" />
+</g>
+</svg>

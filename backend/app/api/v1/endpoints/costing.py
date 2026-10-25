@@ -45,6 +45,16 @@ from app.schemas.costing import (
     CostingRunComparisonResponse,
     ItemOpeningValuationCreate,
     ItemOpeningValuationResponse,
+    OpeningValuationAuditLogResponse,
+    OpeningValuationActionRequest,
+    OpeningValuationRejectRequest,
+)
+from app.services.opening_valuation_service import (
+    propose_opening_valuation as svc_propose_opening_valuation,
+    approve_opening_valuation as svc_approve_opening_valuation,
+    reject_opening_valuation as svc_reject_opening_valuation,
+    list_opening_valuations as svc_list_opening_valuations,
+    get_opening_valuation_by_id as svc_get_opening_valuation_by_id,
 )
 from app.services.costing_service import (
     reconstruct_item_rate_evolution,
@@ -715,64 +725,121 @@ def get_costing_run_detail(
     )
 
 
-# --- Opening Valuation Approval Endpoints ---
+# --- Opening Valuation Versioning & Approval Endpoints (SW-06) ---
+
+def _serialize_opening_valuation(
+    record: ItemOpeningValuation,
+    include_audit: bool = False,
+) -> ItemOpeningValuationResponse:
+    item = record.material_item
+    audit_logs = None
+    if include_audit and record.audit_logs:
+        audit_logs = [
+            OpeningValuationAuditLogResponse(
+                id=log.id,
+                valuation_id=log.valuation_id,
+                action=log.action,
+                from_status=log.from_status,
+                to_status=log.to_status,
+                actor_id=log.actor_id,
+                comments=log.comments,
+                timestamp=log.timestamp,
+            )
+            for log in record.audit_logs
+        ]
+    return ItemOpeningValuationResponse(
+        id=record.id,
+        material_item_id=record.material_item_id,
+        item_code=item.item_code if item else "",
+        item_name=item.name if item else "",
+        version=record.version,
+        baseline_date=record.baseline_date,
+        opening_rate_ex_gst=record.opening_rate_ex_gst,
+        status=record.status,
+        created_by=record.created_by,
+        created_at=record.created_at,
+        approved_by=record.approved_by,
+        approved_at=record.approved_at,
+        rejection_reason=record.rejection_reason,
+        superseded_by_id=record.superseded_by_id,
+        superseded_at=record.superseded_at,
+        notes=record.notes,
+        audit_logs=audit_logs,
+    )
+
 
 @router.post(
     "/opening-valuations",
     response_model=ItemOpeningValuationResponse,
     dependencies=[Depends(require_permission(Permission.COSTING_CALCULATE))],
 )
-def propose_opening_valuation(
+def propose_opening_valuation_endpoint(
     payload: ItemOpeningValuationCreate,
     db: Session = Depends(get_db),
     actor_id: str = Depends(get_current_user_id),
 ):
-    """Proposes an approved opening valuation rate for an item as of 12 October 2026."""
-    item = db.get(MaterialItem, payload.material_item_id)
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Material item ID {payload.material_item_id} not found",
-        )
+    """Proposes a new versioned opening valuation rate for an item as of 12 October 2026."""
+    record = svc_propose_opening_valuation(db, payload, actor_id=actor_id)
+    return _serialize_opening_valuation(record)
 
-    existing = db.execute(
-        select(ItemOpeningValuation).where(
-            ItemOpeningValuation.material_item_id == payload.material_item_id
-        )
-    ).scalars().first()
 
-    if existing:
-        existing.opening_rate_ex_gst = payload.opening_rate_ex_gst
-        existing.baseline_date = payload.baseline_date
-        existing.notes = payload.notes
-        existing.status = "APPROVED"
-        existing.approved_by = actor_id
-        existing.approved_at = datetime.now(timezone.utc)
-        record = existing
-    else:
-        record = ItemOpeningValuation(
-            material_item_id=payload.material_item_id,
-            baseline_date=payload.baseline_date,
-            opening_rate_ex_gst=payload.opening_rate_ex_gst,
-            status="APPROVED",
-            approved_by=actor_id,
-            approved_at=datetime.now(timezone.utc),
-            notes=payload.notes,
-        )
-        db.add(record)
+@router.post(
+    "/opening-valuations/{valuation_id}/approve",
+    response_model=ItemOpeningValuationResponse,
+    dependencies=[Depends(require_permission(Permission.COSTING_CALCULATE))],
+)
+def approve_opening_valuation_endpoint(
+    valuation_id: int,
+    action: Optional[OpeningValuationActionRequest] = None,
+    db: Session = Depends(get_db),
+    actor_id: str = Depends(get_current_user_id),
+):
+    """Approves a proposed opening valuation with maker-checker verification."""
+    comments = action.comments if action else None
+    record = svc_approve_opening_valuation(db, valuation_id, actor_id=actor_id, comments=comments)
+    return _serialize_opening_valuation(record)
 
-    db.commit()
-    db.refresh(record)
 
-    return ItemOpeningValuationResponse(
-        id=record.id,
-        material_item_id=record.material_item_id,
-        item_code=item.item_code,
-        item_name=item.name,
-        baseline_date=record.baseline_date,
-        opening_rate_ex_gst=record.opening_rate_ex_gst,
-        status=record.status,
-        approved_by=record.approved_by,
-        approved_at=record.approved_at,
-        notes=record.notes,
-    )
+@router.post(
+    "/opening-valuations/{valuation_id}/reject",
+    response_model=ItemOpeningValuationResponse,
+    dependencies=[Depends(require_permission(Permission.COSTING_CALCULATE))],
+)
+def reject_opening_valuation_endpoint(
+    valuation_id: int,
+    payload: OpeningValuationRejectRequest,
+    db: Session = Depends(get_db),
+    actor_id: str = Depends(get_current_user_id),
+):
+    """Rejects a proposed opening valuation with a mandatory audit reason."""
+    record = svc_reject_opening_valuation(db, valuation_id, actor_id=actor_id, reason=payload.reason)
+    return _serialize_opening_valuation(record)
+
+
+@router.get(
+    "/opening-valuations",
+    response_model=List[ItemOpeningValuationResponse],
+    dependencies=[Depends(require_permission(Permission.COSTING_READ))],
+)
+def list_opening_valuations_endpoint(
+    material_item_id: Optional[int] = None,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Lists opening valuations with optional filters by material item and status."""
+    records = svc_list_opening_valuations(db, material_item_id=material_item_id, status=status)
+    return [_serialize_opening_valuation(r) for r in records]
+
+
+@router.get(
+    "/opening-valuations/{valuation_id}",
+    response_model=ItemOpeningValuationResponse,
+    dependencies=[Depends(require_permission(Permission.COSTING_READ))],
+)
+def get_opening_valuation_endpoint(
+    valuation_id: int,
+    db: Session = Depends(get_db),
+):
+    """Retrieves a single opening valuation including its complete audit trail."""
+    record = svc_get_opening_valuation_by_id(db, valuation_id)
+    return _serialize_opening_valuation(record, include_audit=True)

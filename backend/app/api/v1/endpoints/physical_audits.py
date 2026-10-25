@@ -10,7 +10,9 @@ from sqlalchemy import select, desc
 
 from app.core.security import AuthenticatedUser, Permission, require_permission
 from app.db.session import get_db
-from app.models.physical_audit import PhysicalAuditHeader
+from decimal import Decimal
+from app.models.physical_audit import PhysicalAuditHeader, AuditStatus
+from app.services.ledger_service import get_material_stock_balance
 from app.schemas.physical_audit import (
     PhysicalAuditCreate,
     PhysicalAuditResponse,
@@ -27,25 +29,41 @@ from app.services.physical_audit_service import (
 router = APIRouter()
 
 
-def _serialize_audit(audit: PhysicalAuditHeader) -> PhysicalAuditResponse:
-    lines = [
-        PhysicalAuditLineResponse(
-            id=l.id,
-            audit_id=l.audit_id,
-            line_number=l.line_number,
-            material_item_id=l.material_item_id,
-            uom_id=l.uom_id,
-            system_quantity=l.system_quantity,
-            physical_quantity=l.physical_quantity,
-            variance=l.variance,
-            reason=l.reason,
-            remarks=l.remarks,
-            item_code=l.material_item.item_code if l.material_item else None,
-            item_name=l.material_item.name if l.material_item else None,
-            uom_code=l.uom.code if l.uom else None,
+def _serialize_audit(audit: PhysicalAuditHeader, db: Optional[Session] = None) -> PhysicalAuditResponse:
+    lines = []
+    has_drift = False
+    for l in audit.lines:
+        live_qty = None
+        live_disc = None
+        drift = None
+        if db is not None:
+            live_bal, _, _, _ = get_material_stock_balance(db, l.material_item_id)
+            live_qty = live_bal
+            live_disc = l.physical_quantity - live_bal
+            drift = live_disc - l.variance
+            if drift != Decimal("0.0000"):
+                has_drift = True
+
+        lines.append(
+            PhysicalAuditLineResponse(
+                id=l.id,
+                audit_id=l.audit_id,
+                line_number=l.line_number,
+                material_item_id=l.material_item_id,
+                uom_id=l.uom_id,
+                system_quantity=l.system_quantity,
+                physical_quantity=l.physical_quantity,
+                variance=l.variance,
+                reason=l.reason,
+                remarks=l.remarks,
+                item_code=l.material_item.item_code if l.material_item else None,
+                item_name=l.material_item.name if l.material_item else None,
+                uom_code=l.uom.code if l.uom else None,
+                live_system_quantity=live_qty,
+                live_discrepancy=live_disc,
+                discrepancy_drift=drift,
+            )
         )
-        for l in audit.lines
-    ]
 
     audits = [
         PhysicalAuditAuditLogResponse(
@@ -60,6 +78,10 @@ def _serialize_audit(audit: PhysicalAuditHeader) -> PhysicalAuditResponse:
         for a in audit.audit_logs
     ]
 
+    override_log = next((a for a in audit.audit_logs if a.action == "APPROVED_WITH_OVERRIDE"), None)
+    supervisor_override_by = override_log.actor_id if override_log else None
+    supervisor_override_at = override_log.timestamp if override_log else None
+
     return PhysicalAuditResponse(
         id=audit.id,
         audit_number=audit.audit_number,
@@ -71,6 +93,9 @@ def _serialize_audit(audit: PhysicalAuditHeader) -> PhysicalAuditResponse:
         created_by=audit.created_by,
         created_at=audit.created_at,
         updated_at=audit.updated_at,
+        requires_supervisor_override=has_drift if audit.status != AuditStatus.APPROVED.value else False,
+        supervisor_override_by=supervisor_override_by,
+        supervisor_override_at=supervisor_override_at,
         lines=lines,
         audit_logs=audits,
     )
@@ -83,7 +108,7 @@ def create_new_physical_audit(
     db: Session = Depends(get_db),
 ):
     audit = create_physical_audit(db, payload, user.user_id)
-    return _serialize_audit(audit)
+    return _serialize_audit(audit, db=db)
 
 
 @router.get("/", response_model=List[PhysicalAuditResponse])
@@ -108,7 +133,7 @@ def list_physical_audits(
         query = query.where(PhysicalAuditHeader.audit_date <= to_date)
 
     audits = db.execute(query.offset(skip).limit(limit)).scalars().all()
-    return [_serialize_audit(a) for a in audits]
+    return [_serialize_audit(a, db=db) for a in audits]
 
 
 @router.get("/{audit_id}", response_model=PhysicalAuditResponse)
@@ -120,7 +145,7 @@ def get_physical_audit_by_id(
     audit = db.get(PhysicalAuditHeader, audit_id)
     if not audit:
         raise HTTPException(status_code=404, detail="Physical audit record not found.")
-    return _serialize_audit(audit)
+    return _serialize_audit(audit, db=db)
 
 
 @router.post("/{audit_id}/submit", response_model=PhysicalAuditResponse)
@@ -131,7 +156,7 @@ def submit_physical_audit_action(
     db: Session = Depends(get_db),
 ):
     audit = submit_physical_audit(db, audit_id, user.user_id, action.comments)
-    return _serialize_audit(audit)
+    return _serialize_audit(audit, db=db)
 
 
 @router.post("/{audit_id}/approve", response_model=PhysicalAuditResponse)
@@ -141,5 +166,5 @@ def approve_physical_audit_action(
     user: AuthenticatedUser = Depends(require_permission(Permission.STOCK_AUDIT_APPROVE)),
     db: Session = Depends(get_db),
 ):
-    audit = approve_physical_audit(db, audit_id, user.user_id, action.comments)
-    return _serialize_audit(audit)
+    audit = approve_physical_audit(db, audit_id, user.user_id, action.comments, supervisor_override=action.supervisor_override)
+    return _serialize_audit(audit, db=db)

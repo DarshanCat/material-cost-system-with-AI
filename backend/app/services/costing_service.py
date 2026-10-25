@@ -101,12 +101,12 @@ def reconstruct_item_rate_evolution(
             detail=f"Material item ID {material_item_id} not found",
         )
 
-    # 1. Fetch approved opening valuation if exists
+    # 1. Fetch approved opening valuation if exists (latest approved version)
     approved_opening = db.execute(
         select(ItemOpeningValuation).where(
             ItemOpeningValuation.material_item_id == material_item_id,
             ItemOpeningValuation.status == "APPROVED",
-        )
+        ).order_by(ItemOpeningValuation.version.desc())
     ).scalars().first()
 
     # 2. Fetch all ledger movements up to as_of_date
@@ -150,6 +150,7 @@ def reconstruct_item_rate_evolution(
                 applied_rate = running_avg_rate
                 extended_val = (delta * running_avg_rate).quantize(VALUE_PRECISION, rounding=ROUND_HALF_UP)
                 step_status = "OPENING_VALUED"
+                notes = f"Opening balance valued via opening valuation v{approved_opening.version} (id={approved_opening.id})"
             else:
                 has_unvalued_opening = True
                 running_avg_rate = None

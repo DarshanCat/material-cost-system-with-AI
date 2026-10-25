@@ -58,10 +58,13 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], Permission | None] = {
     ("GET", "/api/v1/uoms"): P.UOM_READ,
     ("GET", "/api/v1/uoms/{uom_id}"): P.UOM_READ,
     ("GET", "/api/v1/items"): P.ITEM_READ,
+    ("GET", "/api/v1/items/categories"): P.ITEM_READ,
     ("GET", "/api/v1/items/{item_id}"): P.ITEM_READ,
+    ("PUT", "/api/v1/items/{item_id}"): P.ITEM_UPDATE,
     ("GET", "/api/v1/vendors"): P.VENDOR_READ,
     ("POST", "/api/v1/vendors"): P.VENDOR_MANAGE,
     ("GET", "/api/v1/vendors/{vendor_id}"): P.VENDOR_READ,
+    ("PUT", "/api/v1/vendors/{vendor_id}"): P.VENDOR_MANAGE,
     # Item requests
     ("POST", "/api/v1/item-requests"): P.ITEM_REQUEST_CREATE,
     ("GET", "/api/v1/item-requests"): P.ITEM_REQUEST_READ,
@@ -79,6 +82,7 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], Permission | None] = {
     ("POST", "/api/v1/grn/{grn_id}/submit"): P.RECEIPT_CREATE,
     ("POST", "/api/v1/grn/{grn_id}/approve"): P.RECEIPT_APPROVE,
     ("POST", "/api/v1/grn/{grn_id}/cancel"): P.RECEIPT_CREATE,
+    ("POST", "/api/v1/grn/{grn_id}/reverse"): P.LEDGER_REVERSE,
     # Issues
     ("POST", "/api/v1/issues/"): P.ISSUE_CREATE,
     ("GET", "/api/v1/issues/"): P.ISSUE_READ,
@@ -86,12 +90,14 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], Permission | None] = {
     ("POST", "/api/v1/issues/{issue_id}/submit"): P.ISSUE_CREATE,
     ("POST", "/api/v1/issues/{issue_id}/approve"): P.ISSUE_APPROVE,
     ("POST", "/api/v1/issues/{issue_id}/cancel"): P.ISSUE_CREATE,
+    ("POST", "/api/v1/issues/{issue_id}/reverse"): P.LEDGER_REVERSE,
     # Waste
     ("POST", "/api/v1/waste/"): P.WASTE_LOG,
     ("GET", "/api/v1/waste/"): P.WASTE_READ,
     ("GET", "/api/v1/waste/{waste_id}"): P.WASTE_READ,
     ("POST", "/api/v1/waste/{waste_id}/submit"): P.WASTE_LOG,
     ("POST", "/api/v1/waste/{waste_id}/approve"): P.WASTE_APPROVE,
+    ("POST", "/api/v1/waste/{waste_id}/reverse"): P.LEDGER_REVERSE,
     # Excel import
     ("GET", "/api/v1/excel-import/template/{import_type}"): P.EXCEL_IMPORT,
     ("POST", "/api/v1/excel-import/validate"): P.EXCEL_IMPORT,
@@ -146,6 +152,10 @@ ROUTE_PERMISSIONS: dict[tuple[str, str], Permission | None] = {
     ("GET", "/api/v1/costing/runs/compare"): P.COSTING_READ,
     ("GET", "/api/v1/costing/runs/{run_id}"): P.COSTING_READ,
     ("POST", "/api/v1/costing/opening-valuations"): P.COSTING_CALCULATE,
+    ("POST", "/api/v1/costing/opening-valuations/{valuation_id}/approve"): P.COSTING_CALCULATE,
+    ("POST", "/api/v1/costing/opening-valuations/{valuation_id}/reject"): P.COSTING_CALCULATE,
+    ("GET", "/api/v1/costing/opening-valuations"): P.COSTING_READ,
+    ("GET", "/api/v1/costing/opening-valuations/{valuation_id}"): P.COSTING_READ,
 }
 
 STATUS_CODES_DENIED = {401, 403}

@@ -188,32 +188,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="phase-status active">COMPLETED</div>
           </div>
 
-          <div className="phase-card next-phase" onClick={() => onNavigate('material-entry')}>
+          <div className="phase-card current-phase" onClick={() => onNavigate('material-master')}>
             <div className="phase-top">
               <span className="phase-number">Phase 2</span>
-              <Clock size={16} className="text-amber" />
+              <CheckCircle size={16} className="text-success" />
             </div>
             <div className="phase-title">Master Data & Approvals</div>
             <div className="phase-desc">741 Items master, categories, vendors, UOMs, item approval workflow.</div>
-            <div className="phase-status pending">NEXT UP</div>
+            <div className="phase-status active">COMPLETED</div>
           </div>
 
-          <div className="phase-card" onClick={() => onNavigate('material-entry')}>
+          <div className="phase-card current-phase" onClick={() => onNavigate('grn-management')}>
             <div className="phase-top">
               <span className="phase-number">Phase 3</span>
+              <CheckCircle size={16} className="text-success" />
             </div>
             <div className="phase-title">Material Entry</div>
             <div className="phase-desc">GRNs, receipts with GST-excluded rates, issues, waste logs, duplicate check.</div>
-            <div className="phase-status queued">QUEUED</div>
+            <div className="phase-status active">COMPLETED</div>
           </div>
 
-          <div className="phase-card" onClick={() => onNavigate('inventory-ledger')}>
+          <div className="phase-card next-phase" onClick={() => onNavigate('inventory-ledger')}>
             <div className="phase-top">
               <span className="phase-number">Phase 4</span>
+              <Clock size={16} className="text-amber" />
             </div>
             <div className="phase-title">Live Inventory Ledger</div>
             <div className="phase-desc">Append-only movements, opening stock, physical audit adjustments.</div>
-            <div className="phase-status queued">QUEUED</div>
+            <div className="phase-status pending">NEXT UP</div>
           </div>
 
           <div className="phase-card" onClick={() => onNavigate('heat-reconciliation')}>

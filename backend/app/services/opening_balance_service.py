@@ -124,7 +124,7 @@ def _post_approved_opening_balances(
     preview = preview_opening_balances(db, request.rows, request.baseline_date)
     if not preview.can_commit:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"Cannot post opening balances: Batch contains {preview.error_rows_count} blocking errors. Run preview first.",
         )
 

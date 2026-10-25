@@ -163,6 +163,7 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.COSTING_CALCULATE,
         Permission.AUDIT_READ,
         Permission.ITEM_READ,
+        Permission.ITEM_UPDATE,
         Permission.ITEM_REQUEST_CREATE,
         Permission.ITEM_REQUEST_SUBMIT,
         Permission.ITEM_REQUEST_CANCEL,

@@ -26,6 +26,29 @@ class VendorCreate(BaseModel):
         return None
 
 
+class VendorUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=255, description="Updated legal vendor name")
+    gstin: Optional[str] = Field(None, max_length=15, description="15-character Indian GSTIN (optional)")
+    address: Optional[str] = None
+    contact_person: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    is_active: Optional[bool] = None
+
+    @field_validator("gstin")
+    @classmethod
+    def validate_gstin(cls, v: Optional[str]) -> Optional[str]:
+        if v:
+            clean = v.strip().upper()
+            if not validate_gstin_format(clean):
+                raise ValueError(
+                    "Invalid GSTIN format. Expected 15-character Indian GSTIN "
+                    "(e.g., 29AABCU9603R1Z2)."
+                )
+            return clean
+        return None
+
+
 class VendorRead(BaseModel):
     id: int
     name: str

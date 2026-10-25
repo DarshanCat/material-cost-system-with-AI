@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 from typing import Generator
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
@@ -112,3 +113,46 @@ def admin_headers() -> dict[str, str]:
 def role_headers():
     """Callable returning bearer headers for any role (used by the route-by-role matrix)."""
     return _bearer
+
+
+@pytest.fixture(scope="function")
+def pg_session_factory():
+    """
+    Opt-in PostgreSQL session factory for live PostgreSQL schema, trigger, and
+    multi-session concurrency verification.
+    Activated only when TEST_POSTGRES_URL is set and points strictly to the
+    isolated disposable test database (127.0.0.1:55432/vspl_mm_test).
+    """
+    pg_url = os.environ.get("TEST_POSTGRES_URL")
+    if not pg_url:
+        pytest.skip("TEST_POSTGRES_URL not set; skipping live PostgreSQL test.")
+
+    parsed = make_url(pg_url)
+    if parsed.host != "127.0.0.1" or parsed.port != 55432 or parsed.database != "vspl_mm_test":
+        pytest.fail(
+            f"Safety guard tripped: TEST_POSTGRES_URL must target 127.0.0.1:55432/vspl_mm_test, "
+            f"got {parsed.host}:{parsed.port}/{parsed.database}"
+        )
+
+    pg_engine = create_engine(
+        pg_url,
+        pool_size=10,
+        max_overflow=10,
+        pool_pre_ping=True,
+    )
+    PgSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        expire_on_commit=False,
+        bind=pg_engine,
+    )
+
+    with PgSessionLocal() as setup_db:
+        db_name = setup_db.execute(text("SELECT current_database()")).scalar_one()
+        assert db_name == "vspl_mm_test", f"Expected vspl_mm_test, got {db_name}"
+        seed_reference_data(setup_db)
+
+    try:
+        yield PgSessionLocal
+    finally:
+        pg_engine.dispose()

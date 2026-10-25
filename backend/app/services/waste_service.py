@@ -24,6 +24,7 @@ from app.models.item import MaterialItem
 from app.models.uom import UOM
 from app.schemas.waste import WasteDispositionCreate
 from app.services.decimal_validator import validate_and_flag_quantity
+from app.services.duplicate_detector import check_duplicate_line_items
 from app.services.document_number_service import (
     DocumentType,
     generate_document_number,
@@ -37,7 +38,10 @@ def generate_waste_number(db: Session, disposition_date: date) -> str:
 
 
 def create_waste_disposition(
-    db: Session, data: WasteDispositionCreate, created_by: str
+    db: Session,
+    data: WasteDispositionCreate,
+    created_by: str,
+    auto_commit: bool = True,
 ) -> Tuple[WasteDispositionHeader, List[str]]:
     warnings: List[str] = []
 
@@ -50,6 +54,7 @@ def create_waste_disposition(
         )
 
     # 2. Pre-validate line items before entering transaction retry block
+    item_labels: dict[int, str] = {}
     validated_lines = []
     for idx, line in enumerate(data.lines, start=1):
         item = db.get(MaterialItem, line.material_item_id)
@@ -58,6 +63,7 @@ def create_waste_disposition(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Line {idx}: Material Item ID {line.material_item_id} not found.",
             )
+        item_labels[item.id] = item.item_code or item.name
         uom = db.get(UOM, line.uom_id)
         if not uom:
             raise HTTPException(
@@ -68,13 +74,16 @@ def create_waste_disposition(
         qty_result = validate_and_flag_quantity(line.quantity, uom, item.category, item.name)
         if not qty_result.is_valid:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Line {idx}: {'; '.join(qty_result.errors)}",
             )
         for w in qty_result.warnings:
             warnings.append(f"Line {idx} ({item.item_code}): {w}")
 
         validated_lines.append(line)
+
+    # 2b. Check intra-document duplicate line items (non-blocking advisory warnings)
+    warnings.extend(check_duplicate_line_items(data.lines, item_labels))
 
     # 3. Create document using bounded savepoint retry for collision safety
     def _create(waste_num: str) -> WasteDispositionHeader:
@@ -121,8 +130,11 @@ def create_waste_disposition(
         create_fn=_create,
         target_date=data.disposition_date,
     )
-    db.commit()
-    db.refresh(header)
+    if auto_commit:
+        db.commit()
+        db.refresh(header)
+    else:
+        db.flush()
     return header, warnings
 
 
@@ -188,3 +200,7 @@ def _approve_waste_disposition(db: Session, waste_id: int, actor_id: str, commen
     db.commit()
     db.refresh(waste)
     return waste
+
+
+# Re-export whole-document reversal service
+from app.services.document_reversal_service import reverse_waste_disposition  # noqa: E402

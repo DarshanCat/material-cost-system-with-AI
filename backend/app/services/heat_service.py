@@ -47,7 +47,7 @@ def create_heat(
     """
     if not heat_number or not heat_number.strip():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Heat number cannot be empty",
         )
     
@@ -56,7 +56,7 @@ def create_heat(
         norm_heat = normalize_heat_number(raw_heat)
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=str(e),
         )
     
@@ -105,21 +105,21 @@ def create_heat(
             raw_desc = line_data.get("original_material_description", "").strip()
             if not raw_desc:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Charge line {idx} missing material description",
                 )
             
             qty = Decimal(str(line_data.get("charged_quantity", "0")))
             if qty <= Decimal("0"):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Charge line {idx} quantity must be strictly positive",
                 )
             
             uom_id = line_data.get("uom_id")
             if not uom_id:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Charge line {idx} requires a valid UOM ID",
                 )
             
@@ -158,14 +158,14 @@ def create_heat(
             raw_part = part_data.get("original_part_description", "").strip()
             if not raw_part:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Parts produced line {idx} missing part description",
                 )
             
             qty_prod = Decimal(str(part_data.get("quantity_produced", "0")))
             if qty_prod <= Decimal("0"):
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail=f"Parts produced line {idx} quantity must be strictly positive",
                 )
             

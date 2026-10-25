@@ -22,7 +22,10 @@ from app.services.waste_service import (
     create_waste_disposition,
     submit_waste_disposition,
     approve_waste_disposition,
+    reverse_waste_disposition,
 )
+
+from app.schemas.reversal import DocumentReversalRequest, DocumentReversalResponse
 
 router = APIRouter()
 
@@ -149,3 +152,13 @@ def approve_waste_action(
 ):
     waste = approve_waste_disposition(db, waste_id, user.user_id, action.comments)
     return _serialize_waste(waste)
+
+
+@router.post("/{waste_id}/reverse", response_model=DocumentReversalResponse)
+def reverse_waste_action(
+    waste_id: int,
+    payload: DocumentReversalRequest,
+    user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_REVERSE)),
+    db: Session = Depends(get_db),
+):
+    return reverse_waste_disposition(db, waste_id, user.user_id, payload.get_reason())

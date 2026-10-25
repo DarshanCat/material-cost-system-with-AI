@@ -18,7 +18,8 @@ from app.schemas.grn import (
     GRNStatusAction,
 )
 from app.models.grn import GRNHeader, GRNLineItem
-from app.services.grn_service import create_grn, submit_grn, approve_grn, cancel_grn
+from app.schemas.reversal import DocumentReversalRequest, DocumentReversalResponse
+from app.services.grn_service import create_grn, submit_grn, approve_grn, cancel_grn, reverse_grn
 
 router = APIRouter()
 
@@ -156,3 +157,13 @@ def cancel_grn_action(
 ):
     grn = cancel_grn(db, grn_id, user.user_id, action.comments)
     return _serialize_grn(grn)
+
+
+@router.post("/{grn_id}/reverse", response_model=DocumentReversalResponse)
+def reverse_grn_action(
+    grn_id: int,
+    payload: DocumentReversalRequest,
+    user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_REVERSE)),
+    db: Session = Depends(get_db),
+):
+    return reverse_grn(db, grn_id, user.user_id, payload.get_reason())

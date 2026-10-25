@@ -41,6 +41,63 @@ def validate_gstin_format(gstin: Optional[str]) -> bool:
     return bool(GSTIN_REGEX.match(clean_gstin))
 
 
+MATERIAL_CATEGORIES = {
+    "RAW_MATERIAL": {
+        "category": "RAW_MATERIAL",
+        "code": "RM",
+        "name": "Raw Material",
+        "description": "Primary melting stock: pig iron, scrap, returns",
+    },
+    "ALLOY": {
+        "category": "ALLOY",
+        "code": "FA",
+        "name": "Ferro Alloy",
+        "description": "Nodulizing agents, ferro-silicon, ferro-manganese",
+    },
+    "CONSUMABLE": {
+        "category": "CONSUMABLE",
+        "code": "CON",
+        "name": "Consumables",
+        "description": "Refractories, sand binders, foundry tooling",
+    },
+    "RETURN": {
+        "category": "RETURN",
+        "code": "RET",
+        "name": "Return Scrap",
+        "description": "Foundry returns, rejected castings, remelt stock",
+    },
+    "BORING": {
+        "category": "BORING",
+        "code": "BOR",
+        "name": "Machine Boring",
+        "description": "Borings and swarf from machining lines",
+    },
+    "GATING": {
+        "category": "GATING",
+        "code": "GAT",
+        "name": "Gatings & Runners",
+        "description": "Runner bars, risers, pour cups",
+    },
+    "MAINTENANCE": {
+        "category": "MAINTENANCE",
+        "code": "MNT",
+        "name": "Maintenance",
+        "description": "Spares, electrical components, furnace relining",
+    },
+    "PACKING": {
+        "category": "PACKING",
+        "code": "PKG",
+        "name": "Packing Materials",
+        "description": "Crates, strapping, protective wrapping",
+    },
+}
+
+
+def get_material_categories_list() -> list[dict]:
+    """Returns the list of supported material master categories."""
+    return list(MATERIAL_CATEGORIES.values())
+
+
 def get_category_code(category: str) -> str:
     """
     Maps category name to standard item code abbreviation.

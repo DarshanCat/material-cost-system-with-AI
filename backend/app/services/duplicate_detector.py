@@ -92,3 +92,35 @@ def check_issue_slip_duplicate(
         )
 
     return DuplicateCheckResult(False, False, "No duplicate issue slip found.")
+
+
+def check_duplicate_line_items(
+    lines: List[Any],
+    item_labels: Optional[dict[int, str]] = None,
+) -> List[str]:
+    """
+    Detects repeated material_item_id occurrences within a single document payload (GRN, Issue, Waste).
+    Returns structured, non-blocking advisory warnings identifying the material and duplicate line numbers.
+    Preserves line ordering and does not alter submitted quantities, lines, or stock calculations.
+    """
+    if not lines:
+        return []
+
+    from collections import defaultdict
+    item_lines: dict[int, list[int]] = defaultdict(list)
+    for idx, line in enumerate(lines, start=1):
+        item_id = getattr(line, "material_item_id", None)
+        if isinstance(line, dict):
+            item_id = line.get("material_item_id")
+        if item_id is not None:
+            item_lines[item_id].append(idx)
+
+    warnings: List[str] = []
+    for item_id, line_numbers in item_lines.items():
+        if len(line_numbers) > 1:
+            label = item_labels.get(item_id, f"ID {item_id}") if item_labels else f"ID {item_id}"
+            lines_str = ", ".join(str(n) for n in line_numbers)
+            warnings.append(
+                f"Duplicate material line warning: Material '{label}' appears on multiple lines (lines {lines_str})."
+            )
+    return warnings

@@ -29,6 +29,7 @@ class IssueStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     APPROVED = "APPROVED"
     CANCELLED = "CANCELLED"
+    REVERSED = "REVERSED"
 
 
 class MaterialIssueHeader(Base):

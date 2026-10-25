@@ -21,7 +21,7 @@ from app.models.item import MaterialItem
 from app.models.uom import UOM
 from app.models.department import Department
 from app.schemas.physical_audit import PhysicalAuditCreate
-from app.services.ledger_service import get_material_stock_balance, post_audit_adjustment_to_ledger
+from app.services.ledger_service import get_material_stock_balance, post_audit_adjustment_to_ledger, _lock_material_items_for_update
 from app.services.document_number_service import (
     DocumentType,
     generate_document_number,
@@ -149,9 +149,10 @@ def approve_physical_audit(
     audit_id: int,
     actor_id: str,
     comments: Optional[str] = None,
+    supervisor_override: bool = False,
 ) -> PhysicalAuditHeader:
     with ledger_write_guard(db):
-        return _approve_physical_audit(db, audit_id, actor_id, comments)
+        return _approve_physical_audit(db, audit_id, actor_id, comments, supervisor_override=supervisor_override)
 
 
 def _approve_physical_audit(
@@ -159,9 +160,11 @@ def _approve_physical_audit(
     audit_id: int,
     actor_id: str,
     comments: Optional[str] = None,
+    supervisor_override: bool = False,
 ) -> PhysicalAuditHeader:
     """
     Approves physical audit and atomically posts variance adjustment entries to stock ledger.
+    Revalidates live stock balances and detects stale audit snapshot against cutoff variance (SW-08).
     """
     audit = db.get(PhysicalAuditHeader, audit_id, with_for_update=True)
     if not audit:
@@ -173,15 +176,74 @@ def _approve_physical_audit(
             detail=f"Cannot approve audit in status '{audit.status}'. Must be SUBMITTED first.",
         )
 
+    # 1. Lock all material items in deterministic ascending ID order
+    all_item_ids = [line.material_item_id for line in audit.lines]
+    locked_items = _lock_material_items_for_update(db, all_item_ids)
+
+    # 2. Live revalidation and drift detection (SW-08)
+    stale_lines = []
+    for line in audit.lines:
+        item_id = line.material_item_id
+        item = locked_items.get(item_id) or db.get(MaterialItem, item_id)
+        item_code = item.item_code if item else f"ID {item_id}"
+
+        live_bal, is_init, _, _ = get_material_stock_balance(db, item_id)
+        cutoff_bal_now, _, _, _ = get_material_stock_balance(db, item_id, as_of_date=audit.audit_date)
+
+        cutoff_variance = line.variance  # physical_quantity - system_quantity
+        live_discrepancy = line.physical_quantity - live_bal
+        drift = live_discrepancy - cutoff_variance
+
+        # Drift exists if live balance has moved from cutoff snapshot, or if backdated entries altered cutoff balance
+        if live_bal != line.system_quantity or cutoff_bal_now != line.system_quantity:
+            stale_lines.append({
+                "item_code": item_code,
+                "material_item_id": item_id,
+                "cutoff_system_quantity": line.system_quantity,
+                "cutoff_variance": cutoff_variance,
+                "live_balance": live_bal,
+                "live_discrepancy": live_discrepancy,
+                "drift": drift,
+            })
+
+    if stale_lines and not supervisor_override:
+        details = [
+            f"Item '{sl['item_code']}': Cutoff balance was {sl['cutoff_system_quantity']} (variance {sl['cutoff_variance']}), "
+            f"but live balance is now {sl['live_balance']} (live discrepancy {sl['live_discrepancy']}, drift {sl['drift']})"
+            for sl in stale_lines
+        ]
+        err_msg = (
+            f"Physical audit {audit.audit_number} variance revalidation failed: Stale audit snapshot detected. "
+            f"Stock has moved since count cutoff date {audit.audit_date}. "
+            f"Affected items: {'; '.join(details)}. "
+            f"Approval blocked pending supervisor override or re-count."
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=err_msg,
+        )
+
+    if stale_lines and supervisor_override:
+        if not comments or not comments.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Supervisor override requires explicit comments justifying approval despite variance drift.",
+            )
+        action_name = "APPROVED_WITH_OVERRIDE"
+        log_comments = f"Supervisor override applied by {actor_id}. Variance drift acknowledged. Comments: {comments}"
+    else:
+        action_name = "APPROVED"
+        log_comments = comments or "Physical audit approved. Posting variance adjustments to stock ledger."
+
     prev_status = audit.status
     audit.status = AuditStatus.APPROVED.value
     log = PhysicalAuditAuditLog(
         audit_id=audit.id,
-        action="APPROVED",
+        action=action_name,
         from_status=prev_status,
         to_status=audit.status,
         actor_id=actor_id,
-        comments=comments or "Physical audit approved. Posting variance adjustments to stock ledger.",
+        comments=log_comments,
     )
     db.add(log)
     db.flush()

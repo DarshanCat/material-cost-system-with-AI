@@ -119,6 +119,96 @@ def test_material_issue_decimal_precision_rejection(client: TestClient, db_sessi
     assert "exceeds maximum allowed decimal places (0)" in resp.json()["detail"]
 
 
+def test_material_issue_intra_document_duplicate_lines_warning(client: TestClient, db_session: Session):
+    """Verify duplicate material_item_id lines on an issue slip trigger non-blocking advisory warnings."""
+    dept_fdy = db_session.query(Department).filter_by(code="FDY").first()
+    dept_ms = db_session.query(Department).filter_by(code="MSP").first()
+    uom = db_session.query(UOM).filter_by(code="KG").first()
+
+    item1 = MaterialItem(
+        item_code="FDY-AL-010",
+        name="Silico Manganese 60/14",
+        department_id=dept_fdy.id,
+        category="ALLOYS",
+        base_uom_id=uom.id,
+    )
+    item2 = MaterialItem(
+        item_code="FDY-AL-011",
+        name="Ferro Silicon Magnesium",
+        department_id=dept_fdy.id,
+        category="ALLOYS",
+        base_uom_id=uom.id,
+    )
+    db_session.add_all([item1, item2])
+    db_session.commit()
+
+    # 1. Unique items produce no duplicate line warning
+    resp_unique = client.post(
+        "/api/v1/issues/",
+        json={
+            "issue_date": str(date.today()),
+            "issuing_department_id": dept_fdy.id,
+            "receiving_department_id": dept_ms.id,
+            "heat_reference_number": "H-102603-4001",
+            "lines": [
+                {"line_number": 1, "material_item_id": item1.id, "uom_id": uom.id, "quantity": "15.000"},
+                {"line_number": 2, "material_item_id": item2.id, "uom_id": uom.id, "quantity": "10.000"},
+            ],
+        },
+    )
+    assert resp_unique.status_code == 201
+    data_uniq = resp_unique.json()
+    assert not any("Duplicate material line warning" in w for w in data_uniq["validation_warnings"])
+    assert len(data_uniq["lines"]) == 2
+
+    # 2. Two occurrences of item1 on lines 1 and 2
+    resp_two = client.post(
+        "/api/v1/issues/",
+        json={
+            "issue_date": str(date.today()),
+            "issuing_department_id": dept_fdy.id,
+            "receiving_department_id": dept_ms.id,
+            "heat_reference_number": "H-102603-4002",
+            "lines": [
+                {"line_number": 1, "material_item_id": item1.id, "uom_id": uom.id, "quantity": "12.000"},
+                {"line_number": 2, "material_item_id": item1.id, "uom_id": uom.id, "quantity": "8.000"},
+            ],
+        },
+    )
+    assert resp_two.status_code == 201
+    data_two = resp_two.json()
+    assert len(data_two["lines"]) == 2
+    assert Decimal(str(data_two["lines"][0]["quantity"])) == Decimal("12.0000")
+    assert Decimal(str(data_two["lines"][1]["quantity"])) == Decimal("8.0000")
+    dup_warnings_two = [w for w in data_two["validation_warnings"] if "Duplicate material line warning" in w]
+    assert len(dup_warnings_two) == 1
+    assert "FDY-AL-010" in dup_warnings_two[0]
+    assert "lines 1, 2" in dup_warnings_two[0]
+
+    # 3. Three occurrences on lines 1, 3, 4
+    resp_three = client.post(
+        "/api/v1/issues/",
+        json={
+            "issue_date": str(date.today()),
+            "issuing_department_id": dept_fdy.id,
+            "receiving_department_id": dept_ms.id,
+            "heat_reference_number": "H-102603-4003",
+            "lines": [
+                {"line_number": 1, "material_item_id": item1.id, "uom_id": uom.id, "quantity": "5.000"},
+                {"line_number": 2, "material_item_id": item2.id, "uom_id": uom.id, "quantity": "10.000"},
+                {"line_number": 3, "material_item_id": item1.id, "uom_id": uom.id, "quantity": "7.000"},
+                {"line_number": 4, "material_item_id": item1.id, "uom_id": uom.id, "quantity": "3.000"},
+            ],
+        },
+    )
+    assert resp_three.status_code == 201
+    data_three = resp_three.json()
+    assert len(data_three["lines"]) == 4
+    dup_warnings_three = [w for w in data_three["validation_warnings"] if "Duplicate material line warning" in w]
+    assert len(dup_warnings_three) == 1
+    assert "lines 1, 3, 4" in dup_warnings_three[0]
+
+
 @pytest.fixture(autouse=True)
 def _authenticate_as_admin(client: TestClient, admin_headers: dict):
     """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""

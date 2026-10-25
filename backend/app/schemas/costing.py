@@ -121,12 +121,23 @@ class PartCostResponse(BaseModel):
     notes: Optional[str] = None
 
 
-# --- Opening Valuation Approval Schemas ---
+# --- Opening Valuation Versioning & Approval Schemas (SW-06) ---
+
+class OpeningValuationAuditLogResponse(BaseModel):
+    id: int
+    valuation_id: int
+    action: str
+    from_status: Optional[str] = None
+    to_status: str
+    actor_id: str
+    comments: Optional[str] = None
+    timestamp: datetime
+
 
 class ItemOpeningValuationCreate(BaseModel):
     material_item_id: int
     baseline_date: date = Field(default_factory=lambda: date(2026, 10, 12))
-    opening_rate_ex_gst: Decimal = Field(..., gt=0, description="Approved unit rate excluding GST")
+    opening_rate_ex_gst: Decimal = Field(..., gt=0, description="Proposed unit rate excluding GST")
     notes: Optional[str] = None
 
 
@@ -135,12 +146,27 @@ class ItemOpeningValuationResponse(BaseModel):
     material_item_id: int
     item_code: str
     item_name: str
+    version: int = 1
     baseline_date: date
     opening_rate_ex_gst: Optional[Decimal] = None
     status: str
+    created_by: Optional[str] = None
+    created_at: Optional[datetime] = None
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    superseded_by_id: Optional[int] = None
+    superseded_at: Optional[datetime] = None
     notes: Optional[str] = None
+    audit_logs: Optional[List[OpeningValuationAuditLogResponse]] = None
+
+
+class OpeningValuationActionRequest(BaseModel):
+    comments: Optional[str] = None
+
+
+class OpeningValuationRejectRequest(BaseModel):
+    reason: str = Field(..., min_length=1, description="Mandatory audit justification for rejection")
 
 
 # --- Costing Run Schemas ---

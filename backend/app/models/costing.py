@@ -20,6 +20,7 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     Index,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +35,14 @@ class DenominatorPolicy(str, Enum):
 class CostScope(str, Enum):
     MATERIAL_ONLY = "MATERIAL_ONLY"
     BURDENED_MANUFACTURING = "BURDENED_MANUFACTURING"
+
+
+class OpeningValuationStatus(str, Enum):
+    PROPOSED = "PROPOSED"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
+    APPROVED = "APPROVED"
+    SUPERSEDED = "SUPERSEDED"
+    REJECTED = "REJECTED"
 
 
 class ValuationStatus(str, Enum):
@@ -358,21 +367,29 @@ class ItemOpeningValuation(Base):
     """
     Explicitly approved opening stock valuation rates for 12 October 2026.
     Resolves missing opening rates when management provides authorized valuations.
+    Versioned and auditable with maker-checker controls (SW-06).
     """
     __tablename__ = "item_opening_valuations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     material_item_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("material_items.id"), unique=True, nullable=False, index=True
+        Integer, ForeignKey("material_items.id"), nullable=False, index=True
     )
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     baseline_date: Mapped[date] = mapped_column(Date, default=date(2026, 10, 12), nullable=False)
     
     opening_rate_ex_gst: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
     status: Mapped[str] = mapped_column(
-        String(30), default="PENDING_APPROVAL", nullable=False, index=True
+        String(30), default=OpeningValuationStatus.PROPOSED.value, nullable=False, index=True
     )
+    created_by: Mapped[str] = mapped_column(String(100), default="SYSTEM", nullable=False)
     approved_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    superseded_by_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("item_opening_valuations.id"), nullable=True
+    )
+    superseded_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -388,3 +405,41 @@ class ItemOpeningValuation(Base):
     )
 
     material_item = relationship("MaterialItem")
+    superseded_by = relationship("ItemOpeningValuation", remote_side=[id])
+    audit_logs: Mapped[List["ItemOpeningValuationAuditLog"]] = relationship(
+        "ItemOpeningValuationAuditLog",
+        back_populates="valuation",
+        cascade="all, delete-orphan",
+        order_by="ItemOpeningValuationAuditLog.timestamp",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("material_item_id", "version", name="uq_opening_valuation_item_version"),
+        Index("ix_opening_valuation_item", "material_item_id"),
+        Index("ix_opening_valuation_status", "status"),
+    )
+
+
+class ItemOpeningValuationAuditLog(Base):
+    """Audit log for Item Opening Valuation lifecycle (SW-06)."""
+    __tablename__ = "item_opening_valuation_audit_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    valuation_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("item_opening_valuations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    from_status: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    to_status: Mapped[str] = mapped_column(String(30), nullable=False)
+    actor_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    comments: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    valuation = relationship("ItemOpeningValuation", back_populates="audit_logs")

@@ -1,6 +1,20 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
+
+
+class ItemCategoryRead(BaseModel):
+    category: str
+    code: str
+    name: str
+    description: str
+
+
+class MaterialItemUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=2, max_length=255)
+    subcategory: Optional[str] = Field(None, max_length=50)
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class MaterialItemRead(BaseModel):

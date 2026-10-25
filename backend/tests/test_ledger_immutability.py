@@ -134,11 +134,11 @@ def test_alembic_chain_is_linear_with_single_head_006():
     cfg = Config(str(BACKEND / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND / "migrations"))
     script = ScriptDirectory.from_config(cfg)
-    assert script.get_heads() == ["006_sprint2_ledger_immutability"]
+    assert script.get_heads() == ["007_opening_val_versioning"]
     chain = [r.revision for r in script.walk_revisions()]
     assert chain == [
-        "006_sprint2_ledger_immutability", "005_phase6_costing_valuation", "004_phase5_heat_reconciliation",
-        "003_phase4_stock_ledger", "002_phase3_material_entry", "001_phase2_master_data",
+        "007_opening_val_versioning", "006_sprint2_ledger_immutability", "005_phase6_costing_valuation",
+        "004_phase5_heat_reconciliation", "003_phase4_stock_ledger", "002_phase3_material_entry", "001_phase2_master_data",
     ]
 
 

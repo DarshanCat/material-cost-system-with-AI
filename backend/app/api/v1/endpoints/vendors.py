@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.db.session import get_db
 from app.models.vendor import Vendor
-from app.schemas.vendor import VendorCreate, VendorRead, PaginatedVendorsResponse
+from app.schemas.vendor import VendorCreate, VendorUpdate, VendorRead, PaginatedVendorsResponse
 from app.services.validators import normalize_vendor_name
 from app.core.security import require_permission, Permission
 
@@ -101,7 +101,7 @@ def create_vendor(
         existing = db.scalar(select(Vendor).where(Vendor.normalized_name == normalized))
         if existing:
             raise HTTPException(
-                status_code=409,
+                status_code=status.HTTP_409_CONFLICT,
                 detail=f"Duplicate vendor conflict: Vendor '{existing.name}' already exists with normalized key '{normalized}'."
             )
 
@@ -122,7 +122,7 @@ def create_vendor(
     except IntegrityError:
         db.rollback()
         raise HTTPException(
-            status_code=409,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Vendor with identical normalized name already exists."
         )
     except SQLAlchemyError as exc:
@@ -130,4 +130,78 @@ def create_vendor(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Database error while creating vendor: {str(exc.__class__.__name__)}"
+        )
+
+
+@router.put("/{vendor_id}", response_model=VendorRead, summary="Update Vendor Details")
+def update_vendor(
+    vendor_id: int,
+    payload: VendorUpdate,
+    db: Session = Depends(get_db),
+    _user=Depends(require_permission(Permission.VENDOR_MANAGE)),
+):
+    """
+    Updates an existing vendor record.
+    Re-validates normalized name uniqueness if name is changed.
+    """
+    v = db.get(Vendor, vendor_id)
+    if not v:
+        raise HTTPException(status_code=404, detail="Vendor not found.")
+
+    try:
+        if payload.name is not None and payload.name.strip():
+            new_name = payload.name.strip()
+            normalized = normalize_vendor_name(new_name)
+            if not normalized:
+                raise HTTPException(status_code=400, detail="Vendor name cannot be empty or solely punctuation.")
+
+            # Check duplicate normalized key against OTHER vendors
+            existing = db.scalar(
+                select(Vendor).where(
+                    Vendor.normalized_name == normalized,
+                    Vendor.id != vendor_id,
+                )
+            )
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Duplicate vendor conflict: Vendor '{existing.name}' already exists with normalized key '{normalized}'."
+                )
+            v.name = new_name
+            v.normalized_name = normalized
+
+        if payload.gstin is not None:
+            v.gstin = payload.gstin
+
+        if payload.address is not None:
+            v.address = payload.address.strip() if payload.address.strip() else None
+
+        if payload.contact_person is not None:
+            v.contact_person = payload.contact_person.strip() if payload.contact_person.strip() else None
+
+        if payload.phone is not None:
+            v.phone = payload.phone.strip() if payload.phone.strip() else None
+
+        if payload.email is not None:
+            v.email = payload.email.strip() if payload.email.strip() else None
+
+        if payload.is_active is not None:
+            v.is_active = payload.is_active
+
+        db.commit()
+        db.refresh(v)
+        return VendorRead.model_validate(v)
+    except HTTPException:
+        raise
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Vendor with identical normalized name already exists."
+        )
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database error while updating vendor: {str(exc.__class__.__name__)}"
         )

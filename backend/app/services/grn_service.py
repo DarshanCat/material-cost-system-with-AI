@@ -17,7 +17,7 @@ from app.models.item import MaterialItem
 from app.models.uom import UOM
 from app.schemas.grn import GRNCreate, GRNUpdate
 from app.services.decimal_validator import validate_and_flag_quantity, validate_rate_and_gst
-from app.services.duplicate_detector import check_grn_invoice_duplicate
+from app.services.duplicate_detector import check_grn_invoice_duplicate, check_duplicate_line_items
 from app.services.document_number_service import (
     DocumentType,
     generate_document_number,
@@ -30,14 +30,19 @@ def generate_grn_number(db: Session, receipt_date: date) -> str:
     return generate_document_number(db, DocumentType.GRN, receipt_date)
 
 
-def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader, List[str]]:
+def create_grn(
+    db: Session,
+    data: GRNCreate,
+    created_by: str,
+    auto_commit: bool = True,
+) -> Tuple[GRNHeader, List[str]]:
     warnings: List[str] = []
 
     # 1. Vendor validation
     if data.source_type == GRNSourceType.EXTERNAL_VENDOR:
         if not data.vendor_id:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="Vendor selection is mandatory for external vendor receipts.",
             )
         vendor = db.get(Vendor, data.vendor_id)
@@ -56,6 +61,7 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
                 warnings.append(dup_check.message)
 
     # 2. Pre-validate line items before entering transaction retry block
+    item_labels: dict[int, str] = {}
     validated_lines = []
     for idx, line in enumerate(data.lines, start=1):
         item = db.get(MaterialItem, line.material_item_id)
@@ -64,6 +70,7 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Line {idx}: Material Item with ID {line.material_item_id} does not exist.",
             )
+        item_labels[item.id] = item.item_code or item.name
         uom = db.get(UOM, line.uom_id)
         if not uom:
             raise HTTPException(
@@ -75,7 +82,7 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
         qty_result = validate_and_flag_quantity(line.quantity, uom, item.category, item.name)
         if not qty_result.is_valid:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Line {idx}: {'; '.join(qty_result.errors)}",
             )
         for w in qty_result.warnings:
@@ -87,13 +94,16 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
         )
         if not rate_result.is_valid:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=f"Line {idx}: {'; '.join(rate_result.errors)}",
             )
         for w in rate_result.warnings:
             warnings.append(f"Line {idx} ({item.item_code}): {w}")
 
         validated_lines.append(line)
+
+    # 2b. Check intra-document duplicate line items (non-blocking advisory warnings)
+    warnings.extend(check_duplicate_line_items(data.lines, item_labels))
 
     # 3. Create document using bounded savepoint retry for collision safety
     def _create(grn_num: str) -> GRNHeader:
@@ -142,8 +152,11 @@ def create_grn(db: Session, data: GRNCreate, created_by: str) -> Tuple[GRNHeader
         create_fn=_create,
         target_date=data.receipt_date,
     )
-    db.commit()
-    db.refresh(header)
+    if auto_commit:
+        db.commit()
+        db.refresh(header)
+    else:
+        db.flush()
     return header, warnings
 
 
@@ -158,7 +171,7 @@ def submit_grn(db: Session, grn_id: int, actor_id: str, comments: Optional[str] 
         )
     if not grn.lines:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Cannot submit GRN without line items.",
         )
 
@@ -240,3 +253,7 @@ def cancel_grn(db: Session, grn_id: int, actor_id: str, comments: Optional[str] 
     db.commit()
     db.refresh(grn)
     return grn
+
+
+# Re-export whole-document reversal service
+from app.services.document_reversal_service import reverse_grn  # noqa: E402

@@ -30,7 +30,7 @@ def create_material_alias(
     """
     if not alias_text or not alias_text.strip():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Alias text cannot be empty",
         )
     
@@ -52,7 +52,7 @@ def create_material_alias(
     norm_key = normalize_alias_key(alias_text)
     if not norm_key:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Normalized alias key cannot be empty",
         )
     

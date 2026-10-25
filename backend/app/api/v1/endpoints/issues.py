@@ -23,7 +23,10 @@ from app.services.issue_service import (
     submit_material_issue,
     approve_material_issue,
     cancel_material_issue,
+    reverse_material_issue,
 )
+
+from app.schemas.reversal import DocumentReversalRequest, DocumentReversalResponse
 
 router = APIRouter()
 
@@ -160,3 +163,13 @@ def cancel_issue_action(
 ):
     issue = cancel_material_issue(db, issue_id, user.user_id, action.comments)
     return _serialize_issue(issue)
+
+
+@router.post("/{issue_id}/reverse", response_model=DocumentReversalResponse)
+def reverse_issue_action(
+    issue_id: int,
+    payload: DocumentReversalRequest,
+    user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_REVERSE)),
+    db: Session = Depends(get_db),
+):
+    return reverse_material_issue(db, issue_id, user.user_id, payload.get_reason())

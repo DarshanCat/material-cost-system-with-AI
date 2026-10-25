@@ -44,6 +44,7 @@ class WasteStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     APPROVED = "APPROVED"
     CANCELLED = "CANCELLED"
+    REVERSED = "REVERSED"
 
 
 class WasteDispositionHeader(Base):

@@ -16,6 +16,8 @@ backend/.env
 .env
 *.env.local
 *.env.production
+*.env.backup*
+migration_review.sql
 
 # Node / Frontend
 frontend/node_modules/

@@ -949,3 +949,207 @@ def test_reconciliation_run_number_sequential_not_repeating(db_session: Session)
 
     assert runs == ["REC-20261022-0001", "REC-20261022-0002", "REC-20261022-0003"]
     assert len(set(runs)) == 3
+
+
+# ==============================================================================
+# 8. Sprint 3.3: Model Table-Name Alignment, ix_* Index Diagnostics & Live PG Concurrency
+# ==============================================================================
+
+def test_document_configs_match_model_tablenames_and_pg_index_names():
+    """
+    [Unit / Model Alignment Test] Verifies that every DocumentConfig.table_name matches
+    its SQLAlchemy model's actual __tablename__ and includes the ix_{table}_{column}
+    unique index name created by Alembic migrations 001-005.
+    """
+    expected_tables = {
+        DocumentType.GRN: ("grn_headers", "grn_number"),
+        DocumentType.ISSUE: ("material_issue_headers", "issue_slip_number"),
+        DocumentType.WASTE: ("waste_disposition_headers", "waste_number"),
+        DocumentType.AUDIT: ("physical_audit_headers", "audit_number"),
+        DocumentType.LEDGER: ("stock_ledger_entries", "entry_number"),
+        DocumentType.COSTING_RUN: ("costing_runs", "run_number"),
+        DocumentType.ITEM_REQUEST: ("item_requests", "request_number"),
+        DocumentType.RECONCILIATION_RUN: ("reconciliation_runs", "run_number"),
+    }
+
+    for doc_type, (expected_table, expected_col) in expected_tables.items():
+        cfg = DOCUMENT_CONFIGS[doc_type]
+        assert cfg.table_name == expected_table
+        assert cfg.model_class.__tablename__ == expected_table
+        assert cfg.column_name == expected_col
+        assert f"ix_{expected_table}_{expected_col}" in cfg.pg_constraint_names
+        assert f"uq_{expected_table}_{expected_col}" in cfg.pg_constraint_names
+        assert f"{expected_table}_{expected_col}_key" in cfg.pg_constraint_names
+
+
+def test_postgresql_ix_unique_index_diagnostic_matching_all_corrected_types():
+    """
+    [Mocked Diagnostics Test] Verifies that is_document_number_collision recognizes
+    the exact ix_{table}_{column} unique index names from migrations 001-005 and rejects
+    stale table names or unrelated unique constraints on the same tables.
+    """
+    for doc_type, cfg in DOCUMENT_CONFIGS.items():
+        ix_name = f"ix_{cfg.table_name}_{cfg.column_name}"
+        mock_orig = types.SimpleNamespace(
+            sqlstate="23505",
+            pgcode="23505",
+            diag=types.SimpleNamespace(
+                constraint_name=ix_name,
+                table_name=cfg.table_name,
+            ),
+        )
+        exc = IntegrityError(statement="INSERT ...", params={}, orig=mock_orig)
+        assert is_document_number_collision(exc, cfg.column_name, cfg.table_name) is True, (
+            f"Failed to match intended unique index {ix_name} for {doc_type}"
+        )
+
+    # Stale/wrong table names must NOT match the corrected config table names
+    stale_cases = [
+        ("ix_material_issues_issue_slip_number", "issue_slip_number", "material_issue_headers"),
+        ("ix_waste_dispositions_waste_number", "waste_number", "waste_disposition_headers"),
+        ("ix_physical_audits_audit_number", "audit_number", "physical_audit_headers"),
+        ("uq_source_doc_line_posting", "entry_number", "stock_ledger_entries"),
+        ("ix_material_items_item_code", "issue_slip_number", "material_issue_headers"),
+    ]
+    for bad_constraint, col_name, tbl_name in stale_cases:
+        mock_bad = types.SimpleNamespace(
+            sqlstate="23505",
+            diag=types.SimpleNamespace(constraint_name=bad_constraint),
+        )
+        exc_bad = IntegrityError(statement="INSERT ...", params={}, orig=mock_bad)
+        assert is_document_number_collision(exc_bad, col_name, tbl_name) is False
+
+
+def test_postgres_live_concurrent_document_number_collision_and_retry(pg_session_factory):
+    """
+    [Real PostgreSQL Concurrency Test] Uses 4 independent PostgreSQL sessions/threads
+    synchronized via threading.Barrier so all 4 sessions read the same initial MAX()
+    sequence before any commits, forcing genuine PostgreSQL 23505 unique-index collisions
+    on ix_material_issue_headers_issue_slip_number, ix_waste_disposition_headers_waste_number,
+    ix_physical_audit_headers_audit_number, and ix_grn_headers_grn_number, and verifying
+    savepoint rollback + sequence retry recovery.
+    """
+    import threading
+    from sqlalchemy import delete
+
+    num_workers = 4
+    target_dates = {
+        DocumentType.ISSUE: date(2099, 3, 1),
+        DocumentType.WASTE: date(2099, 3, 2),
+        DocumentType.AUDIT: date(2099, 3, 3),
+        DocumentType.GRN: date(2099, 3, 4),
+    }
+
+    with pg_session_factory() as prep_db:
+        fdy_dept_id = prep_db.execute(select(Department.id).where(Department.code == "FDY")).scalar_one()
+        prep_db.execute(delete(MaterialIssueHeader).where(MaterialIssueHeader.issue_date == target_dates[DocumentType.ISSUE]))
+        prep_db.execute(delete(WasteDispositionHeader).where(WasteDispositionHeader.disposition_date == target_dates[DocumentType.WASTE]))
+        prep_db.execute(delete(PhysicalAuditHeader).where(PhysicalAuditHeader.audit_date == target_dates[DocumentType.AUDIT]))
+        prep_db.execute(delete(GRNHeader).where(GRNHeader.receipt_date == target_dates[DocumentType.GRN]))
+        prep_db.commit()
+
+    def _run_concurrent_batch(doc_type: DocumentType, tx_date: date, builder_fn):
+        barrier = threading.Barrier(num_workers)
+        results = [None] * num_workers
+        errors = [None] * num_workers
+        first_attempt_numbers = [[] for _ in range(num_workers)]
+
+        def _worker(idx: int):
+            try:
+                with pg_session_factory() as worker_db:
+                    attempt_counter = 0
+
+                    def _create(doc_num: str):
+                        nonlocal attempt_counter
+                        attempt_counter += 1
+                        first_attempt_numbers[idx].append(doc_num)
+                        if attempt_counter == 1:
+                            # All 4 threads read MAX() before any thread flushes/commits
+                            barrier.wait(timeout=10)
+                        obj = builder_fn(doc_num, idx)
+                        worker_db.add(obj)
+                        return obj
+
+                    created = execute_with_document_number_retry(
+                        db=worker_db,
+                        doc_type=doc_type,
+                        create_fn=_create,
+                        target_date=tx_date,
+                        max_retries=8,
+                    )
+                    worker_db.commit()
+                    results[idx] = getattr(created, DOCUMENT_CONFIGS[doc_type].column_name)
+            except Exception as e:
+                errors[idx] = e
+
+        threads = [threading.Thread(target=_worker, args=(i,)) for i in range(num_workers)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=20)
+
+        assert all(err is None for err in errors), f"Errors in {doc_type}: {errors}"
+        # Prove contention occurred: every worker initially generated -0001 on attempt 1
+        for idx in range(num_workers):
+            assert first_attempt_numbers[idx][0].endswith("-0001"), (
+                f"Worker {idx} did not contend on -0001: {first_attempt_numbers[idx]}"
+            )
+        # At least num_workers - 1 workers had to retry (>1 attempt)
+        total_retries = sum(len(attempts) - 1 for attempts in first_attempt_numbers)
+        assert total_retries >= num_workers - 1
+        return sorted(results)
+
+    issue_nums = _run_concurrent_batch(
+        DocumentType.ISSUE,
+        target_dates[DocumentType.ISSUE],
+        lambda num, idx: MaterialIssueHeader(
+            issue_slip_number=num,
+            issue_date=target_dates[DocumentType.ISSUE],
+            issuing_department_id=fdy_dept_id,
+            receiving_department_id=fdy_dept_id,
+            status=IssueStatus.DRAFT.value,
+            created_by=f"pg_worker_{idx}",
+        ),
+    )
+    assert issue_nums == [f"ISS-20990301-000{i}" for i in range(1, 5)]
+
+    waste_nums = _run_concurrent_batch(
+        DocumentType.WASTE,
+        target_dates[DocumentType.WASTE],
+        lambda num, idx: WasteDispositionHeader(
+            waste_number=num,
+            disposition_date=target_dates[DocumentType.WASTE],
+            waste_type=WasteType.SLAG.value,
+            disposition_type=DispositionType.SCRAP_OUTWARD.value,
+            source_department_id=fdy_dept_id,
+            status=WasteStatus.DRAFT.value,
+            created_by=f"pg_worker_{idx}",
+        ),
+    )
+    assert waste_nums == [f"WST-20990302-000{i}" for i in range(1, 5)]
+
+    audit_nums = _run_concurrent_batch(
+        DocumentType.AUDIT,
+        target_dates[DocumentType.AUDIT],
+        lambda num, idx: PhysicalAuditHeader(
+            audit_number=num,
+            audit_date=target_dates[DocumentType.AUDIT],
+            department_id=fdy_dept_id,
+            status=AuditStatus.DRAFT.value,
+            created_by=f"pg_worker_{idx}",
+        ),
+    )
+    assert audit_nums == [f"AUD-20990303-000{i}" for i in range(1, 5)]
+
+    grn_nums = _run_concurrent_batch(
+        DocumentType.GRN,
+        target_dates[DocumentType.GRN],
+        lambda num, idx: GRNHeader(
+            grn_number=num,
+            receipt_date=target_dates[DocumentType.GRN],
+            source_type=GRNSourceType.INTERNAL_VSPL.value,
+            status=GRNStatus.DRAFT.value,
+            created_by=f"pg_worker_{idx}",
+        ),
+    )
+    assert grn_nums == [f"GRN-20990304-000{i}" for i in range(1, 5)]

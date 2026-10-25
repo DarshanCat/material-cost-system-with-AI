@@ -36,6 +36,7 @@ class GRNStatus(str, Enum):
     SUBMITTED = "SUBMITTED"
     APPROVED = "APPROVED"
     CANCELLED = "CANCELLED"
+    REVERSED = "REVERSED"
 
 
 class GRNHeader(Base):
