@@ -1,890 +1,671 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VSPL Material Management & Costing System - Complete Functional, Calculation & Operational Flow</title>
-  <style>
-    :root {
-      --primary: #1e3a8a;
-      --primary-light: #3b82f6;
-      --secondary: #0f172a;
-      --accent: #f59e0b;
-      --success: #10b981;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --card-bg: #ffffff;
-      --border: #cbd5e1;
-      --border-light: #e2e8f0;
-      --text: #1e293b;
-      --text-muted: #64748b;
-      --bg-page: #f8fafc;
-      --bg-alt: #f1f5f9;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg-page);
-      color: var(--text);
-      line-height: 1.55;
-      padding: 24px;
-    }
-    .container { max-width: 1400px; margin: 0 auto; }
-    
-    /* Header */
-    .header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-      color: #fff;
-      padding: 28px 32px;
-      border-radius: 14px;
-      margin-bottom: 24px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    }
-    .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; }
-    .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-    .header-subtitle { font-size: 14px; color: #bfdbfe; margin-top: 4px; }
-    .header-meta { font-size: 12px; color: #93c5fd; margin-top: 8px; }
-    
-    .badge-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .badge {
-      display: inline-block;
-      padding: 5px 12px;
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-amber { background: #fef3c7; color: #92400e; }
-    .badge-blue { background: #dbeafe; color: #1e40af; }
-    .badge-purple { background: #ede9fe; color: #5b21b6; }
-    .badge-red { background: #fee2e2; color: #991b1b; }
-
-    /* Core Control Banner */
-    .control-banner {
-      background: #eff6ff;
-      border-left: 5px solid #2563eb;
-      padding: 16px 20px;
-      border-radius: 8px;
-      margin-bottom: 24px;
-      font-size: 13px;
-      color: #1e40af;
-    }
-    .control-banner strong { font-size: 14px; color: #1e3a8a; }
-
-    /* KPI Cards */
-    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .kpi-card {
-      background: var(--card-bg);
-      padding: 18px 20px;
-      border-radius: 12px;
-      border: 1px solid var(--border-light);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      border-top: 4px solid #3b82f6;
-    }
-    .kpi-card.amber { border-top-color: #f59e0b; }
-    .kpi-card.green { border-top-color: #10b981; }
-    .kpi-card.purple { border-top-color: #8b5cf6; }
-    .kpi-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 24px; font-weight: 800; color: var(--secondary); margin-top: 4px; }
-    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-    /* Section Cards */
-    .section {
-      background: var(--card-bg);
-      border: 1px solid var(--border-light);
-      border-radius: 14px;
-      padding: 26px;
-      margin-bottom: 24px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    }
-    .section-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--secondary);
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .section-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
-
-    /* End to End Flow Chart */
-    .flow-container { display: flex; flex-direction: column; gap: 14px; margin-bottom: 10px; }
-    .flow-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .flow-node {
-      background: #eff6ff;
-      border: 1.5px solid #bfdbfe;
-      color: #1e40af;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      flex: 1;
-      min-width: 160px;
-      text-align: center;
-    }
-    .flow-node.highlight { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
-    .flow-node.success { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
-    .flow-node.purple { background: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
-    .flow-arrow { color: #94a3b8; font-weight: 800; font-size: 16px; }
-
-    /* Step Cards Grid */
-    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
-    .step-card {
-      border: 1px solid var(--border-light);
-      border-radius: 10px;
-      padding: 16px 18px;
-      background: #ffffff;
-      border-left: 4px solid #3b82f6;
-    }
-    .step-num { font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; }
-    .step-title { font-size: 14px; font-weight: 700; color: var(--secondary); margin: 4px 0 6px 0; }
-    .step-desc { font-size: 12px; color: #475569; margin-bottom: 8px; }
-    .step-meta { font-size: 11px; font-family: monospace; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0; color: #334155; }
-
-    /* Formulas Grid */
-    .formula-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-bottom: 20px; }
-    .formula-card {
-      background: #f8fafc;
-      border: 1px solid var(--border-light);
-      border-radius: 10px;
-      padding: 18px;
-    }
-    .formula-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
-    .tag-blue { background: #dbeafe; color: #1e40af; }
-    .tag-amber { background: #fef3c7; color: #92400e; }
-    .tag-green { background: #d1fae5; color: #065f46; }
-    .tag-purple { background: #ede9fe; color: #5b21b6; }
-    .formula-name { font-size: 13px; font-weight: 700; color: var(--secondary); margin-bottom: 8px; }
-    .formula-box {
-      font-family: "Courier New", Courier, monospace;
-      font-size: 13px;
-      font-weight: 700;
-      background: #ffffff;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      color: #0f172a;
-      margin-bottom: 8px;
-      overflow-x: auto;
-    }
-    .formula-notes { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
-
-    /* Interactive Calculators */
-    .sim-panel {
-      background: #ffffff;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-    }
-    .sim-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-    .sim-title { font-size: 14px; font-weight: 700; color: #1e3a8a; }
-    .sim-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
-    .input-group label { display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase; }
-    .input-group input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #0f172a;
-    }
-    .input-group input:focus { outline: none; border-color: #2563eb; ring: 2px solid #bfdbfe; }
-    .sim-result {
-      background: #f1f5f9;
-      border-radius: 8px;
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .sim-result-val { font-size: 18px; font-weight: 800; color: #1e3a8a; }
-
-    /* Tables */
-    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
-    th { background: #f8fafc; color: #475569; font-weight: 700; text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); }
-    td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); color: #334155; vertical-align: top; }
-    tr:hover td { background: #f8fafc; }
-    .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; }
-    .tag-r { background: #fee2e2; color: #991b1b; }
-    .tag-a { background: #fef3c7; color: #92400e; }
-    .tag-c { background: #e0e7ff; color: #3730a3; }
-    .tag-i { background: #f1f5f9; color: #475569; }
-
-    /* Timeline */
-    .timeline { position: relative; border-left: 3px solid #3b82f6; margin-left: 14px; padding-left: 20px; }
-    .timeline-item { position: relative; margin-bottom: 20px; }
-    .timeline-item::before {
-      content: ""; position: absolute; left: -27px; top: 4px; width: 12px; height: 12px;
-      border-radius: 50%; background: #3b82f6; border: 2px solid #fff;
-    }
-    .timeline-time { font-size: 12px; font-weight: 800; color: var(--primary); }
-    .timeline-title { font-size: 13px; font-weight: 700; color: var(--secondary); margin: 2px 0; }
-    .timeline-desc { font-size: 12px; color: var(--text-muted); }
-
-    /* Footer */
-    .footer-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f1f5f9;
-      border-radius: 10px;
-      padding: 14px 20px;
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 20px;
-    }
-    .live-link {
-      background: #2563eb;
-      color: white;
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 11px;
-      transition: background 0.2s;
-    }
-    .live-link:hover { background: #1d4ed8; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WI-MM-001 Rev 3.0 · VSPL Material Management &amp; Costing System</title>
+<style>
+:root{
+  --paper:#f6f7f9; --sheet:#ffffff; --ink:#15233b; --ink-2:#4a5568; --ink-3:#718096;
+  --rule:#d8dde5; --rule-2:#eceff3; --steel:#2f5d8a; --steel-tint:#e8f0f8;
+  --posted:#23704a; --posted-tint:#e6f4ec; --held:#9a6410; --held-tint:#fbf1df;
+  --refused:#b42318; --refused-tint:#fdecea; --code:#eef1f5;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0f141b; --sheet:#161d27; --ink:#e6ebf2; --ink-2:#b4bfcc; --ink-3:#8794a5;
+    --rule:#2c3644; --rule-2:#222b37; --steel:#7fb0e0; --steel-tint:#1b2a3b;
+    --posted:#6fcf97; --posted-tint:#173126; --held:#e3b25c; --held-tint:#33281a;
+    --refused:#f28b82; --refused-tint:#3a1e1c; --code:#1f2733;
+    color-scheme: dark;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-padding-top:16px}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;font-size:15px;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.num,td.n,.out{font-variant-numeric:tabular-nums}
+td.out{white-space:nowrap}
+a{color:var(--steel)}
+:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:32px;max-width:1240px;margin:0 auto;padding:28px 24px 60px}
+nav.toc{position:sticky;top:20px;align-self:start;font-size:13px}
+nav.toc p{font-weight:600;color:var(--ink-3);margin-bottom:8px}
+nav.toc ol{list-style:none;counter-reset:t}
+nav.toc li{counter-increment:t;margin:2px 0}
+nav.toc a{display:block;padding:5px 8px;border-radius:6px;color:var(--ink-2);text-decoration:none}
+nav.toc a::before{content:counter(t) ". ";color:var(--ink-3)}
+nav.toc a:hover{background:var(--steel-tint);color:var(--ink)}
+main{min-width:0}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:28px 32px;margin-bottom:20px}
+h1{font-size:26px;line-height:1.25;letter-spacing:-.01em;margin-bottom:6px}
+h2{font-size:19px;margin-bottom:6px}
+h3{font-size:15px;margin:18px 0 6px}
+.lead{color:var(--ink-2);max-width:72ch;margin-bottom:16px}
+p+p{margin-top:8px}
+code{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:12.5px;background:var(--code);padding:1px 5px;border-radius:4px}
+/* document control */
+.docctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-top:18px}
+.docctl div{padding:10px 14px;border-right:1px solid var(--rule-2);border-bottom:1px solid var(--rule-2)}
+.docctl dt{font-size:12px;color:var(--ink-3)}
+.docctl dd{font-weight:600;font-size:14px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p-posted{background:var(--posted-tint);color:var(--posted)}
+.p-held{background:var(--held-tint);color:var(--held)}
+.p-refused{background:var(--refused-tint);color:var(--refused)}
+.p-steel{background:var(--steel-tint);color:var(--steel)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;font-size:13px;color:var(--ink-2);align-items:center}
+/* principle */
+.principle{border-left:4px solid var(--steel);background:var(--steel-tint);padding:14px 18px;border-radius:0 8px 8px 0;margin:4px 0 0}
+.principle strong{display:block;margin-bottom:2px}
+/* flow */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;counter-reset:f;margin-top:10px}
+.flow li{list-style:none;counter-increment:f;border:1px solid var(--rule);border-radius:8px;padding:10px 12px;font-size:13px;position:relative;background:var(--sheet)}
+.flow li::before{content:counter(f);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--steel);color:var(--sheet);font-size:12px;font-weight:700;margin-right:6px}
+.flow li b{font-size:14px}
+.flow li span{display:block;color:var(--ink-2);margin-top:4px}
+.flow li.gate{border-color:var(--steel);border-width:2px}
+.flow li.nopost{border-style:dashed}
+/* tables */
+.tw{overflow-x:auto;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+th{font-weight:600;color:var(--ink-2);border-bottom:2px solid var(--rule);background:var(--paper)}
+td.n,th.n{text-align:right}
+td.y{color:var(--posted);font-weight:600}
+td.x{color:var(--ink-3)}
+/* steps */
+.steps{list-style:none;counter-reset:s}
+.steps>li{counter-increment:s;border-top:1px solid var(--rule-2);padding:14px 0 14px 44px;position:relative}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:14px;width:30px;height:30px;border-radius:8px;background:var(--steel-tint);color:var(--steel);font-weight:700;display:grid;place-items:center}
+.steps h4{font-size:15px}
+.steps .who{font-size:13px;color:var(--ink-2);margin:2px 0 6px}
+.steps ul{margin:4px 0 0 18px;font-size:14px}
+.steps .ref{font-size:12.5px;color:var(--ink-3);margin-top:6px}
+/* formulas */
+.fx{border:1px solid var(--rule);border-radius:8px;padding:14px 16px;margin:10px 0}
+.fx h4{font-size:14px;margin-bottom:6px}
+.fx pre{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:13px;background:var(--code);padding:10px 12px;border-radius:6px;overflow-x:auto;white-space:pre}
+.fx p{font-size:13px;color:var(--ink-2);margin-top:6px}
+.fx.fe{border-style:dashed}
+/* simulators */
+.sim{border:2px solid var(--steel);border-radius:10px;padding:18px 20px;margin:16px 0}
+.sim h3{margin-top:0}
+.sim .note{font-size:13px;color:var(--ink-2);margin-bottom:10px}
+.grid-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 12px}
+label{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:3px}
+input,select{width:100%;padding:7px 9px;border:1px solid var(--rule);border-radius:6px;font:inherit;font-size:14px;background:var(--sheet);color:var(--ink)}
+table input{min-width:84px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+button{font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--steel)}
+.result{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px}
+.result div{background:var(--paper);border-radius:8px;padding:10px 12px}
+.result dt{font-size:12px;color:var(--ink-3)}
+.result dd{font-size:18px;font-weight:700}
+tr.refused td{background:var(--refused-tint)}
+tr.flag td{background:var(--held-tint)}
+.small{font-size:12.5px;color:var(--ink-3)}
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--ink-2);padding:14px 4px}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;padding:16px 12px 40px}
+  nav.toc{position:static}
+  nav.toc ol{display:flex;flex-wrap:wrap;gap:4px}
+  .sheet{padding:20px 16px}
+}
+@media print{
+  nav.toc,.btns,footer a{display:none}
+  .layout{display:block;padding:0}
+  .sheet{border:none;padding:10px 0;break-inside:avoid-page}
+  body{background:#fff}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
 </head>
 <body>
-<div class="container">
+<div class="layout">
 
-  <!-- Header -->
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <div class="header-title">VIJAY SPHEROIDALS PVT. LTD. (VSPL)</div>
-        <div class="header-subtitle">Material Management & Costing System — Functional, Calculation & Operational Flow</div>
-        <div class="header-meta">Plant 1: Peenya Foundry • Plant 2: Tumkur Machine Shop • Central Stores & Cost Accounts</div>
-      </div>
-      <div class="badge-bar">
-        <span class="badge badge-success">Approved Specification</span>
-        <span class="badge badge-amber">Cycle: 13:00 - 13:00</span>
-        <span class="badge badge-blue">MWAR Active</span>
-        <span class="badge badge-purple">Phase 5 Reconciled</span>
-      </div>
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#flow">End-to-end flow</a></li>
+    <li><a href="#masters">Masters to fill</a></li>
+    <li><a href="#sop">Step-by-step procedure</a></li>
+    <li><a href="#ledger">Ledger effect by document</a></li>
+    <li><a href="#formulas">Formula register</a></li>
+    <li><a href="#sims">Simulators</a></li>
+    <li><a href="#roles">Role access</a></li>
+    <li><a href="#exceptions">Exceptions and gates</a></li>
+    <li><a href="#notbuilt">Not in the system yet</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section class="sheet" aria-labelledby="title">
+  <h1 id="title">Material Management &amp; Costing System: Work Instruction</h1>
+  <p class="lead">How material is set up, received, issued, scrapped, counted, charged to heats, reconciled and costed at Vijay Spheroidals Pvt. Ltd. Every rule on this page is taken from the application code. All figures are DEMO values for training, not plant data.</p>
+  <div class="principle">
+    <strong>One posting path</strong>
+    Stock changes only when an approved Stores document (Opening Balance, GRN, Issue, Waste or Physical Audit) posts to the append-only stock ledger. The Foundry heat log is a production record. It is compared against issues but never deducts stock.
+  </div>
+  <dl class="docctl">
+    <div><dt>Document</dt><dd>WI-MM-001</dd></div>
+    <div><dt>Revision</dt><dd>3.0</dd></div>
+    <div><dt>Status</dt><dd><span class="pill p-held">Draft, pending approval</span></dd></div>
+    <div><dt>Basis</dt><dd>Backend code review</dd></div>
+    <div><dt>Opening baseline</dt><dd>12 Oct 2026</dd></div>
+  </dl>
+  <div class="legend">
+    <span class="pill p-posted">Posts to ledger</span>
+    <span class="pill p-steel">Record only</span>
+    <span class="pill p-held">Held / pending</span>
+    <span class="pill p-refused">Refused by system</span>
+  </div>
+</section>
+
+<section class="sheet" id="flow" aria-labelledby="h-flow">
+  <h2 id="h-flow">1. End-to-end flow</h2>
+  <p class="lead">Nine stages in order. The approval stage is the only gate into the ledger; the heat log stage writes no stock movement.</p>
+  <ol class="flow">
+    <li><b>Masters</b><span>Departments, UOMs, categories, vendors, item codes, aliases</span></li>
+    <li><b>Opening balance</b><span>Certified count at 12 Oct 2026, posted once by Admin</span></li>
+    <li><b>GRN</b><span>Stores records receipt with rate ex GST</span></li>
+    <li class="gate"><b>Approval</b><span>Management approves; creator cannot approve</span></li>
+    <li><b>Stock ledger</b><span>Append-only movement, negative stock refused</span></li>
+    <li><b>Issue slip</b><span>The only stock deduction for furnace material</span></li>
+    <li class="nopost"><b>Heat log</b><span>Foundry charge, tapped weight, parts. No posting</span></li>
+    <li><b>Reconciliation</b><span>Issued vs charged per heat and item</span></li>
+    <li><b>Costing run</b><span>Started manually; weighted average, heat and part cost</span></li>
+  </ol>
+  <p class="small" style="margin-top:10px">Waste / Scrap and Physical Audit follow the same path as GRN and Issue: create, submit, approve, post.</p>
+</section>
+
+<section class="sheet" id="masters" aria-labelledby="h-masters">
+  <h2 id="h-masters">2. Masters to fill, in order</h2>
+  <p class="lead">Nothing can be received, issued or charged to a heat until the item exists in rows 1 to 5. Costing needs row 7.</p>
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>Master</th><th>Who fills</th><th>Who approves</th><th>Mandatory fields</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Departments (7)</td><td>Seeded by Admin</td><td>Fixed</td><td>FDY, MCS, MNT, QLY, PKD, UTL, GEN</td></tr>
+      <tr><td>2</td><td>UOMs (6)</td><td>Seeded by Admin</td><td>Fixed</td><td>KG, NOS, LTR, PACK, ROLL, MTR. No automatic conversion</td></tr>
+      <tr><td>3</td><td>Categories (15)</td><td>Fixed in standard v1.0</td><td>Standard change</td><td>Each category belongs to one department, e.g. RM under FDY, BR under MNT</td></tr>
+      <tr><td>4</td><td>Vendor</td><td>Purchase</td><td>None</td><td>Name (duplicates blocked after normalising); GSTIN optional, 15 characters</td></tr>
+      <tr><td>5</td><td>Item code request, then material item</td><td>Stores, Foundry or Purchase</td><td>Management</td><td>Name, department, category, UOM, justification. Code issued on approval as <code>DDD-CC-NNN</code></td></tr>
+      <tr><td>6</td><td>Material alias</td><td>Stores or Foundry</td><td>Management</td><td>Alias text as written on slips and heat logs, target item. One alias maps to one item</td></tr>
+      <tr><td>7</td><td>Opening valuation and opening balance</td><td>Proposed by Stores / Accounts; posted by Admin</td><td>Rate approved by a different person</td><td>Rate ex GST (versioned), certified physical quantity, baseline exactly 12 Oct 2026</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Item code rules: pattern <code>^[A-Z]{3}-[A-Z]{2}-[0-9]{3}$</code>, serial 001 to 999, next serial = highest ever issued + 1 under a database lock, never reused, retired items are deactivated not deleted. Names follow Primary Noun, Type/Grade, Size/Spec, Material/Variant, 2 to 255 characters, no prices.</p>
+</section>
+
+<section class="sheet" id="sop" aria-labelledby="h-sop">
+  <h2 id="h-sop">3. Step-by-step procedure</h2>
+  <p class="lead">Each step names who does it, who approves it, and what it does to stock.</p>
+  <ol class="steps">
+    <li>
+      <h4>Request a missing item code</h4>
+      <p class="who">Stores, Foundry or Purchase raise · Management approves or rejects</p>
+      <ul>
+        <li>Fill name, department, matching category, UOM and justification. Status DRAFT, then SUBMITTED.</li>
+        <li>The system blocks a name that already exists as an item, an alias or an open request.</li>
+        <li>On approval the code is generated and a registry row records serial, standard version and approver.</li>
+      </ul>
+      <p class="ref">item_code_service.py, item_nomenclature.py</p>
+    </li>
+    <li>
+      <h4>Map shop-floor names to items (aliases)</h4>
+      <p class="who">Stores or Foundry create · Management approves</p>
+      <ul><li>Heat log and Excel lines are matched to items through approved aliases. An unmatched heat charge line is marked UNMAPPED_ALIAS and left out of costing.</li></ul>
+      <p class="ref">material_alias_service.py</p>
+    </li>
+    <li>
+      <h4>Set opening stock</h4>
+      <p class="who">Rate proposed and approved by two different people · quantity posted by Admin</p>
+      <ul>
+        <li>Quantity comes only from a management-certified physical count at the cutover.</li>
+        <li>Preview first. Posting is refused if any row has a blocking error or the baseline date is not 12 Oct 2026.</li>
+        <li>Creates OPENING_BALANCE ledger movements.</li>
+      </ul>
+      <p class="ref">opening_balance_service.py, opening_valuation_service.py</p>
+    </li>
+    <li>
+      <h4>Receive material (GRN)</h4>
+      <p class="who">Stores creates and submits · Management approves</p>
+      <ul>
+        <li>Header: receipt date, source type (External vendor, Internal VSPL or Segregation yard), vendor, invoice number and date. Number format <code>GRN-YYYYMMDD-XXXX</code>.</li>
+        <li>Lines: item, UOM, quantity, rate ex GST, GST %. Rate is optional in the form but a line without a rate posts stock unvalued.</li>
+        <li>The system checks for duplicate invoices and duplicate lines.</li>
+        <li>DRAFT, then SUBMITTED, then APPROVED. The creator cannot approve.</li>
+        <li>On approval: + INWARD_RECEIPT (or INTERNAL_INWARD) in the ledger. GST is stored but costing uses the rate ex GST.</li>
+      </ul>
+      <p class="ref">grn_service.py, duplicate_detector.py, ledger_service.post_grn_to_ledger</p>
+    </li>
+    <li>
+      <h4>Issue material</h4>
+      <p class="who">Stores creates and submits · Management approves</p>
+      <ul>
+        <li>Header: issue date, issuing and receiving department, heat reference number for furnace material. Number format <code>ISS-YYYYMMDD-XXXX</code>.</li>
+        <li>On approval: the item rows are locked, the balance is checked, and − OUTWARD_ISSUE is posted.</li>
+        <li>If the issue would make stock negative, approval is refused with "Insufficient inventory". Nothing is posted.</li>
+      </ul>
+      <p class="ref">issue_service.py, ledger_service.post_issue_to_ledger</p>
+    </li>
+    <li>
+      <h4>Record waste or scrap</h4>
+      <p class="who">Stores logs · Management approves</p>
+      <ul>
+        <li>Waste type: Borings, Gatings/Runners, Returns, Rejected castings, Slag, Other scrap. Number format <code>WST-YYYYMMDD-XXXX</code>.</li>
+        <li>Disposition decides the ledger effect: Scrap outward posts − quantity; Internal recovery posts a zero-quantity record; Inspection hold posts nothing.</li>
+      </ul>
+      <p class="ref">waste_service.py, ledger_service.post_waste_to_ledger</p>
+    </li>
+    <li>
+      <h4>Count stock (physical audit)</h4>
+      <p class="who">Stores creates and submits · Management approves</p>
+      <ul><li>Variance = physical count − system quantity at cutoff. On approval the variance posts as PHYSICAL_AUDIT_ADJUSTMENT. Approval is blocked if the live balance moved after the cutoff snapshot.</li></ul>
+      <p class="ref">physical_audit_service.py</p>
+    </li>
+    <li>
+      <h4>Log the heat</h4>
+      <p class="who">Foundry (or Management) records · no approval step</p>
+      <ul>
+        <li>Header: heat number (original kept, normalised key used for matching), heat date, furnace, shift, metal tapped weight.</li>
+        <li>Charge lines: description as written, quantity, UOM. Repeat additions of the same item are separate lines and are added together later.</li>
+        <li>Parts produced: description, quantity, unit cast weight, Good / Rejected / Rework.</li>
+        <li>No ledger movement is written.</li>
+      </ul>
+      <p class="ref">heat_service.py, heat_import_service.py</p>
+    </li>
+    <li>
+      <h4>Reconcile issues against heats</h4>
+      <p class="who">Foundry or Management run · Management resolves exceptions</p>
+      <ul>
+        <li>Pass 1 exact heat and slip, Pass 2 same-day batch, Pass 3 fuzzy suggestions only (never auto-confirmed).</li>
+        <li>Each rerun is a new snapshot; old results are kept.</li>
+      </ul>
+      <p class="ref">reconciliation_service.py</p>
+    </li>
+    <li>
+      <h4>Run costing</h4>
+      <p class="who">Management or Admin start the run manually</p>
+      <ul>
+        <li>Rebuilds each item's weighted-average rate from the ledger, then values heats and parts. Material cost only.</li>
+        <li>Statuses explain anything not valued (missing rate, missing opening valuation, missing denominator).</li>
+      </ul>
+      <p class="ref">costing_service.execute_costing_run</p>
+    </li>
+    <li>
+      <h4>Correct a mistake</h4>
+      <p class="who">Management or Admin</p>
+      <ul><li>Posted entries are never edited. Reverse the GRN, Issue or Waste; the system writes linked REVERSAL entries.</li></ul>
+      <p class="ref">ledger_service.reverse_*</p>
+    </li>
+  </ol>
+</section>
+
+<section class="sheet" id="ledger" aria-labelledby="h-ledger">
+  <h2 id="h-ledger">4. Ledger effect by document</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Document</th><th>Status flow</th><th>Movement on approval</th><th>Sign</th></tr></thead>
+    <tbody>
+      <tr><td>Opening balance</td><td>Preview, post</td><td>OPENING_BALANCE</td><td><span class="pill p-posted">+</span></td></tr>
+      <tr><td>GRN</td><td>Draft, Submitted, Approved / Cancelled / Reversed</td><td>INWARD_RECEIPT or INTERNAL_INWARD</td><td><span class="pill p-posted">+</span></td></tr>
+      <tr><td>Issue</td><td>Draft, Submitted, Approved / Cancelled / Reversed</td><td>OUTWARD_ISSUE</td><td><span class="pill p-posted">−</span></td></tr>
+      <tr><td>Waste: scrap outward</td><td>Draft, Submitted, Approved / Cancelled / Reversed</td><td>SCRAP_OUTWARD</td><td><span class="pill p-posted">−</span></td></tr>
+      <tr><td>Waste: internal recovery</td><td>Same</td><td>INTERNAL_RECOVERY</td><td><span class="pill p-held">0, policy pending</span></td></tr>
+      <tr><td>Waste: inspection hold</td><td>Same</td><td>None</td><td><span class="pill p-steel">none</span></td></tr>
+      <tr><td>Physical audit</td><td>Draft, Submitted, Approved / Cancelled</td><td>PHYSICAL_AUDIT_ADJUSTMENT</td><td><span class="pill p-posted">±</span></td></tr>
+      <tr><td>Heat log</td><td>In progress, Completed, Aborted</td><td>None</td><td><span class="pill p-steel">none</span></td></tr>
+      <tr><td>Reversal</td><td>Linked to original entry</td><td>REVERSAL</td><td><span class="pill p-posted">opposite</span></td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Posting is idempotent: approving a document that already posted returns the existing entries instead of posting twice.</p>
+</section>
+
+<section class="sheet" id="formulas" aria-labelledby="h-formulas">
+  <h2 id="h-formulas">5. Formula register</h2>
+  <p class="lead">Solid boxes are calculated by the backend. Dashed boxes are screen estimates only and do not feed costing.</p>
+
+  <div class="fx"><h4>Stock on hand</h4>
+<pre>Closing Qty = Σ quantity_delta of all ledger entries for the item</pre>
+  <p>Opening balance, receipts, issues, scrap, audit adjustments and reversals are all signed entries in one ledger.</p></div>
+
+  <div class="fx"><h4>Moving weighted-average rate (on each GRN line with rate &gt; 0)</h4>
+<pre>If stock before receipt ≤ 0:   New Rate = Receipt Rate
+Else:   New Rate = round4( (Qty × Rate + Receipt Qty × Receipt Rate) ÷ (Qty + Receipt Qty) )</pre>
+  <p>Starts from the approved opening rate. A GRN line without a rate adds quantity but does not change the rate (status MISSING_RECEIPT_RATE). Internal inward adds quantity with valuation policy pending. Same-day order: opening, receipts, positive adjustments, issues and scrap, negative adjustments, reversals.</p></div>
+
+  <div class="fx"><h4>Issue and scrap value</h4>
+<pre>Issue Value = round2( Issued Qty × Current Average Rate )</pre>
+  <p>Issues do not change the average rate.</p></div>
+
+  <div class="fx"><h4>Reconciliation tolerance and class</h4>
+<pre>Issued  = Σ approved issue qty for (heat, item)
+Charged = Σ heat charge qty for (heat, item)
+Variance = Issued − Charged
+Tolerance = 0.5 if Issued ≤ 0, else max(0.5, 0.02 × Issued)
+
+1. Issued &gt; 0 and Charged &gt; 0 and Issued ÷ Charged ≥ 9.5 or ≤ 0.105  → DECIMAL_SUSPECT
+2. |Variance| ≤ Tolerance                                                 → OK
+3. Variance &gt; Tolerance                                                  → EXCESS_ISSUE
+4. otherwise                                                              → SHORT_ISSUE</pre>
+  <p>The 2% and 0.5 are fixed in code. Unmatched or ambiguous rows get UNMATCHED_SLIP, UNMATCHED_HEAT or AMBIGUOUS_MATCH.</p></div>
+
+  <div class="fx"><h4>Heat material cost per kg</h4>
+<pre>Line Cost = round2( Charged Qty × Item Average Rate as of heat date )
+Heat Material Cost = Σ Line Cost (valued lines only)
+Denominator = Metal Tapped Weight            (default, METAL_TAPPED)
+           or Σ Good Qty × Unit Cast Weight  (GOOD_CASTING_KG)
+Cost per kg = round4( Heat Material Cost ÷ Denominator )</pre>
+  <p>Status COMPLETE only if every charge line has a mapped item and a rate; otherwise PARTIAL_COST or INSUFFICIENT_COST_DATA. No denominator gives DENOMINATOR_UNAVAILABLE. Power and consumables are not included.</p></div>
+
+  <div class="fx"><h4>Part material cost</h4>
+<pre>Cost per Part = round4( Unit Cast Weight × Heat Cost per kg )
+Total = round2( Quantity × Cost per Part )</pre>
+  <p>Calculated only when the heat status is COMPLETE and the part has a unit cast weight.</p></div>
+
+  <div class="fx"><h4>Opening value</h4>
+<pre>Opening Value = Certified Opening Qty × Approved Opening Rate ex GST</pre></div>
+
+  <div class="fx fe"><h4>Melt loss and yield (screen estimate only)</h4>
+<pre>Melt Loss kg = Σ charge qty − Metal Tapped Weight
+Melt Loss %  = Melt Loss kg ÷ Σ charge qty × 100
+Warning above 6.5 %, critical above 8.0 %</pre>
+  <p>Shown on the Heat Log screen only. Not stored or used by the costing run. The same screen's cost per kg uses fixed estimates and will not match a costing run.</p></div>
+</section>
+
+<section class="sheet" id="sims" aria-labelledby="h-sims">
+  <h2 id="h-sims">6. Simulators</h2>
+  <p class="lead">These follow the backend rules above. Change any value to see the effect. DEMO data only.</p>
+
+  <div class="sim" id="sim-ledger">
+    <h3>Ledger and weighted-average rate</h3>
+    <p class="note">Item FDY-RM-901 Demo Copper, kg. Leave a GRN rate blank to see an unvalued receipt. An issue larger than stock is refused at approval.</p>
+    <div class="tw"><table id="ledTable">
+      <thead><tr><th>#</th><th>Movement</th><th class="n">Qty (kg)</th><th class="n">Rate ex GST (₹)</th><th class="n">Balance</th><th class="n">Avg rate</th><th class="n">Movement value</th><th>System status</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="btns">
+      <button type="button" data-add="GRN">Add GRN</button>
+      <button type="button" data-add="ISSUE">Add Issue</button>
+      <button type="button" id="ledReset">Reset demo</button>
     </div>
+    <dl class="result">
+      <div><dt>Closing quantity</dt><dd class="out" id="ledQty"></dd></div>
+      <div><dt>Average rate</dt><dd class="out" id="ledRate"></dd></div>
+      <div><dt>Closing value</dt><dd class="out" id="ledVal"></dd></div>
+    </dl>
   </div>
 
-  <!-- Core Control Banner -->
-  <div class="control-banner">
-    <strong>CRITICAL SYSTEM CONTROL PRINCIPLE:</strong> Inventory movements have exactly <u>ONE authoritative posting path</u>. 
-    Heat Log records capture foundry production and crucible charge execution; they <strong>must not independently deduct stock</strong> when the approved Stores Issue slip has already done so.
+  <div class="sim" id="sim-rec">
+    <h3>Heat reconciliation</h3>
+    <p class="note">Heat DEMO-H-001, item Demo Copper. Repeat charges are added together before comparing.</p>
+    <div class="grid-in">
+      <div><label for="recIss">Issued on slips (kg)</label><input id="recIss" type="number" step="0.01" value="5.00"></div>
+      <div><label for="recC1">Charge line 1 (kg)</label><input id="recC1" type="number" step="0.01" value="3.00"></div>
+      <div><label for="recC2">Charge line 2 (kg)</label><input id="recC2" type="number" step="0.01" value="2.05"></div>
+      <div><label for="recC3">Charge line 3 (kg)</label><input id="recC3" type="number" step="0.01" value=""></div>
+    </div>
+    <dl class="result">
+      <div><dt>Charged total</dt><dd class="out" id="recCh"></dd></div>
+      <div><dt>Variance (issued − charged)</dt><dd class="out" id="recVar"></dd></div>
+      <div><dt>Tolerance</dt><dd class="out" id="recTol"></dd></div>
+      <div><dt>Class</dt><dd id="recCls"></dd></div>
+    </dl>
   </div>
 
-  <!-- KPI Summary Cards -->
-  <div class="grid-4">
-    <div class="kpi-card">
-      <div class="kpi-title">Catalog Master</div>
-      <div class="kpi-value">391 Items</div>
-      <div class="kpi-sub">7 Depts • 15 Categories • 6 UOMs</div>
-    </div>
-    <div class="kpi-card green">
-      <div class="kpi-title">Valid Furnace Charges</div>
-      <div class="kpi-value">57,519.20 kg</div>
-      <div class="kpi-sub">1,044 Valid Charge Lines Verified</div>
-    </div>
-    <div class="kpi-card amber">
-      <div class="kpi-title">Reconciliation Scope</div>
-      <div class="kpi-value">1,183 Slips</div>
-      <div class="kpi-sub">61 General + 1,122 Furnace Candidates</div>
-    </div>
-    <div class="kpi-card purple">
-      <div class="kpi-title">Accounting Cycle</div>
-      <div class="kpi-value">13:00 – 13:00</div>
-      <div class="kpi-sub">Daily Cut-off & MWAR Costing Run</div>
-    </div>
-  </div>
-
-  <!-- Section 1: End-to-End System Project Flow -->
-  <div class="section">
-    <div class="section-title">
-      <span>1. End-to-End Material & Costing Flow (Procurement to Balance Sheet)</span>
-      <span class="badge badge-blue">9 Verified Stages</span>
-    </div>
-    <div class="flow-container">
-      <div class="flow-row">
-        <div class="flow-node"><strong>1. Weighbridge & Gate</strong><br>Truck Inward & Gross/Tare</div>
-        <div class="flow-arrow">➔</div>
-        <div class="flow-node"><strong>2. Central Stores GRN</strong><br>Vendor Challan & Ex-GST Rate</div>
-        <div class="flow-arrow">➔</div>
-        <div class="flow-node"><strong>3. Quality Inspection</strong><br>Spectrometer & Lab Release</div>
-        <div class="flow-arrow">➔</div>
-        <div class="flow-node highlight"><strong>4. Stock Ledger Post</strong><br>Append-Only Inward (+Qty)</div>
-      </div>
-      <div style="text-align: center; color: #94a3b8; font-weight: bold; margin: 4px 0;">▼</div>
-      <div class="flow-row">
-        <div class="flow-node success"><strong>9. Daily Costing Run</strong><br>MWAR & Part Cost Allocation</div>
-        <div class="flow-arrow">⬅</div>
-        <div class="flow-node highlight"><strong>8. 3-Pass Reconciliation</strong><br>Stores Issue vs Heat Charge</div>
-        <div class="flow-arrow">⬅</div>
-        <div class="flow-node"><strong>7. Heat Log Execution</strong><br>Crucible Charge (0 Ledger Post)</div>
-        <div class="flow-arrow">⬅</div>
-        <div class="flow-node purple"><strong>6. Stores Issue Slip</strong><br>SOLE Stock Deduction (-Qty)</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section 2: How All Has To Be Done (Step-by-Step Operating Guide) -->
-  <div class="section">
-    <div class="section-title">
-      <span>2. How All Has To Be Done (Detailed Operational Guide)</span>
-      <span class="badge badge-success">SOP Instructions</span>
-    </div>
-    <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-num">Step 1 • Master Data</div>
-        <div class="step-title">Item Master & Nomenclature</div>
-        <div class="step-desc">All items follow strict nomenclature: <code>DEP-CAT-XXX</code> (e.g. <code>FDY-RM-001</code>). If an item is missing, Stores submits an Item Code Request. Maker-checker prevents self-approval. Non-standard codes are grandfathered and never silently overwritten.</div>
-        <div class="step-meta">Rule: Regex ^[A-Z]{3}-[A-Z]{2}-[0-9]{3}$ • Inactive toggle, never delete</div>
-      </div>
-
-      <div class="step-card">
-        <div class="step-num">Step 2 • Procurement Inward</div>
-        <div class="step-title">Goods Receipt Note (GRN)</div>
-        <div class="step-desc">Stores creates a GRN recording vendor, invoice number, item, and mandatory positive <code>unit_rate_ex_gst</code>. System checks for duplicate invoice numbers. Upon approval by Stores Manager, appends a positive stock movement (<code>+Q</code>) to the ledger.</div>
-        <div class="step-meta">Authority: post_grn_to_ledger • Taxes recorded separately, not in costing</div>
-      </div>
-
-      <div class="step-card">
-        <div class="step-num">Step 3 • Physical Issue</div>
-        <div class="step-title">Stores Issue Slip Approval</div>
-        <div class="step-desc">Stores issues raw material upon receiving an authorized slip. System locks stock row with <code>FOR UPDATE</code>, checks available balance, and appends <code>MovementType.ISSUE</code> (<code>-Q</code>). This is the <strong>SOLE authoritative point of inventory reduction</strong>.</div>
-        <div class="step-meta">Authority: issue_service.py:198-202 • Negative stock strictly blocked</div>
-      </div>
-
-      <div class="step-card">
-        <div class="step-num">Step 4 • Foundry Melt Shop</div>
-        <div class="step-title">Heat Log & Crucible Charge</div>
-        <div class="step-desc">Melt shop operators record heat number, furnace, shift, tapped weight, and raw material additions. System translates shop floor nicknames via Material Aliases. <strong>Zero stock ledger rows are written</strong>, ensuring no duplicate deduction occurs.</div>
-        <div class="step-meta">Authority: heat_service.py • Captures chemistry, tapped weight & parts</div>
-      </div>
-
-      <div class="step-card">
-        <div class="step-num">Step 5 • Audit Verification</div>
-        <div class="step-title">Three-Pass Reconciliation</div>
-        <div class="step-desc">Reconciliation compares Stores issue slips against Heat crucible charges. Pass 1 matches exact heat numbers; Pass 2 matches daily batch totals; Pass 3 discovers fuzzy candidates. Flags any weight difference exceeding the 2% tolerance limit.</div>
-        <div class="step-meta">Tolerance: max(0.5 kg, 0.02 × IssuedQty) • Decimal ratio check &ge;9.5</div>
-      </div>
-
-      <div class="step-card">
-        <div class="step-num">Step 6 • Daily Valuation</div>
-        <div class="step-title">MWAR Costing Run Execution</div>
-        <div class="step-desc">At 13:15 daily, the Costing Engine sorts same-day transactions chronologically (receipts before issues), updates the moving weighted-average rate, computes liquid metal rate per kg, and allocates exact material costs to finished good castings.</div>
-        <div class="step-meta">Formula: R_new = (Q_prev*R_prev + Q_rcpt*R_rcpt) / (Q_prev + Q_rcpt)</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section 3: Exhaustive Formulas and Calculation Rules -->
-  <div class="section">
-    <div class="section-title">
-      <span>3. Comprehensive Formula Register</span>
-      <span class="badge badge-purple">10 Verified Formulas</span>
-    </div>
-    <div class="formula-grid">
-      
-      <div class="formula-card">
-        <span class="formula-tag tag-blue">Formula 1 • Stock Balance</span>
-        <div class="formula-name">Closing Inventory Quantity</div>
-        <div class="formula-box">Closing Qty = Opening Qty + &Sigma; SignedLedgerQuantity</div>
-        <div class="formula-notes">Calculated from immutable ledger movements (+Receipts, -Issues, -Scrap Outward, +Recovery, &plusmn;Adjustments). Silent overwrites and negative balances are forbidden.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-amber">Formula 2 • Valuation</span>
-        <div class="formula-name">Moving Weighted-Average Rate (MWAR)</div>
-        <div class="formula-box">R_new = [(Q_prev &times; R_prev) + (Q_rcpt &times; R_rcpt)] &divide; [Q_prev + Q_rcpt]</div>
-        <div class="formula-notes">Recalculated upon every approved receipt. Rounded to 4 decimal places (<code>0.0001</code>). If previous stock &le; 0, rate resets to current receipt rate.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-green">Formula 3 • Issue Valuation</span>
-        <div class="formula-name">Outward Stock Issue Value</div>
-        <div class="formula-box">Issue Value = round(Issued Qty &times; R_prev, 2)</div>
-        <div class="formula-notes">Consumes stock at current applicable MWAR rate. Outward issues reduce physical quantity and inventory valuation, leaving the average rate unchanged.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-purple">Formula 4 • Heat Aggregation</span>
-        <div class="formula-name">Charge Aggregation & Variance</div>
-        <div class="formula-box">Variance (kg) = IssuedQty(heat, item) - ChargeQty(heat, item)</div>
-        <div class="formula-notes">Repeated additions of the same material within a single heat are aggregated before comparison. Excludes non-charge supplies and floor consumables.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-blue">Formula 5 • Reconciliation</span>
-        <div class="formula-name">Reconciliation Tolerance & Anomaly Ratio</div>
-        <div class="formula-box">Tolerance Limit = max(0.5000 kg, 0.02 &times; IssuedQty)<br>Ratio = ChargeQty &divide; IssuedQty</div>
-        <div class="formula-notes">Classified as <strong>OK</strong> if absolute variance &le; tolerance. Flagged as <strong>DECIMAL_SUSPECT</strong> if Ratio &ge; 9.5 or &le; 0.105 (indicates 10x typo).</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-amber">Formula 6 • Efficiency</span>
-        <div class="formula-name">Melt Loss (kg & %)</div>
-        <div class="formula-box">Melt Loss (kg) = Charge Weight - Metal Tapped Weight<br>Melt Loss (%) = [Melt Loss (kg) &divide; Charge Weight] &times; 100</div>
-        <div class="formula-notes">Target range: 3.0% to 6.5%. Loss &gt; 6.5% generates warning flag; loss &gt; 8.0% triggers an immediate QA and scale calibration hold.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-green">Formula 7 • Casting Yield</span>
-        <div class="formula-name">Good Casting Yield & Liquid Metal Rate</div>
-        <div class="formula-box">Good Yield (%) = [&Sigma; (Good Parts &times; Unit Cast Wt) &divide; Tapped Wt] &times; 100<br>Liquid Metal Rate/kg = Total Heat Material Cost &divide; Tapped Wt</div>
-        <div class="formula-notes">Dividing total heat cost by tapped weight absorbs melting loss into the liquid metal cost, giving the true cost per kilogram of molten metal.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-purple">Formula 8 • Cost Allocation</span>
-        <div class="formula-name">Finished Part Unit Cost</div>
-        <div class="formula-box">Unit Part Cost = round(Unit Cast Weight &times; Liquid Metal Rate, 2)</div>
-        <div class="formula-notes">Allocates liquid metal cost to good parts. Rejection and scrap costs remain accounted for in the net yield rate.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-blue">Formula 9 • Baseline Valuation</span>
-        <div class="formula-name">Opening Stock Valuation</div>
-        <div class="formula-box">Opening Value = Certified Physical Qty &times; Approved Opening Unit Cost</div>
-        <div class="formula-notes">Must be supported by certified physical stock count as of 12 October 2026. Cannot be guessed or back-calculated from ledger summaries.</div>
-      </div>
-
-      <div class="formula-card">
-        <span class="formula-tag tag-amber">Formula 10 • Item Code Registry</span>
-        <div class="formula-name">Serial Number Sequence Generator</div>
-        <div class="formula-box">Next Serial = Highest Ever Issued Serial(dept, category) + 1</div>
-        <div class="formula-notes">Serials are never reused and sequence gaps are never filled. Locked with <code>FOR UPDATE</code> during assignment to prevent concurrent collisions.</div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Section 4: Live Interactive Calculation Simulators -->
-  <div class="section">
-    <div class="section-title">
-      <span>4. Interactive Calculation Simulators</span>
-      <span class="badge badge-success">Live Test Tools</span>
-    </div>
-
-    <!-- Simulator 1: MWAR Calculator -->
-    <div class="sim-panel">
-      <div class="sim-header">
-        <span class="sim-title">⚡ Simulator 1: Moving Weighted-Average Rate (MWAR)</span>
-        <span class="badge badge-blue">Formula F-08 Live Test</span>
-      </div>
-      <div class="sim-inputs">
-        <div class="input-group">
-          <label>Current Stock (kg)</label>
-          <input type="number" id="mwar_q_curr" value="10000" step="100" oninput="calcMWAR()">
-        </div>
-        <div class="input-group">
-          <label>Current Rate (₹/kg)</label>
-          <input type="number" id="mwar_r_curr" value="40.0000" step="0.5" oninput="calcMWAR()">
-        </div>
-        <div class="input-group">
-          <label>New Receipt Qty (kg)</label>
-          <input type="number" id="mwar_q_new" value="5000" step="100" oninput="calcMWAR()">
-        </div>
-        <div class="input-group">
-          <label>New Inward Rate (₹/kg)</label>
-          <input type="number" id="mwar_r_new" value="46.0000" step="0.5" oninput="calcMWAR()">
-        </div>
-      </div>
-      <div class="sim-result">
-        <div>
-          <span style="font-size: 12px; color: #64748b;">New Blended Rate:</span><br>
-          <span class="sim-result-val" id="mwar_res_rate">₹42.0000 / kg</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Total Ending Valuation:</span><br>
-          <span class="sim-result-val" id="mwar_res_val">₹6,30,000.00</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Formula Steps:</span><br>
-          <span style="font-size: 11px; font-family: monospace;" id="mwar_res_steps">(10,000×40 + 5,000×46) ÷ 15,000</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Simulator 2: Reconciliation Checker -->
-    <div class="sim-panel">
-      <div class="sim-header">
-        <span class="sim-title">⚡ Simulator 2: Furnace Charge Reconciliation & Tolerance Checker</span>
-        <span class="badge badge-amber">Formula F-06 / F-07 Live Test</span>
-      </div>
-      <div class="sim-inputs">
-        <div class="input-group">
-          <label>Stores Issued Qty (kg)</label>
-          <input type="number" id="rec_issued" value="6000" step="50" oninput="calcRec()">
-        </div>
-        <div class="input-group">
-          <label>Heat Charged Qty (kg)</label>
-          <input type="number" id="rec_charged" value="5980" step="50" oninput="calcRec()">
-        </div>
-        <div class="input-group">
-          <label>Tolerance % (Standard 2%)</label>
-          <input type="number" id="rec_tol_pct" value="2.0" step="0.1" oninput="calcRec()">
-        </div>
-      </div>
-      <div class="sim-result">
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Variance:</span><br>
-          <span class="sim-result-val" id="rec_res_var">-20.00 kg</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Allowed Tolerance Limit:</span><br>
-          <span class="sim-result-val" id="rec_res_tol">&plusmn;120.00 kg</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Classification Result:</span><br>
-          <span class="badge badge-success" id="rec_res_class" style="font-size: 13px; padding: 6px 12px;">OK (Within Tolerance)</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Simulator 3: Melt Loss & Part Costing -->
-    <div class="sim-panel">
-      <div class="sim-header">
-        <span class="sim-title">⚡ Simulator 3: Melt Loss, Liquid Metal & Part Costing</span>
-        <span class="badge badge-purple">Formula F-10 / F-11 Live Test</span>
-      </div>
-      <div class="sim-inputs">
-        <div class="input-group">
-          <label>Gross Charge Wt (kg)</label>
-          <input type="number" id="cost_charge_wt" value="517" step="5" oninput="calcCost()">
-        </div>
-        <div class="input-group">
-          <label>Tapped Metal Wt (kg)</label>
-          <input type="number" id="cost_tap_wt" value="492" step="5" oninput="calcCost()">
-        </div>
-        <div class="input-group">
-          <label>Total Heat Direct Cost (₹)</label>
-          <input type="number" id="cost_heat_val" value="25392.50" step="100" oninput="calcCost()">
-        </div>
-        <div class="input-group">
-          <label>Unit Cast Wt (kg/part)</label>
-          <input type="number" id="cost_part_wt" value="20.0" step="0.5" oninput="calcCost()">
-        </div>
-      </div>
-      <div class="sim-result">
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Melt Loss:</span><br>
-          <span class="sim-result-val" id="cost_res_loss">25.0 kg (4.84%)</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Liquid Metal Rate:</span><br>
-          <span class="sim-result-val" id="cost_res_liquid">₹51.61 / kg</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #64748b;">Finished Part Raw Cost:</span><br>
-          <span class="sim-result-val" id="cost_res_part" style="color: #065f46;">₹1,032.22 / part</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Section 5: Phase 5 Issue Row Accounting Breakdown -->
-  <div class="section">
-    <div class="section-title">
-      <span>5. Phase 5 Source Issue Rows Accounting (1,183 Total Rows Audited)</span>
-      <span class="badge badge-amber">Mutually Exclusive Proof</span>
-    </div>
-    <div class="section-desc">
-      Every source issue row from the daily workbooks has been audited into exactly one mutually exclusive category with strict UOM separation.
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Category Classification</th>
-          <th>Row Count</th>
-          <th>Physical Mass Total</th>
-          <th>Recorded UOM</th>
-          <th>Inventory Deduction Authority</th>
-          <th>Reconciliation Handling</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr style="background: #ecfdf5; font-weight: 700;">
-          <td><span class="tag" style="background:#a7f3d0;color:#065f46;">VALID_FURNACE_CHARGE</span></td>
-          <td>1,044</td>
-          <td>57,519.20 kg</td>
-          <td>KG</td>
-          <td>Stores Issue Slip (Approved)</td>
-          <td>Included in Crucible Charge Comparison</td>
-        </tr>
-        <tr>
-          <td><span class="tag tag-i">ZERO_QUANTITY_PLACEHOLDER</span></td>
-          <td>43</td>
-          <td>0.00 kg</td>
-          <td>KG</td>
-          <td>Excluded (No physical movement)</td>
-          <td>Excluded from charge weight; preserved in audit</td>
-        </tr>
-        <tr>
-          <td><span class="tag tag-a">NON_CHARGE_SUPPLY_VOUCHER</span></td>
-          <td>21</td>
-          <td>187.00 kg + 478.00 Nos</td>
-          <td>KG / NOS / PACK</td>
-          <td>Stores Issue Slip (General)</td>
-          <td>Excluded from crucible bath comparison</td>
-        </tr>
-        <tr>
-          <td><span class="tag tag-c">FLOOR_CONSUMABLE_BLANK_SLIP</span></td>
-          <td>13</td>
-          <td>Floor Supplies</td>
-          <td>KG / NOS</td>
-          <td>Stores Departmental Issue</td>
-          <td>Segregated from induction furnace charge</td>
-        </tr>
-        <tr style="background: #fef2f2;">
-          <td><span class="tag tag-r">MISSING_ITEM_CODE</span></td>
-          <td>1</td>
-          <td>177.00 kg (Gattings)</td>
-          <td>KG</td>
-          <td>HELD (Requires Item Code)</td>
-          <td>Heat 102608-3920 held pending code approval</td>
-        </tr>
-        <tr style="background: #f8fafc; font-weight: 700;">
-          <td><span class="tag tag-c">GENERAL_ISSUE</span></td>
-          <td>61</td>
-          <td>Non-Foundry Issues</td>
-          <td>Various</td>
-          <td>Stores Issue Slip</td>
-          <td>General department issues outside melt shop</td>
-        </tr>
-        <tr style="background: #1e3a8a; color: #fff; font-weight: 800;">
-          <td>TOTAL AUDITED ISSUE ROWS</td>
-          <td>1,183 Rows</td>
-          <td>57,519.20 kg Valid Metal</td>
-          <td>Separated</td>
-          <td colspan="2">100% Accounted For • Zero Overlaps • Zero Unclassified Rows</td>
-        </tr>
+  <div class="sim" id="sim-heat">
+    <h3>Heat and part material cost</h3>
+    <p class="note">Rates are each item's weighted-average rate on the heat date. Leave a rate blank to see a partial heat, which stops part costing.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Charge line</th><th class="n">Qty (kg)</th><th class="n">Rate (₹/kg)</th><th class="n">Line cost (₹)</th></tr></thead>
+      <tbody id="heatLines">
+        <tr><td>FDY-RM-902 Demo CRC Scrap</td><td><input type="number" step="0.01" value="300"></td><td><input type="number" step="0.0001" value="40"></td><td class="n out"></td></tr>
+        <tr><td>FDY-RM-903 Demo Pig Iron</td><td><input type="number" step="0.01" value="200"></td><td><input type="number" step="0.0001" value="45"></td><td class="n out"></td></tr>
+        <tr><td>FDY-RM-901 Demo Copper</td><td><input type="number" step="0.01" value="5.05"></td><td><input type="number" step="0.0001" value="100"></td><td class="n out"></td></tr>
       </tbody>
-    </table>
-    <div style="font-size: 11px; color: #dc2626; font-weight: 600; margin-top: 6px;">
-      ⚠️ CRITICAL ARITHMETIC RULE: The preliminary figure 58,361.20 kg cannot be treated as a pure mass total because it erroneously combined 187 kg of non-charge supplies with 478 count units. Pure verified metallic charge is exactly 57,519.20 kg.
+    </table></div>
+    <div class="grid-in">
+      <div><label for="hTap">Metal tapped (kg)</label><input id="hTap" type="number" step="0.01" value="480"></div>
+      <div><label for="hDen">Denominator</label><select id="hDen"><option value="TAP">Metal tapped</option><option value="GOOD">Good castings</option></select></div>
+      <div><label for="pGood">Good parts (qty)</label><input id="pGood" type="number" step="1" value="20"></div>
+      <div><label for="pRej">Rejected parts (qty)</label><input id="pRej" type="number" step="1" value="2"></div>
+      <div><label for="pWt">Unit cast weight (kg)</label><input id="pWt" type="number" step="0.001" value="18.5"></div>
     </div>
+    <dl class="result">
+      <div><dt>Heat material cost</dt><dd class="out" id="hCost"></dd></div>
+      <div><dt>Denominator</dt><dd class="out" id="hDenV"></dd></div>
+      <div><dt>Cost per kg</dt><dd class="out" id="hCpk"></dd></div>
+      <div><dt>Heat status</dt><dd id="hStat"></dd></div>
+      <div><dt>Cost per part</dt><dd class="out" id="pCpu"></dd></div>
+      <div><dt>Good parts total</dt><dd class="out" id="pTot"></dd></div>
+    </dl>
+    <p class="small" style="margin-top:8px">Metal tapped is the default denominator. Only Good parts count in the good castings denominator, but every part line, including rejected, gets a cost per part.</p>
   </div>
+</section>
 
-  <!-- Section 6: RACI Governance Matrix -->
-  <div class="section">
-    <div class="section-title">
-      <span>6. RACI Responsibility & Governance Matrix</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Operation / Workflow Step</th>
-          <th>Stores</th>
-          <th>Melt Shop</th>
-          <th>Quality (QA)</th>
-          <th>Cost Accounts</th>
-          <th>Plant Head</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Item Code Creation & Registry</strong></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-a">A - Accountable</span></td>
-        </tr>
-        <tr>
-          <td><strong>Inward Material Receipts (GRN)</strong></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-        </tr>
-        <tr>
-          <td><strong>Stores Issue Slip Deduction</strong></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-a">A - Accountable</span></td>
-        </tr>
-        <tr>
-          <td><strong>Furnace Heat Log Charging</strong></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-a">A - Accountable</span></td>
-        </tr>
-        <tr>
-          <td><strong>13:00 Hard Cut-Off Execution</strong></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-a">A - Accountable</span></td>
-        </tr>
-        <tr>
-          <td><strong>Three-Pass Heat Reconciliation</strong></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-a">A - Accountable</span></td>
-        </tr>
-        <tr>
-          <td><strong>MWAR Costing Run & Valuation</strong></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-a">A - Accountable</span></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<section class="sheet" id="roles" aria-labelledby="h-roles">
+  <h2 id="h-roles">7. Role access</h2>
+  <p class="lead">These are the five roles in the system. Admin has every permission. The creator of a GRN, Issue, Waste or Physical Audit cannot approve it.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Action</th><th>Stores</th><th>Foundry</th><th>Purchase</th><th>Management</th></tr></thead>
+    <tbody>
+      <tr><td>Create GRN / Issue / Waste</td><td class="y">Yes</td><td class="x">No</td><td class="x">No</td><td class="x">No</td></tr>
+      <tr><td>Approve GRN / Issue / Waste</td><td class="x">No</td><td class="x">No</td><td class="x">No</td><td class="y">Yes</td></tr>
+      <tr><td>Physical audit create / approve</td><td class="y">Create</td><td class="x">No</td><td class="x">No</td><td class="y">Approve</td></tr>
+      <tr><td>Excel bulk import</td><td class="y">Yes</td><td class="x">No</td><td class="x">No</td><td class="x">No</td></tr>
+      <tr><td>Request item code</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Approve item code</td><td class="x">No</td><td class="x">No</td><td class="x">No</td><td class="y">Yes</td></tr>
+      <tr><td>Manage vendors</td><td class="x">No</td><td class="x">No</td><td class="y">Yes</td><td class="x">No</td></tr>
+      <tr><td>Create / approve alias</td><td class="y">Create</td><td class="y">Create</td><td class="x">No</td><td class="y">Both</td></tr>
+      <tr><td>Create heat log</td><td class="x">No</td><td class="y">Yes</td><td class="x">No</td><td class="y">Yes</td></tr>
+      <tr><td>Run reconciliation / resolve exceptions</td><td class="x">No</td><td class="y">Run</td><td class="x">No</td><td class="y">Both</td></tr>
+      <tr><td>Reverse ledger documents</td><td class="x">No</td><td class="x">No</td><td class="x">No</td><td class="y">Yes</td></tr>
+      <tr><td>Run costing</td><td class="x">No</td><td class="x">No</td><td class="x">No</td><td class="y">Yes</td></tr>
+      <tr><td>Post opening balance</td><td class="x">No</td><td class="x">No</td><td class="x">No</td><td class="x">No (Admin only)</td></tr>
+    </tbody>
+  </table></div>
+</section>
 
-  <!-- Section 7: Exception Handling & Approval Gates -->
-  <div class="section">
-    <div class="section-title">
-      <span>7. Exception Handling & Approval Gates</span>
-      <span class="badge badge-red">Blocker Controls</span>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Exception Condition</th>
-          <th>Required Operational Action</th>
-          <th>System Gate Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong style="color:#b91c1c;">Uncertified Opening Stock</strong></td>
-          <td>Complete formal physical stocktake as of 12 October 2026 cutover with signed management sign-off.</td>
-          <td><span class="tag tag-r">BLOCKED</span> Opening balances cannot be posted from summary snapshots.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#b91c1c;">Ledger-Only Item Code</strong></td>
-          <td>Submit Item Code Generator request with verified description, category, and UOM for Plant Head approval.</td>
-          <td><span class="tag tag-r">BLOCKED</span> Bulk insertion of unapproved codes is prohibited.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#d97706;">Missing Issue Slip Reference</strong></td>
-          <td>Retrieve physical paper issue slip from foundry stores archives and enter voucher number.</td>
-          <td><span class="tag tag-a">HELD</span> Unlinked issues held from reconciliation match.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#d97706;">UOM Conflict on Item</strong></td>
-          <td>Stores & Engineering confirm base UOM and approved conversion ratio with documented evidence.</td>
-          <td><span class="tag tag-a">HELD</span> No automatic or unapproved UOM conversion allowed.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#b91c1c;">Negative Stock Balance</strong></td>
-          <td>Investigate missing receipt or physical counting error; resolve through authorized GRN or audit entry.</td>
-          <td><span class="tag tag-r">BLOCKED</span> Negative stock issues blocked by row lock constraint.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:#2563eb;">Decimal Scale Suspect (Ratio &ge; 9.5)</strong></td>
-          <td>Audit slip for 10x order-of-magnitude slip typographical errors (e.g. 50 kg entered as 500 kg).</td>
-          <td><span class="tag tag-c">AUDIT HOLD</span> Highlighted in reconciliation exception report.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<section class="sheet" id="exceptions" aria-labelledby="h-exc">
+  <h2 id="h-exc">8. Exceptions and gates</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Condition</th><th>What the system does</th><th>What the team does</th></tr></thead>
+    <tbody>
+      <tr><td>Issue or scrap larger than stock</td><td><span class="pill p-refused">Refused</span> nothing posts</td><td>Find the missing GRN or count error; post it through the normal approval</td></tr>
+      <tr><td>Creator tries to approve own document</td><td><span class="pill p-refused">Refused</span> HTTP 403</td><td>A different authorised approver approves</td></tr>
+      <tr><td>Opening balance with wrong date or errors</td><td><span class="pill p-refused">Refused</span></td><td>Fix rows in preview; use 12 Oct 2026</td></tr>
+      <tr><td>Item not in master</td><td><span class="pill p-refused">Refused</span> on the line</td><td>Raise an item code request; never add codes in bulk</td></tr>
+      <tr><td>Duplicate name, alias or invoice</td><td><span class="pill p-refused">Blocked</span></td><td>Use the existing code or document</td></tr>
+      <tr><td>GRN line without rate</td><td><span class="pill p-held">Posted, unvalued</span></td><td>Purchase / Accounts confirm the rate</td></tr>
+      <tr><td>Heat charge text not mapped</td><td><span class="pill p-held">UNMAPPED_ALIAS</span> excluded from cost</td><td>Create and approve the alias</td></tr>
+      <tr><td>Ratio ≥ 9.5 or ≤ 0.105</td><td><span class="pill p-held">DECIMAL_SUSPECT</span></td><td>Check the slip and heat log for a typing error</td></tr>
+      <tr><td>Variance outside tolerance</td><td><span class="pill p-held">EXCESS / SHORT_ISSUE</span> exception opened</td><td>Foundry investigates; Management resolves or accepts the loss</td></tr>
+      <tr><td>Heat with partial or missing data</td><td><span class="pill p-held">PARTIAL_COST / DENOMINATOR_UNAVAILABLE</span></td><td>Complete rates, aliases or tapped weight, then rerun</td></tr>
+    </tbody>
+  </table></div>
+</section>
 
-  <!-- Footer -->
-  <div class="footer-bar">
-    <div>
-      <strong>Vijay Spheroidals Pvt. Ltd.</strong> • Material Management & Costing System (WI-MM-001 | Rev 2.0)
-    </div>
-    <div>
-      <a href="https://frontend-rouge-xi-35.vercel.app/" target="_blank" class="live-link">Open Live Web Application ↗</a>
-    </div>
-  </div>
+<section class="sheet" id="notbuilt" aria-labelledby="h-nb">
+  <h2 id="h-nb">9. Not in the system yet</h2>
+  <p class="lead">Earlier revisions described these as live. They are either procedures outside the software or open decisions.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Item</th><th>Current position</th></tr></thead>
+    <tbody>
+      <tr><td>Daily 13:00 cut-off and 13:15 automatic run</td><td>No time-based freeze or scheduler. Costing runs are started manually.</td></tr>
+      <tr><td>Weighbridge and QA lab release before stock</td><td>Not in the GRN flow. Stock posts on GRN approval.</td></tr>
+      <tr><td>Chemistry on the heat log</td><td>No chemistry fields in the heat record.</td></tr>
+      <tr><td>Power and consumables in heat cost</td><td>Not stored. Backend cost is material only.</td></tr>
+      <tr><td>Melt loss and yield in backend</td><td>Screen estimate only, see formula register.</td></tr>
+      <tr><td>Purchase Orders</td><td>Menu exists; no database table yet.</td></tr>
+      <tr><td>Valuation of internal recovery and internal inward</td><td>Accounting policy pending.</td></tr>
+      <tr><td>Self-approval check on item code requests</td><td>Not enforced in code; procedural for now.</td></tr>
+      <tr><td>Certified opening stock</td><td>Pending management-certified physical count.</td></tr>
+      <tr><td>Production login provider</td><td>Not configured by default; protected routes return 401.</td></tr>
+    </tbody>
+  </table></div>
+</section>
 
+<footer>
+  <span>Vijay Spheroidals Pvt. Ltd. · WI-MM-001 Rev 3.0 · Draft</span>
+  <a href="https://frontend-rouge-xi-35.vercel.app/">Open the application</a>
+</footer>
+
+</main>
 </div>
 
-<!-- Calculation Scripts -->
 <script>
-  function calcMWAR() {
-    const qCurr = parseFloat(document.getElementById('mwar_q_curr').value) || 0;
-    const rCurr = parseFloat(document.getElementById('mwar_r_curr').value) || 0;
-    const qNew = parseFloat(document.getElementById('mwar_q_new').value) || 0;
-    const rNew = parseFloat(document.getElementById('mwar_r_new').value) || 0;
+(function(){
+  "use strict";
+  var r = function(x, dp){ var f = Math.pow(10, dp); return Math.sign(x) * Math.round(Math.abs(x) * f + 1e-9) / f; };
+  var inr = function(x, dp){ return "₹" + x.toLocaleString("en-IN", {minimumFractionDigits: dp, maximumFractionDigits: dp}); };
+  var kg = function(x){ return x.toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 4}) + " kg"; };
+  var num = function(el){ var v = el.value.trim(); return v === "" ? null : parseFloat(v); };
 
-    let newRate = 0;
-    const totalQty = qCurr + qNew;
-    if (totalQty > 0) {
-      if (qCurr <= 0) {
-        newRate = rNew;
+  /* ---------- Ledger simulator ---------- */
+  var DEMO = [
+    {t: "OPENING", q: 1000, rate: 100},
+    {t: "GRN", q: 500, rate: 120},
+    {t: "ISSUE", q: 600},
+    {t: "GRN", q: 400, rate: null},
+    {t: "ISSUE", q: 300},
+    {t: "ISSUE", q: 1500}
+  ];
+  var rows = [];
+  var tbody = document.querySelector("#ledTable tbody");
+  var label = {OPENING: "Opening balance", GRN: "GRN receipt", ISSUE: "Issue"};
+
+  function buildLedger(){
+    tbody.innerHTML = "";
+    rows.forEach(function(m, i){
+      var tr = document.createElement("tr");
+      var rateCell = m.t === "ISSUE" ? '<td class="n x">at average</td>' :
+        '<td><input type="number" step="0.0001" aria-label="Rate row ' + (i + 1) + '" value="' + (m.rate === null ? "" : m.rate) + '"></td>';
+      tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + label[m.t] + '</td>' +
+        '<td><input type="number" step="0.01" min="0" aria-label="Quantity row ' + (i + 1) + '" value="' + m.q + '"></td>' +
+        rateCell + '<td class="n out"></td><td class="n out"></td><td class="n out"></td><td></td>';
+      var inputs = tr.querySelectorAll("input");
+      inputs[0].addEventListener("input", function(){ m.q = num(inputs[0]) || 0; calcLedger(); });
+      if (inputs[1]) inputs[1].addEventListener("input", function(){ m.rate = num(inputs[1]); calcLedger(); });
+      tbody.appendChild(tr);
+    });
+    calcLedger();
+  }
+
+  function calcLedger(){
+    var qty = 0, avg = null;
+    rows.forEach(function(m, i){
+      var tr = tbody.children[i], c = tr.children, status = "", mv = "";
+      tr.className = "";
+      if (m.t === "OPENING"){
+        qty = m.q;
+        avg = (m.rate !== null && m.rate > 0) ? r(m.rate, 4) : null;
+        status = avg === null ? "Opening, rate not approved" : "Opening at approved rate";
+        mv = avg === null ? "" : inr(r(m.q * avg, 2), 2);
+        if (avg === null) tr.className = "flag";
+      } else if (m.t === "GRN"){
+        if (m.rate !== null && m.rate > 0){
+          var rr = r(m.rate, 4);
+          mv = inr(r(m.q * rr, 2), 2);
+          if (qty <= 0){ avg = rr; status = qty < 0 ? "Negative stock reset" : "Receipt restart"; qty += m.q; }
+          else if (avg === null){ avg = rr; qty += m.q; status = "First priced receipt"; }
+          else { avg = r((qty * avg + m.q * rr) / (qty + m.q), 4); qty += m.q; status = "Weighted average updated"; }
+        } else {
+          qty += m.q; status = "Missing receipt rate: qty added, rate unchanged"; tr.className = "flag";
+        }
       } else {
-        newRate = ((qCurr * rCurr) + (qNew * rNew)) / totalQty;
+        if (m.q > qty){
+          status = "Refused: insufficient inventory (" + kg(qty) + " available)"; tr.className = "refused";
+        } else {
+          mv = avg === null ? "" : inr(r(m.q * avg, 2), 2);
+          qty -= m.q;
+          status = avg === null ? "Issued unvalued: no rate" : "Issued at average rate";
+          if (avg === null) tr.className = "flag";
+        }
       }
-    }
-    const totalVal = totalQty * newRate;
-
-    document.getElementById('mwar_res_rate').textContent = '₹' + newRate.toFixed(4) + ' / kg';
-    document.getElementById('mwar_res_val').textContent = '₹' + totalVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    document.getElementById('mwar_res_steps').textContent = `(${qCurr.toLocaleString()}×${rCurr.toFixed(2)} + ${qNew.toLocaleString()}×${rNew.toFixed(2)}) ÷ ${totalQty.toLocaleString()}`;
+      c[4].textContent = kg(qty);
+      c[5].textContent = avg === null ? "none" : inr(avg, 4);
+      c[6].textContent = mv;
+      c[7].textContent = status;
+    });
+    document.getElementById("ledQty").textContent = kg(qty);
+    document.getElementById("ledRate").textContent = avg === null ? "none" : inr(avg, 4);
+    document.getElementById("ledVal").textContent = avg === null ? "not valued" : inr(r(qty * avg, 2), 2);
   }
 
-  function calcRec() {
-    const issued = parseFloat(document.getElementById('rec_issued').value) || 0;
-    const charged = parseFloat(document.getElementById('rec_charged').value) || 0;
-    const tolPct = parseFloat(document.getElementById('rec_tol_pct').value) || 2.0;
+  document.querySelectorAll("[data-add]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var t = b.getAttribute("data-add");
+      rows.push(t === "GRN" ? {t: "GRN", q: 100, rate: 110} : {t: "ISSUE", q: 100});
+      buildLedger();
+    });
+  });
+  document.getElementById("ledReset").addEventListener("click", function(){ rows = DEMO.map(function(m){ return Object.assign({}, m); }); buildLedger(); });
+  rows = DEMO.map(function(m){ return Object.assign({}, m); });
+  buildLedger();
 
-    const diff = charged - issued;
-    const tolLimit = Math.max(0.5000, (tolPct / 100) * issued);
-    const absDiff = Math.abs(diff);
-
-    document.getElementById('rec_res_var').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' kg';
-    document.getElementById('rec_res_tol').textContent = '±' + tolLimit.toFixed(2) + ' kg';
-
-    const classEl = document.getElementById('rec_res_class');
-    if (issued > 0 && (charged / issued >= 9.5 || charged / issued <= 0.105)) {
-      classEl.className = 'badge badge-red';
-      classEl.textContent = 'DECIMAL_SUSPECT (Ratio Mismatch)';
-    } else if (absDiff <= tolLimit) {
-      classEl.className = 'badge badge-success';
-      classEl.textContent = 'OK (Within Tolerance)';
-    } else if (issued > charged) {
-      classEl.className = 'badge badge-amber';
-      classEl.textContent = 'EXCESS_ISSUE (Store > Furnace)';
-    } else {
-      classEl.className = 'badge badge-red';
-      classEl.textContent = 'SHORT_ISSUE (Furnace > Store)';
-    }
+  /* ---------- Reconciliation simulator ---------- */
+  var recIds = ["recIss", "recC1", "recC2", "recC3"];
+  function pill(text, cls){ return '<span class="pill ' + cls + '">' + text + '</span>'; }
+  function calcRec(){
+    var issued = num(document.getElementById("recIss")) || 0;
+    var charged = ["recC1", "recC2", "recC3"].reduce(function(s, id){ return s + (num(document.getElementById(id)) || 0); }, 0);
+    var variance = issued - charged;
+    var tol = issued <= 0 ? 0.5 : Math.max(0.5, 0.02 * issued);
+    var cls;
+    if (issued > 0 && charged > 0 && (issued / charged >= 9.5 || issued / charged <= 0.105)) cls = pill("DECIMAL_SUSPECT", "p-refused");
+    else if (Math.abs(variance) <= tol + 1e-9) cls = pill("OK", "p-posted");
+    else if (variance > tol) cls = pill("EXCESS_ISSUE", "p-held");
+    else cls = pill("SHORT_ISSUE", "p-held");
+    document.getElementById("recCh").textContent = kg(r(charged, 4));
+    document.getElementById("recVar").textContent = (variance > 0 ? "+" : "") + kg(r(variance, 4));
+    document.getElementById("recTol").textContent = "± " + kg(r(tol, 4));
+    document.getElementById("recCls").innerHTML = cls;
   }
-
-  function calcCost() {
-    const chargeWt = parseFloat(document.getElementById('cost_charge_wt').value) || 0;
-    const tapWt = parseFloat(document.getElementById('cost_tap_wt').value) || 0;
-    const heatCost = parseFloat(document.getElementById('cost_heat_val').value) || 0;
-    const partWt = parseFloat(document.getElementById('cost_part_wt').value) || 0;
-
-    const lossKg = chargeWt - tapWt;
-    const lossPct = chargeWt > 0 ? (lossKg / chargeWt) * 100 : 0;
-    const liquidRate = tapWt > 0 ? heatCost / tapWt : 0;
-    const partCost = partWt * liquidRate;
-
-    document.getElementById('cost_res_loss').textContent = `${lossKg.toFixed(1)} kg (${lossPct.toFixed(2)}%)`;
-    document.getElementById('cost_res_liquid').textContent = `₹${liquidRate.toFixed(2)} / kg`;
-    document.getElementById('cost_res_part').textContent = `₹${partCost.toFixed(2)} / part`;
-  }
-
-  // Initialize calculations on load
-  calcMWAR();
+  recIds.forEach(function(id){ document.getElementById(id).addEventListener("input", calcRec); });
   calcRec();
-  calcCost();
+
+  /* ---------- Heat and part cost simulator ---------- */
+  var heatRows = document.querySelectorAll("#heatLines tr");
+  function calcHeat(){
+    var total = 0, valued = 0;
+    heatRows.forEach(function(tr){
+      var ins = tr.querySelectorAll("input"), q = num(ins[0]) || 0, rate = num(ins[1]);
+      var out = tr.querySelector(".out");
+      if (rate === null){ out.textContent = "missing rate"; tr.className = "flag"; return; }
+      tr.className = "";
+      var lc = r(q * r(rate, 4), 2); total = r(total + lc, 2); valued++;
+      out.textContent = inr(lc, 2);
+    });
+    var lines = heatRows.length;
+    var status = valued === lines ? "COMPLETE" : (valued > 0 ? "PARTIAL_COST" : "INSUFFICIENT_COST_DATA");
+    var tap = num(document.getElementById("hTap")), good = num(document.getElementById("pGood")) || 0;
+    var rej = num(document.getElementById("pRej")) || 0, wt = num(document.getElementById("pWt"));
+    var den = document.getElementById("hDen").value === "TAP" ? tap : ((wt && good) ? good * wt : null);
+    var cpk = null;
+    if (den && den > 0){ if (total > 0) cpk = r(total / den, 4); }
+    else if (status === "COMPLETE") status = "DENOMINATOR_UNAVAILABLE";
+    document.getElementById("hCost").textContent = inr(total, 2);
+    document.getElementById("hDenV").textContent = den && den > 0 ? kg(den) : "unavailable";
+    document.getElementById("hCpk").textContent = cpk === null ? "not calculated" : inr(cpk, 4);
+    document.getElementById("hStat").innerHTML = pill(status, status === "COMPLETE" ? "p-posted" : "p-held");
+    var canPart = cpk !== null && status === "COMPLETE" && wt && wt > 0;
+    if (canPart){
+      var cpu = r(wt * cpk, 4);
+      document.getElementById("pCpu").textContent = inr(cpu, 4);
+      document.getElementById("pTot").textContent = inr(r(good * cpu, 2), 2) + (rej ? " (rejected: " + inr(r(rej * cpu, 2), 2) + ")" : "");
+    } else {
+      var why = (!wt || wt <= 0) ? "MISSING_WEIGHT" : "INSUFFICIENT_COST_DATA";
+      document.getElementById("pCpu").textContent = why;
+      document.getElementById("pTot").textContent = "not calculated";
+    }
+  }
+  document.querySelectorAll("#sim-heat input, #sim-heat select").forEach(function(el){
+    el.addEventListener("input", calcHeat); el.addEventListener("change", calcHeat);
+  });
+  calcHeat();
+})();
 </script>
 </body>
 </html>
