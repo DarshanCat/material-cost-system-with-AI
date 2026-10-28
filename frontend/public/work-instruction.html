@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VSPL Work Instruction & Project Flow</title>
+  <title>VSPL Material Management & Costing System - Complete Functional, Calculation & Operational Flow</title>
   <style>
     :root {
       --primary: #1e3a8a;
@@ -12,31 +12,43 @@
       --accent: #f59e0b;
       --success: #10b981;
       --danger: #ef4444;
+      --warning: #f59e0b;
       --card-bg: #ffffff;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
+      --border-light: #e2e8f0;
       --text: #1e293b;
       --text-muted: #64748b;
+      --bg-page: #f8fafc;
+      --bg-alt: #f1f5f9;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #f8fafc;
+      background: var(--bg-page);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.55;
       padding: 24px;
     }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    /* Header */
     .header {
       background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
       color: #fff;
-      padding: 24px 28px;
-      border-radius: 12px;
+      padding: 28px 32px;
+      border-radius: 14px;
       margin-bottom: 24px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
-    .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; }
+    .header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+    .header-subtitle { font-size: 14px; color: #bfdbfe; margin-top: 4px; }
+    .header-meta { font-size: 12px; color: #93c5fd; margin-top: 8px; }
+    
+    .badge-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .badge {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 9999px;
       font-size: 11px;
       font-weight: 700;
@@ -46,30 +58,49 @@
     .badge-success { background: #d1fae5; color: #065f46; }
     .badge-amber { background: #fef3c7; color: #92400e; }
     .badge-blue { background: #dbeafe; color: #1e40af; }
-    .doc-meta { font-size: 12px; color: #93c5fd; margin-top: 6px; }
-    
-    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+
+    /* Core Control Banner */
+    .control-banner {
+      background: #eff6ff;
+      border-left: 5px solid #2563eb;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #1e40af;
+    }
+    .control-banner strong { font-size: 14px; color: #1e3a8a; }
+
+    /* KPI Cards */
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .kpi-card {
       background: var(--card-bg);
-      padding: 16px 20px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 18px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border-light);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      border-top: 4px solid #3b82f6;
     }
+    .kpi-card.amber { border-top-color: #f59e0b; }
+    .kpi-card.green { border-top-color: #10b981; }
+    .kpi-card.purple { border-top-color: #8b5cf6; }
     .kpi-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .kpi-value { font-size: 22px; font-weight: 800; color: var(--secondary); margin-top: 4px; }
+    .kpi-value { font-size: 24px; font-weight: 800; color: var(--secondary); margin-top: 4px; }
     .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
+    /* Section Cards */
     .section {
       background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 26px;
       margin-bottom: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     }
     .section-title {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--secondary);
       border-bottom: 2px solid #f1f5f9;
@@ -77,329 +108,577 @@
       margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
     }
+    .section-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
 
-    /* Flow Chart */
-    .flow-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .flow-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+    /* End to End Flow Chart */
+    .flow-container { display: flex; flex-direction: column; gap: 14px; margin-bottom: 10px; }
+    .flow-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .flow-node {
       background: #eff6ff;
       border: 1.5px solid #bfdbfe;
       color: #1e40af;
-      padding: 10px 14px;
-      border-radius: 8px;
+      padding: 12px 14px;
+      border-radius: 10px;
       font-size: 12px;
       font-weight: 600;
       flex: 1;
-      min-width: 150px;
+      min-width: 160px;
       text-align: center;
     }
-    .flow-node.highlight {
-      background: #fef3c7;
-      border-color: #fcd34d;
-      color: #92400e;
-    }
-    .flow-node.success {
-      background: #ecfdf5;
-      border-color: #a7f3d0;
-      color: #065f46;
-    }
-    .flow-arrow {
-      color: #94a3b8;
-      font-weight: 800;
-      font-size: 14px;
-    }
+    .flow-node.highlight { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+    .flow-node.success { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .flow-node.purple { background: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
+    .flow-arrow { color: #94a3b8; font-weight: 800; font-size: 16px; }
 
-    /* Timeline */
-    .timeline {
-      position: relative;
-      border-left: 3px solid #3b82f6;
-      margin-left: 14px;
-      padding-left: 20px;
+    /* Step Cards Grid */
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .step-card {
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: #ffffff;
+      border-left: 4px solid #3b82f6;
     }
-    .timeline-item {
-      position: relative;
-      margin-bottom: 20px;
+    .step-num { font-size: 11px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; }
+    .step-title { font-size: 14px; font-weight: 700; color: var(--secondary); margin: 4px 0 6px 0; }
+    .step-desc { font-size: 12px; color: #475569; margin-bottom: 8px; }
+    .step-meta { font-size: 11px; font-family: monospace; background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0; color: #334155; }
+
+    /* Formulas Grid */
+    .formula-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .formula-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 18px;
     }
-    .timeline-item::before {
-      content: "";
-      position: absolute;
-      left: -27px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #3b82f6;
-      border: 2px solid #fff;
-    }
-    .timeline-time {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--primary);
-    }
-    .timeline-title {
+    .formula-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .tag-blue { background: #dbeafe; color: #1e40af; }
+    .tag-amber { background: #fef3c7; color: #92400e; }
+    .tag-green { background: #d1fae5; color: #065f46; }
+    .tag-purple { background: #ede9fe; color: #5b21b6; }
+    .formula-name { font-size: 13px; font-weight: 700; color: var(--secondary); margin-bottom: 8px; }
+    .formula-box {
+      font-family: "Courier New", Courier, monospace;
       font-size: 13px;
       font-weight: 700;
-      color: var(--secondary);
-      margin: 2px 0;
+      background: #ffffff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      margin-bottom: 8px;
+      overflow-x: auto;
     }
-    .timeline-desc {
-      font-size: 12px;
-      color: var(--text-muted);
+    .formula-notes { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+
+    /* Interactive Calculators */
+    .sim-panel {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
     }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .sim-title { font-size: 14px; font-weight: 700; color: #1e3a8a; }
+    .sim-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; text-transform: uppercase; }
+    .input-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .input-group input:focus { outline: none; border-color: #2563eb; ring: 2px solid #bfdbfe; }
+    .sim-result {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .sim-result-val { font-size: 18px; font-weight: 800; color: #1e3a8a; }
 
     /* Tables */
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px; }
     th { background: #f8fafc; color: #475569; font-weight: 700; text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); }
-    td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: #334155; vertical-align: top; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); color: #334155; vertical-align: top; }
     tr:hover td { background: #f8fafc; }
-    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 10px; }
     .tag-r { background: #fee2e2; color: #991b1b; }
     .tag-a { background: #fef3c7; color: #92400e; }
     .tag-c { background: #e0e7ff; color: #3730a3; }
     .tag-i { background: #f1f5f9; color: #475569; }
 
-    /* SOP Cards */
-    .sop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-    .sop-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      background: #ffffff;
+    /* Timeline */
+    .timeline { position: relative; border-left: 3px solid #3b82f6; margin-left: 14px; padding-left: 20px; }
+    .timeline-item { position: relative; margin-bottom: 20px; }
+    .timeline-item::before {
+      content: ""; position: absolute; left: -27px; top: 4px; width: 12px; height: 12px;
+      border-radius: 50%; background: #3b82f6; border: 2px solid #fff;
     }
-    .sop-role { font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; }
-    .sop-title { font-size: 14px; font-weight: 700; margin: 4px 0 8px 0; color: var(--secondary); }
-    .sop-list { list-style-type: none; font-size: 12px; color: #475569; }
-    .sop-list li { margin-bottom: 6px; position: relative; padding-left: 14px; }
-    .sop-list li::before { content: "•"; position: absolute; left: 0; color: #3b82f6; font-weight: bold; }
+    .timeline-time { font-size: 12px; font-weight: 800; color: var(--primary); }
+    .timeline-title { font-size: 13px; font-weight: 700; color: var(--secondary); margin: 2px 0; }
+    .timeline-desc { font-size: 12px; color: var(--text-muted); }
 
+    /* Footer */
     .footer-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #f1f5f9;
-      border-radius: 8px;
-      padding: 12px 18px;
+      border-radius: 10px;
+      padding: 14px 20px;
       font-size: 12px;
       color: #64748b;
+      margin-top: 20px;
     }
     .live-link {
       background: #2563eb;
       color: white;
       text-decoration: none;
-      padding: 6px 14px;
+      padding: 8px 16px;
       border-radius: 6px;
       font-weight: 600;
       font-size: 11px;
+      transition: background 0.2s;
     }
     .live-link:hover { background: #1d4ed8; }
   </style>
 </head>
 <body>
+<div class="container">
 
   <!-- Header -->
   <div class="header">
     <div class="header-top">
       <div>
-        <h1 style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">VIJAY SPHEROIDALS PVT. LTD. (VSPL)</h1>
-        <p style="font-size: 13px; color: #bfdbfe; margin-top: 2px;">Standard Work Instruction & System Flow (WI-MM-001 | Rev 1.0)</p>
-        <div class="doc-meta">Peenya Foundry (Plant 1) • Tumkur Machine Shop (Plant 2) • Central Stores & Accounts</div>
+        <div class="header-title">VIJAY SPHEROIDALS PVT. LTD. (VSPL)</div>
+        <div class="header-subtitle">Material Management & Costing System — Functional, Calculation & Operational Flow</div>
+        <div class="header-meta">Plant 1: Peenya Foundry • Plant 2: Tumkur Machine Shop • Central Stores & Cost Accounts</div>
       </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <span class="badge badge-success">Approved / Effective</span>
+      <div class="badge-bar">
+        <span class="badge badge-success">Approved Specification</span>
         <span class="badge badge-amber">Cycle: 13:00 - 13:00</span>
-        <span class="badge badge-blue">Phase 6 Active</span>
+        <span class="badge badge-blue">MWAR Active</span>
+        <span class="badge badge-purple">Phase 5 Reconciled</span>
       </div>
     </div>
   </div>
 
-  <!-- Key Metrics -->
+  <!-- Core Control Banner -->
+  <div class="control-banner">
+    <strong>CRITICAL SYSTEM CONTROL PRINCIPLE:</strong> Inventory movements have exactly <u>ONE authoritative posting path</u>. 
+    Heat Log records capture foundry production and crucible charge execution; they <strong>must not independently deduct stock</strong> when the approved Stores Issue slip has already done so.
+  </div>
+
+  <!-- KPI Summary Cards -->
   <div class="grid-4">
     <div class="kpi-card">
-      <div class="kpi-title">Raw Material Catalog</div>
-      <div class="kpi-value">24 SKUs</div>
-      <div class="kpi-sub">Standardized to Nomenclature v1.0</div>
+      <div class="kpi-title">Catalog Master</div>
+      <div class="kpi-value">391 Items</div>
+      <div class="kpi-sub">7 Depts • 15 Categories • 6 UOMs</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Total Inventory Valuation</div>
-      <div class="kpi-value">₹46,52,929</div>
-      <div class="kpi-sub">Moving Weighted-Average Run</div>
+    <div class="kpi-card green">
+      <div class="kpi-title">Valid Furnace Charges</div>
+      <div class="kpi-value">57,519.20 kg</div>
+      <div class="kpi-sub">1,044 Valid Charge Lines Verified</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Daily Accounting Window</div>
+    <div class="kpi-card amber">
+      <div class="kpi-title">Reconciliation Scope</div>
+      <div class="kpi-value">1,183 Slips</div>
+      <div class="kpi-sub">61 General + 1,122 Furnace Candidates</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-title">Accounting Cycle</div>
       <div class="kpi-value">13:00 – 13:00</div>
-      <div class="kpi-sub">Hard Cut-Off at 13:00 Daily</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Melting Yield / Loss</div>
-      <div class="kpi-value">95.2% / 4.8%</div>
-      <div class="kpi-sub">Tolerance: 3.0% - 6.5% Max</div>
+      <div class="kpi-sub">Daily Cut-off & MWAR Costing Run</div>
     </div>
   </div>
 
   <!-- Section 1: End-to-End System Project Flow -->
   <div class="section">
     <div class="section-title">
-      <span>1. End-to-End System Flow (Procurement to Valuation)</span>
+      <span>1. End-to-End Material & Costing Flow (Procurement to Balance Sheet)</span>
+      <span class="badge badge-blue">9 Verified Stages</span>
     </div>
     <div class="flow-container">
       <div class="flow-row">
-        <div class="flow-node"><strong>1. Gate & Weighbridge</strong><br>Truck Inward & Tare Weighment</div>
+        <div class="flow-node"><strong>1. Weighbridge & Gate</strong><br>Truck Inward & Gross/Tare</div>
         <div class="flow-arrow">➔</div>
-        <div class="flow-node"><strong>2. Central Stores GRN</strong><br>Challan Verification & Binning</div>
+        <div class="flow-node"><strong>2. Central Stores GRN</strong><br>Vendor Challan & Ex-GST Rate</div>
         <div class="flow-arrow">➔</div>
-        <div class="flow-node"><strong>3. QA Lab Testing</strong><br>Chemical & Spectro Clearance</div>
+        <div class="flow-node"><strong>3. Quality Inspection</strong><br>Spectrometer & Lab Release</div>
         <div class="flow-arrow">➔</div>
-        <div class="flow-node highlight"><strong>4. Stock Ledger Post</strong><br>Append-Only Inward Ledger</div>
+        <div class="flow-node highlight"><strong>4. Stock Ledger Post</strong><br>Append-Only Inward (+Qty)</div>
       </div>
       <div style="text-align: center; color: #94a3b8; font-weight: bold; margin: 4px 0;">▼</div>
       <div class="flow-row">
-        <div class="flow-node success"><strong>8. Management Web App</strong><br>Vercel Dashboard / Reports</div>
+        <div class="flow-node success"><strong>9. Daily Costing Run</strong><br>MWAR & Part Cost Allocation</div>
         <div class="flow-arrow">⬅</div>
-        <div class="flow-node highlight"><strong>7. Daily Costing Run</strong><br>Phase 6 Weighted Avg & Heats</div>
+        <div class="flow-node highlight"><strong>8. 3-Pass Reconciliation</strong><br>Stores Issue vs Heat Charge</div>
         <div class="flow-arrow">⬅</div>
-        <div class="flow-node"><strong>6. 13:00 Hard Cut-Off</strong><br>Automated Freeze & Anomaly Check</div>
+        <div class="flow-node"><strong>7. Heat Log Execution</strong><br>Crucible Charge (0 Ledger Post)</div>
         <div class="flow-arrow">⬅</div>
-        <div class="flow-node"><strong>5. Melt Shop Charging</strong><br>Heat Log & Raw Material Draw</div>
+        <div class="flow-node purple"><strong>6. Stores Issue Slip</strong><br>SOLE Stock Deduction (-Qty)</div>
       </div>
     </div>
   </div>
 
-  <!-- Section 2: Daily 1 PM – 1 PM Accounting Timeline -->
+  <!-- Section 2: How All Has To Be Done (Step-by-Step Operating Guide) -->
   <div class="section">
     <div class="section-title">
-      <span>2. The Daily 1 PM – 1 PM Accounting Cycle (SOP Timeline)</span>
+      <span>2. How All Has To Be Done (Detailed Operational Guide)</span>
+      <span class="badge badge-success">SOP Instructions</span>
     </div>
-    <div class="timeline">
-      <div class="timeline-item">
-        <div class="timeline-time">13:00 (Day T)</div>
-        <div class="timeline-title">Cycle Start & Handover</div>
-        <div class="timeline-desc">Previous 24-hr accounting cycle is archived. New cycle begins tracking all incoming raw materials, scrap, and foundry issues.</div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">Step 1 • Master Data</div>
+        <div class="step-title">Item Master & Nomenclature</div>
+        <div class="step-desc">All items follow strict nomenclature: <code>DEP-CAT-XXX</code> (e.g. <code>FDY-RM-001</code>). If an item is missing, Stores submits an Item Code Request. Maker-checker prevents self-approval. Non-standard codes are grandfathered and never silently overwritten.</div>
+        <div class="step-meta">Rule: Regex ^[A-Z]{3}-[A-Z]{2}-[0-9]{3}$ • Inactive toggle, never delete</div>
       </div>
-      <div class="timeline-item">
-        <div class="timeline-time">13:00 – 12:30 (Day T+1)</div>
-        <div class="timeline-title">Continuous Real-Time Data Capture</div>
-        <div class="timeline-desc">Stores records GRNs immediately upon truck unload. Melt Shop operators enter Heat Logs (charging weights, ferroalloys, power KWH, tapped metal) immediately after each tap.</div>
+
+      <div class="step-card">
+        <div class="step-num">Step 2 • Procurement Inward</div>
+        <div class="step-title">Goods Receipt Note (GRN)</div>
+        <div class="step-desc">Stores creates a GRN recording vendor, invoice number, item, and mandatory positive <code>unit_rate_ex_gst</code>. System checks for duplicate invoice numbers. Upon approval by Stores Manager, appends a positive stock movement (<code>+Q</code>) to the ledger.</div>
+        <div class="step-meta">Authority: post_grn_to_ledger • Taxes recorded separately, not in costing</div>
       </div>
-      <div class="timeline-item">
-        <div class="timeline-time">12:30 – 13:00</div>
-        <div class="timeline-title">Pre-Closing Sanity Check</div>
-        <div class="timeline-desc">Stores Supervisor audits pending delivery challans. Melting Lead verifies all heats tapped before 12:30 have complete charge slips entered.</div>
+
+      <div class="step-card">
+        <div class="step-num">Step 3 • Physical Issue</div>
+        <div class="step-title">Stores Issue Slip Approval</div>
+        <div class="step-desc">Stores issues raw material upon receiving an authorized slip. System locks stock row with <code>FOR UPDATE</code>, checks available balance, and appends <code>MovementType.ISSUE</code> (<code>-Q</code>). This is the <strong>SOLE authoritative point of inventory reduction</strong>.</div>
+        <div class="step-meta">Authority: issue_service.py:198-202 • Negative stock strictly blocked</div>
       </div>
-      <div class="timeline-item">
-        <div class="timeline-time">13:00 (Day T+1)</div>
-        <div class="timeline-title">HARD CUT-OFF (Transaction Freeze)</div>
-        <div class="timeline-desc">Strict system cut-off. Any receipt or issue logged after 13:00:00 automatically rolls into the subsequent day's cycle.</div>
+
+      <div class="step-card">
+        <div class="step-num">Step 4 • Foundry Melt Shop</div>
+        <div class="step-title">Heat Log & Crucible Charge</div>
+        <div class="step-desc">Melt shop operators record heat number, furnace, shift, tapped weight, and raw material additions. System translates shop floor nicknames via Material Aliases. <strong>Zero stock ledger rows are written</strong>, ensuring no duplicate deduction occurs.</div>
+        <div class="step-meta">Authority: heat_service.py • Captures chemistry, tapped weight & parts</div>
       </div>
-      <div class="timeline-item">
-        <div class="timeline-time">13:15</div>
-        <div class="timeline-title">Automated Cost & Valuation Run</div>
-        <div class="timeline-desc">Engine calculates moving weighted-average costs per unit for all items, generates the daily stock journal, and computes net liquid metal cost per kg.</div>
+
+      <div class="step-card">
+        <div class="step-num">Step 5 • Audit Verification</div>
+        <div class="step-title">Three-Pass Reconciliation</div>
+        <div class="step-desc">Reconciliation compares Stores issue slips against Heat crucible charges. Pass 1 matches exact heat numbers; Pass 2 matches daily batch totals; Pass 3 discovers fuzzy candidates. Flags any weight difference exceeding the 2% tolerance limit.</div>
+        <div class="step-meta">Tolerance: max(0.5 kg, 0.02 × IssuedQty) • Decimal ratio check &ge;9.5</div>
       </div>
-      <div class="timeline-item">
-        <div class="timeline-time">13:20 – 14:00</div>
-        <div class="timeline-title">Anomaly Resolution & Sign-Off Window</div>
-        <div class="timeline-desc">Cost Accountant & Plant Head review exceptions (negative stock, abnormal melt loss &gt; 8%, unmapped item codes). Approved ledger snapshot is committed to Finance.</div>
+
+      <div class="step-card">
+        <div class="step-num">Step 6 • Daily Valuation</div>
+        <div class="step-title">MWAR Costing Run Execution</div>
+        <div class="step-desc">At 13:15 daily, the Costing Engine sorts same-day transactions chronologically (receipts before issues), updates the moving weighted-average rate, computes liquid metal rate per kg, and allocates exact material costs to finished good castings.</div>
+        <div class="step-meta">Formula: R_new = (Q_prev*R_prev + Q_rcpt*R_rcpt) / (Q_prev + Q_rcpt)</div>
       </div>
     </div>
   </div>
 
-  <!-- Section 3: End-to-End Cost Calculation Flow -->
+  <!-- Section 3: Exhaustive Formulas and Calculation Rules -->
   <div class="section">
     <div class="section-title">
-      <span>3. Calculation Flow & Valuation Engine (With Worked 500 Kg Heat Example)</span>
+      <span>3. Comprehensive Formula Register</span>
+      <span class="badge badge-purple">10 Verified Formulas</span>
     </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 18px;">
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-        <div style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Stage 1: Inventory Moving Average</div>
-        <div style="font-size: 12px; margin-top: 6px; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-          R_new = (Q_curr × R_prev + Q_grn × R_landed) / (Q_curr + Q_grn)
-        </div>
-        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Recalculated upon every accepted GRN. Dispatches are issued at current R_new.</div>
+    <div class="formula-grid">
+      
+      <div class="formula-card">
+        <span class="formula-tag tag-blue">Formula 1 • Stock Balance</span>
+        <div class="formula-name">Closing Inventory Quantity</div>
+        <div class="formula-box">Closing Qty = Opening Qty + &Sigma; SignedLedgerQuantity</div>
+        <div class="formula-notes">Calculated from immutable ledger movements (+Receipts, -Issues, -Scrap Outward, +Recovery, &plusmn;Adjustments). Silent overwrites and negative balances are forbidden.</div>
       </div>
 
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-        <div style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase;">Stage 2: Melt Loss & Yield</div>
-        <div style="font-size: 12px; margin-top: 6px; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-          Melt Loss % = [(Q_gross - Q_tapped) / Q_gross] × 100
-        </div>
-        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Standard Tolerance: 3.0% – 6.5%. &gt;6.5% triggers warning; &gt;8.0% critical audit hold.</div>
+      <div class="formula-card">
+        <span class="formula-tag tag-amber">Formula 2 • Valuation</span>
+        <div class="formula-name">Moving Weighted-Average Rate (MWAR)</div>
+        <div class="formula-box">R_new = [(Q_prev &times; R_prev) + (Q_rcpt &times; R_rcpt)] &divide; [Q_prev + Q_rcpt]</div>
+        <div class="formula-notes">Recalculated upon every approved receipt. Rounded to 4 decimal places (<code>0.0001</code>). If previous stock &le; 0, rate resets to current receipt rate.</div>
       </div>
 
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-        <div style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase;">Stage 3: Net Liquid Metal Rate</div>
-        <div style="font-size: 12px; margin-top: 6px; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
-          Rate/Kg = (Cost_RM + Cost_Power + Cost_Consumables) / Q_tapped
-        </div>
-        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Unrecovered metallic loss is absorbed into yield, determining true cost per kg.</div>
+      <div class="formula-card">
+        <span class="formula-tag tag-green">Formula 3 • Issue Valuation</span>
+        <div class="formula-name">Outward Stock Issue Value</div>
+        <div class="formula-box">Issue Value = round(Issued Qty &times; R_prev, 2)</div>
+        <div class="formula-notes">Consumes stock at current applicable MWAR rate. Outward issues reduce physical quantity and inventory valuation, leaving the average rate unchanged.</div>
       </div>
-    </div>
 
-    <!-- Numerical Worked Example Table -->
-    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="font-size: 13px; font-weight: 700; color: #0f172a;">Standard 500 Kg Induction Furnace Heat (EN-GJS-500-7)</span>
-        <span class="badge badge-success">Yield: 95.16% • Loss: 4.84%</span>
+      <div class="formula-card">
+        <span class="formula-tag tag-purple">Formula 4 • Heat Aggregation</span>
+        <div class="formula-name">Charge Aggregation & Variance</div>
+        <div class="formula-box">Variance (kg) = IssuedQty(heat, item) - ChargeQty(heat, item)</div>
+        <div class="formula-notes">Repeated additions of the same material within a single heat are aggregated before comparison. Excludes non-charge supplies and floor consumables.</div>
       </div>
-      <table style="margin-bottom: 12px;">
-        <thead>
-          <tr>
-            <th>Material Code</th>
-            <th>Description</th>
-            <th>Qty (Kg)</th>
-            <th>Rate (₹/Kg)</th>
-            <th>Total (₹)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>FDY-RM-001</td><td>Pig Iron Grade 1</td><td>250.0</td><td>₹44.00</td><td>₹11,000.00</td></tr>
-          <tr><td>FDY-RM-002</td><td>CRCA Steel Scrap</td><td>150.0</td><td>₹38.00</td><td>₹5,700.00</td></tr>
-          <tr><td>FDY-RM-003</td><td>Foundry Returns (Internal)</td><td>100.0</td><td>₹36.00</td><td>₹3,600.00</td></tr>
-          <tr><td>FDY-CON-001</td><td>Recarburizer (98.5% C)</td><td>5.0</td><td>₹65.00</td><td>₹325.00</td></tr>
-          <tr><td>FDY-FA-001</td><td>Ferro Silicon (FeSi 70%)</td><td>4.0</td><td>₹115.00</td><td>₹460.00</td></tr>
-          <tr><td>FDY-NOD-001</td><td>FeSiMg Nodulizer (9% Mg)</td><td>6.0</td><td>₹240.00</td><td>₹1,440.00</td></tr>
-          <tr><td>FDY-INO-001</td><td>Foundry Inoculant</td><td>2.0</td><td>₹180.00</td><td>₹360.00</td></tr>
-          <tr style="background: #f1f5f9; font-weight: 700;">
-            <td colspan="2">Gross Charge Subtotal</td>
-            <td>517.0 Kg</td>
-            <td>—</td>
-            <td>₹22,885.00</td>
-          </tr>
-          <tr>
-            <td colspan="2">Electric Power (295 KWH consumed @ ₹8.50/KWH)</td>
-            <td>295 KWH</td>
-            <td>₹8.50</td>
-            <td>₹2,507.50</td>
-          </tr>
-          <tr style="background: #dbeafe; font-weight: 800; color: #1e40af;">
-            <td colspan="2">Total Direct Heat Cost</td>
-            <td colspan="2">Liquid Metal Tapped: 492.0 Kg</td>
-            <td>₹25,392.50</td>
-          </tr>
-          <tr style="background: #d1fae5; font-weight: 800; color: #065f46;">
-            <td colspan="2">Final Net Liquid Metal Cost per Kg</td>
-            <td colspan="3" style="font-size: 13px;">₹25,392.50 ÷ 492.0 Kg = ₹51.61 / Kg (₹51,610.77 / MT)</td>
-          </tr>
-        </tbody>
-      </table>
+
+      <div class="formula-card">
+        <span class="formula-tag tag-blue">Formula 5 • Reconciliation</span>
+        <div class="formula-name">Reconciliation Tolerance & Anomaly Ratio</div>
+        <div class="formula-box">Tolerance Limit = max(0.5000 kg, 0.02 &times; IssuedQty)<br>Ratio = ChargeQty &divide; IssuedQty</div>
+        <div class="formula-notes">Classified as <strong>OK</strong> if absolute variance &le; tolerance. Flagged as <strong>DECIMAL_SUSPECT</strong> if Ratio &ge; 9.5 or &le; 0.105 (indicates 10x typo).</div>
+      </div>
+
+      <div class="formula-card">
+        <span class="formula-tag tag-amber">Formula 6 • Efficiency</span>
+        <div class="formula-name">Melt Loss (kg & %)</div>
+        <div class="formula-box">Melt Loss (kg) = Charge Weight - Metal Tapped Weight<br>Melt Loss (%) = [Melt Loss (kg) &divide; Charge Weight] &times; 100</div>
+        <div class="formula-notes">Target range: 3.0% to 6.5%. Loss &gt; 6.5% generates warning flag; loss &gt; 8.0% triggers an immediate QA and scale calibration hold.</div>
+      </div>
+
+      <div class="formula-card">
+        <span class="formula-tag tag-green">Formula 7 • Casting Yield</span>
+        <div class="formula-name">Good Casting Yield & Liquid Metal Rate</div>
+        <div class="formula-box">Good Yield (%) = [&Sigma; (Good Parts &times; Unit Cast Wt) &divide; Tapped Wt] &times; 100<br>Liquid Metal Rate/kg = Total Heat Material Cost &divide; Tapped Wt</div>
+        <div class="formula-notes">Dividing total heat cost by tapped weight absorbs melting loss into the liquid metal cost, giving the true cost per kilogram of molten metal.</div>
+      </div>
+
+      <div class="formula-card">
+        <span class="formula-tag tag-purple">Formula 8 • Cost Allocation</span>
+        <div class="formula-name">Finished Part Unit Cost</div>
+        <div class="formula-box">Unit Part Cost = round(Unit Cast Weight &times; Liquid Metal Rate, 2)</div>
+        <div class="formula-notes">Allocates liquid metal cost to good parts. Rejection and scrap costs remain accounted for in the net yield rate.</div>
+      </div>
+
+      <div class="formula-card">
+        <span class="formula-tag tag-blue">Formula 9 • Baseline Valuation</span>
+        <div class="formula-name">Opening Stock Valuation</div>
+        <div class="formula-box">Opening Value = Certified Physical Qty &times; Approved Opening Unit Cost</div>
+        <div class="formula-notes">Must be supported by certified physical stock count as of 12 October 2026. Cannot be guessed or back-calculated from ledger summaries.</div>
+      </div>
+
+      <div class="formula-card">
+        <span class="formula-tag tag-amber">Formula 10 • Item Code Registry</span>
+        <div class="formula-name">Serial Number Sequence Generator</div>
+        <div class="formula-box">Next Serial = Highest Ever Issued Serial(dept, category) + 1</div>
+        <div class="formula-notes">Serials are never reused and sequence gaps are never filled. Locked with <code>FOR UPDATE</code> during assignment to prevent concurrent collisions.</div>
+      </div>
+
     </div>
   </div>
 
-  <!-- Section 4: RACI Governance Matrix -->
+  <!-- Section 4: Live Interactive Calculation Simulators -->
   <div class="section">
     <div class="section-title">
-      <span>4. RACI Responsibility Matrix</span>
+      <span>4. Interactive Calculation Simulators</span>
+      <span class="badge badge-success">Live Test Tools</span>
+    </div>
+
+    <!-- Simulator 1: MWAR Calculator -->
+    <div class="sim-panel">
+      <div class="sim-header">
+        <span class="sim-title">⚡ Simulator 1: Moving Weighted-Average Rate (MWAR)</span>
+        <span class="badge badge-blue">Formula F-08 Live Test</span>
+      </div>
+      <div class="sim-inputs">
+        <div class="input-group">
+          <label>Current Stock (kg)</label>
+          <input type="number" id="mwar_q_curr" value="10000" step="100" oninput="calcMWAR()">
+        </div>
+        <div class="input-group">
+          <label>Current Rate (₹/kg)</label>
+          <input type="number" id="mwar_r_curr" value="40.0000" step="0.5" oninput="calcMWAR()">
+        </div>
+        <div class="input-group">
+          <label>New Receipt Qty (kg)</label>
+          <input type="number" id="mwar_q_new" value="5000" step="100" oninput="calcMWAR()">
+        </div>
+        <div class="input-group">
+          <label>New Inward Rate (₹/kg)</label>
+          <input type="number" id="mwar_r_new" value="46.0000" step="0.5" oninput="calcMWAR()">
+        </div>
+      </div>
+      <div class="sim-result">
+        <div>
+          <span style="font-size: 12px; color: #64748b;">New Blended Rate:</span><br>
+          <span class="sim-result-val" id="mwar_res_rate">₹42.0000 / kg</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Total Ending Valuation:</span><br>
+          <span class="sim-result-val" id="mwar_res_val">₹6,30,000.00</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Formula Steps:</span><br>
+          <span style="font-size: 11px; font-family: monospace;" id="mwar_res_steps">(10,000×40 + 5,000×46) ÷ 15,000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator 2: Reconciliation Checker -->
+    <div class="sim-panel">
+      <div class="sim-header">
+        <span class="sim-title">⚡ Simulator 2: Furnace Charge Reconciliation & Tolerance Checker</span>
+        <span class="badge badge-amber">Formula F-06 / F-07 Live Test</span>
+      </div>
+      <div class="sim-inputs">
+        <div class="input-group">
+          <label>Stores Issued Qty (kg)</label>
+          <input type="number" id="rec_issued" value="6000" step="50" oninput="calcRec()">
+        </div>
+        <div class="input-group">
+          <label>Heat Charged Qty (kg)</label>
+          <input type="number" id="rec_charged" value="5980" step="50" oninput="calcRec()">
+        </div>
+        <div class="input-group">
+          <label>Tolerance % (Standard 2%)</label>
+          <input type="number" id="rec_tol_pct" value="2.0" step="0.1" oninput="calcRec()">
+        </div>
+      </div>
+      <div class="sim-result">
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Variance:</span><br>
+          <span class="sim-result-val" id="rec_res_var">-20.00 kg</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Allowed Tolerance Limit:</span><br>
+          <span class="sim-result-val" id="rec_res_tol">&plusmn;120.00 kg</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Classification Result:</span><br>
+          <span class="badge badge-success" id="rec_res_class" style="font-size: 13px; padding: 6px 12px;">OK (Within Tolerance)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator 3: Melt Loss & Part Costing -->
+    <div class="sim-panel">
+      <div class="sim-header">
+        <span class="sim-title">⚡ Simulator 3: Melt Loss, Liquid Metal & Part Costing</span>
+        <span class="badge badge-purple">Formula F-10 / F-11 Live Test</span>
+      </div>
+      <div class="sim-inputs">
+        <div class="input-group">
+          <label>Gross Charge Wt (kg)</label>
+          <input type="number" id="cost_charge_wt" value="517" step="5" oninput="calcCost()">
+        </div>
+        <div class="input-group">
+          <label>Tapped Metal Wt (kg)</label>
+          <input type="number" id="cost_tap_wt" value="492" step="5" oninput="calcCost()">
+        </div>
+        <div class="input-group">
+          <label>Total Heat Direct Cost (₹)</label>
+          <input type="number" id="cost_heat_val" value="25392.50" step="100" oninput="calcCost()">
+        </div>
+        <div class="input-group">
+          <label>Unit Cast Wt (kg/part)</label>
+          <input type="number" id="cost_part_wt" value="20.0" step="0.5" oninput="calcCost()">
+        </div>
+      </div>
+      <div class="sim-result">
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Melt Loss:</span><br>
+          <span class="sim-result-val" id="cost_res_loss">25.0 kg (4.84%)</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Liquid Metal Rate:</span><br>
+          <span class="sim-result-val" id="cost_res_liquid">₹51.61 / kg</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #64748b;">Finished Part Raw Cost:</span><br>
+          <span class="sim-result-val" id="cost_res_part" style="color: #065f46;">₹1,032.22 / part</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Section 5: Phase 5 Issue Row Accounting Breakdown -->
+  <div class="section">
+    <div class="section-title">
+      <span>5. Phase 5 Source Issue Rows Accounting (1,183 Total Rows Audited)</span>
+      <span class="badge badge-amber">Mutually Exclusive Proof</span>
+    </div>
+    <div class="section-desc">
+      Every source issue row from the daily workbooks has been audited into exactly one mutually exclusive category with strict UOM separation.
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Category Classification</th>
+          <th>Row Count</th>
+          <th>Physical Mass Total</th>
+          <th>Recorded UOM</th>
+          <th>Inventory Deduction Authority</th>
+          <th>Reconciliation Handling</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background: #ecfdf5; font-weight: 700;">
+          <td><span class="tag" style="background:#a7f3d0;color:#065f46;">VALID_FURNACE_CHARGE</span></td>
+          <td>1,044</td>
+          <td>57,519.20 kg</td>
+          <td>KG</td>
+          <td>Stores Issue Slip (Approved)</td>
+          <td>Included in Crucible Charge Comparison</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-i">ZERO_QUANTITY_PLACEHOLDER</span></td>
+          <td>43</td>
+          <td>0.00 kg</td>
+          <td>KG</td>
+          <td>Excluded (No physical movement)</td>
+          <td>Excluded from charge weight; preserved in audit</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-a">NON_CHARGE_SUPPLY_VOUCHER</span></td>
+          <td>21</td>
+          <td>187.00 kg + 478.00 Nos</td>
+          <td>KG / NOS / PACK</td>
+          <td>Stores Issue Slip (General)</td>
+          <td>Excluded from crucible bath comparison</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-c">FLOOR_CONSUMABLE_BLANK_SLIP</span></td>
+          <td>13</td>
+          <td>Floor Supplies</td>
+          <td>KG / NOS</td>
+          <td>Stores Departmental Issue</td>
+          <td>Segregated from induction furnace charge</td>
+        </tr>
+        <tr style="background: #fef2f2;">
+          <td><span class="tag tag-r">MISSING_ITEM_CODE</span></td>
+          <td>1</td>
+          <td>177.00 kg (Gattings)</td>
+          <td>KG</td>
+          <td>HELD (Requires Item Code)</td>
+          <td>Heat 102608-3920 held pending code approval</td>
+        </tr>
+        <tr style="background: #f8fafc; font-weight: 700;">
+          <td><span class="tag tag-c">GENERAL_ISSUE</span></td>
+          <td>61</td>
+          <td>Non-Foundry Issues</td>
+          <td>Various</td>
+          <td>Stores Issue Slip</td>
+          <td>General department issues outside melt shop</td>
+        </tr>
+        <tr style="background: #1e3a8a; color: #fff; font-weight: 800;">
+          <td>TOTAL AUDITED ISSUE ROWS</td>
+          <td>1,183 Rows</td>
+          <td>57,519.20 kg Valid Metal</td>
+          <td>Separated</td>
+          <td colspan="2">100% Accounted For • Zero Overlaps • Zero Unclassified Rows</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="font-size: 11px; color: #dc2626; font-weight: 600; margin-top: 6px;">
+      ⚠️ CRITICAL ARITHMETIC RULE: The preliminary figure 58,361.20 kg cannot be treated as a pure mass total because it erroneously combined 187 kg of non-charge supplies with 478 count units. Pure verified metallic charge is exactly 57,519.20 kg.
+    </div>
+  </div>
+
+  <!-- Section 6: RACI Governance Matrix -->
+  <div class="section">
+    <div class="section-title">
+      <span>6. RACI Responsibility & Governance Matrix</span>
     </div>
     <table>
       <thead>
@@ -414,6 +693,14 @@
       </thead>
       <tbody>
         <tr>
+          <td><strong>Item Code Creation & Registry</strong></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-a">A - Accountable</span></td>
+        </tr>
+        <tr>
           <td><strong>Inward Material Receipts (GRN)</strong></td>
           <td><span class="tag tag-r">R - Responsible</span></td>
           <td><span class="tag tag-i">I - Informed</span></td>
@@ -422,15 +709,15 @@
           <td><span class="tag tag-i">I - Informed</span></td>
         </tr>
         <tr>
-          <td><strong>QA Inspection & Release</strong></td>
+          <td><strong>Stores Issue Slip Deduction</strong></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
           <td><span class="tag tag-c">C - Consulted</span></td>
           <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-r">R - Responsible</span></td>
           <td><span class="tag tag-i">I - Informed</span></td>
           <td><span class="tag tag-a">A - Accountable</span></td>
         </tr>
         <tr>
-          <td><strong>Furnace Heat Log & Additions</strong></td>
+          <td><strong>Furnace Heat Log Charging</strong></td>
           <td><span class="tag tag-i">I - Informed</span></td>
           <td><span class="tag tag-r">R - Responsible</span></td>
           <td><span class="tag tag-c">C - Consulted</span></td>
@@ -446,105 +733,69 @@
           <td><span class="tag tag-a">A - Accountable</span></td>
         </tr>
         <tr>
-          <td><strong>Phase 6 Costing & Ledger Valuation</strong></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
-          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><strong>Three-Pass Heat Reconciliation</strong></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
           <td><span class="tag tag-i">I - Informed</span></td>
           <td><span class="tag tag-r">R - Responsible</span></td>
           <td><span class="tag tag-a">A - Accountable</span></td>
         </tr>
         <tr>
-          <td><strong>Melt Loss & Anomaly Resolution</strong></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><strong>MWAR Costing Run & Valuation</strong></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
           <td><span class="tag tag-r">R - Responsible</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
-          <td><span class="tag tag-c">C - Consulted</span></td>
           <td><span class="tag tag-a">A - Accountable</span></td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <!-- Section 5: Standard Operating Procedures (SOPs) -->
+  <!-- Section 7: Exception Handling & Approval Gates -->
   <div class="section">
     <div class="section-title">
-      <span>5. Standard Operating Procedures (By Role)</span>
-    </div>
-    <div class="sop-grid">
-      <div class="sop-card">
-        <div class="sop-role">Stores Department</div>
-        <div class="sop-title">Inward & Issue Execution</div>
-        <ul class="sop-list">
-          <li>Weigh delivery trucks upon arrival (Gross & Tare).</li>
-          <li>Log GRN in MMS with Supplier Challan No, exact item code (e.g. <code>FDY-RM-001</code>), and landed rate.</li>
-          <li>Ensure quarantine until QA testing releases material.</li>
-          <li>Never dispatch material without approved MMS requisition.</li>
-          <li>Complete all pending day entries prior to 12:30.</li>
-        </ul>
-      </div>
-      <div class="sop-card">
-        <div class="sop-role">Foundry Melt Shop</div>
-        <div class="sop-title">Heat Log & Charge Logging</div>
-        <ul class="sop-list">
-          <li>Record furnace number, target grade (e.g. <code>EN-GJS-500-7</code>), and operator name.</li>
-          <li>Weigh and record exact metallic charge: Pig Iron, CRCA Scrap, Returns.</li>
-          <li>Log ferroalloy additions (FeSi, FeSiMg nodulizer, inoculant, recarburizer).</li>
-          <li>Record starting and finishing KWH meter readings and tap temp.</li>
-          <li>Weigh and log liquid metal tapped for melt loss calculation.</li>
-        </ul>
-      </div>
-      <div class="sop-card">
-        <div class="sop-role">Finance & Cost Accounting</div>
-        <div class="sop-title">Valuation & Exceptions</div>
-        <ul class="sop-list">
-          <li>Enforce 13:00 transaction freeze across plants.</li>
-          <li>Execute <code>material_ledger_engine.py</code> and Cost Run Phase 6 at 13:15.</li>
-          <li>Review Anomaly Register: Negative stock balances, abnormal melt losses (&gt; 6.5%).</li>
-          <li>Sign off daily moving weighted-average valuation.</li>
-          <li>Export official valuation snapshot to ERP / Accounts.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section 6: Anomaly Escalation Protocol -->
-  <div class="section">
-    <div class="section-title">
-      <span>6. Anomaly Resolution & Tolerance Protocol</span>
+      <span>7. Exception Handling & Approval Gates</span>
+      <span class="badge badge-red">Blocker Controls</span>
     </div>
     <table>
       <thead>
         <tr>
-          <th>Anomaly Type</th>
-          <th>Threshold / Condition</th>
-          <th>Operational Cause</th>
-          <th>Resolution Protocol</th>
+          <th>Exception Condition</th>
+          <th>Required Operational Action</th>
+          <th>System Gate Status</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><strong style="color: #dc2626;">Negative Stock</strong></td>
-          <td>Calculated balance &lt; 0</td>
-          <td>Physical issue logged before GRN entry</td>
-          <td>Stores has 30 mins to enter missing GRN or post physical count credit. Escalates to Plant Head at 13:45.</td>
+          <td><strong style="color:#b91c1c;">Uncertified Opening Stock</strong></td>
+          <td>Complete formal physical stocktake as of 12 October 2026 cutover with signed management sign-off.</td>
+          <td><span class="tag tag-r">BLOCKED</span> Opening balances cannot be posted from summary snapshots.</td>
         </tr>
         <tr>
-          <td><strong style="color: #d97706;">High Melt Loss</strong></td>
-          <td>Melt loss &gt; 6.5% (Warning) &gt; 8% (Critical)</td>
-          <td>Scrap rust, scale error, high slagging</td>
-          <td>Melt supervisor inspects weigh scale calibration and scrap oxidation. Critical heats held for QA review.</td>
+          <td><strong style="color:#b91c1c;">Ledger-Only Item Code</strong></td>
+          <td>Submit Item Code Generator request with verified description, category, and UOM for Plant Head approval.</td>
+          <td><span class="tag tag-r">BLOCKED</span> Bulk insertion of unapproved codes is prohibited.</td>
         </tr>
         <tr>
-          <td><strong style="color: #2563eb;">Unmapped Alias</strong></td>
-          <td>Vendor challan text unmatched</td>
-          <td>Supplier changed item description</td>
-          <td>Held in quarantine alias queue. Master Data Admin maps alias to standard nomenclature code.</td>
+          <td><strong style="color:#d97706;">Missing Issue Slip Reference</strong></td>
+          <td>Retrieve physical paper issue slip from foundry stores archives and enter voucher number.</td>
+          <td><span class="tag tag-a">HELD</span> Unlinked issues held from reconciliation match.</td>
         </tr>
         <tr>
-          <td><strong style="color: #7c3aed;">High Power Consumption</strong></td>
-          <td>&gt; 620 KWH / MT liquid metal</td>
-          <td>Refractory lining erosion or delays</td>
-          <td>Furnace maintenance alerted for lining patch inspection.</td>
+          <td><strong style="color:#d97706;">UOM Conflict on Item</strong></td>
+          <td>Stores & Engineering confirm base UOM and approved conversion ratio with documented evidence.</td>
+          <td><span class="tag tag-a">HELD</span> No automatic or unapproved UOM conversion allowed.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:#b91c1c;">Negative Stock Balance</strong></td>
+          <td>Investigate missing receipt or physical counting error; resolve through authorized GRN or audit entry.</td>
+          <td><span class="tag tag-r">BLOCKED</span> Negative stock issues blocked by row lock constraint.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:#2563eb;">Decimal Scale Suspect (Ratio &ge; 9.5)</strong></td>
+          <td>Audit slip for 10x order-of-magnitude slip typographical errors (e.g. 50 kg entered as 500 kg).</td>
+          <td><span class="tag tag-c">AUDIT HOLD</span> Highlighted in reconciliation exception report.</td>
         </tr>
       </tbody>
     </table>
@@ -553,12 +804,87 @@
   <!-- Footer -->
   <div class="footer-bar">
     <div>
-      <strong>Vijay Spheroidals Pvt. Ltd.</strong> • Material Management & Costing System v1.0 • Connected to Supabase Cloud
+      <strong>Vijay Spheroidals Pvt. Ltd.</strong> • Material Management & Costing System (WI-MM-001 | Rev 2.0)
     </div>
     <div>
-      <a href="https://frontend-rouge-xi-35.vercel.app/" target="_blank" class="live-link">Open Live Dashboard ↗</a>
+      <a href="https://frontend-rouge-xi-35.vercel.app/" target="_blank" class="live-link">Open Live Web Application ↗</a>
     </div>
   </div>
 
+</div>
+
+<!-- Calculation Scripts -->
+<script>
+  function calcMWAR() {
+    const qCurr = parseFloat(document.getElementById('mwar_q_curr').value) || 0;
+    const rCurr = parseFloat(document.getElementById('mwar_r_curr').value) || 0;
+    const qNew = parseFloat(document.getElementById('mwar_q_new').value) || 0;
+    const rNew = parseFloat(document.getElementById('mwar_r_new').value) || 0;
+
+    let newRate = 0;
+    const totalQty = qCurr + qNew;
+    if (totalQty > 0) {
+      if (qCurr <= 0) {
+        newRate = rNew;
+      } else {
+        newRate = ((qCurr * rCurr) + (qNew * rNew)) / totalQty;
+      }
+    }
+    const totalVal = totalQty * newRate;
+
+    document.getElementById('mwar_res_rate').textContent = '₹' + newRate.toFixed(4) + ' / kg';
+    document.getElementById('mwar_res_val').textContent = '₹' + totalVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('mwar_res_steps').textContent = `(${qCurr.toLocaleString()}×${rCurr.toFixed(2)} + ${qNew.toLocaleString()}×${rNew.toFixed(2)}) ÷ ${totalQty.toLocaleString()}`;
+  }
+
+  function calcRec() {
+    const issued = parseFloat(document.getElementById('rec_issued').value) || 0;
+    const charged = parseFloat(document.getElementById('rec_charged').value) || 0;
+    const tolPct = parseFloat(document.getElementById('rec_tol_pct').value) || 2.0;
+
+    const diff = charged - issued;
+    const tolLimit = Math.max(0.5000, (tolPct / 100) * issued);
+    const absDiff = Math.abs(diff);
+
+    document.getElementById('rec_res_var').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + ' kg';
+    document.getElementById('rec_res_tol').textContent = '±' + tolLimit.toFixed(2) + ' kg';
+
+    const classEl = document.getElementById('rec_res_class');
+    if (issued > 0 && (charged / issued >= 9.5 || charged / issued <= 0.105)) {
+      classEl.className = 'badge badge-red';
+      classEl.textContent = 'DECIMAL_SUSPECT (Ratio Mismatch)';
+    } else if (absDiff <= tolLimit) {
+      classEl.className = 'badge badge-success';
+      classEl.textContent = 'OK (Within Tolerance)';
+    } else if (issued > charged) {
+      classEl.className = 'badge badge-amber';
+      classEl.textContent = 'EXCESS_ISSUE (Store > Furnace)';
+    } else {
+      classEl.className = 'badge badge-red';
+      classEl.textContent = 'SHORT_ISSUE (Furnace > Store)';
+    }
+  }
+
+  function calcCost() {
+    const chargeWt = parseFloat(document.getElementById('cost_charge_wt').value) || 0;
+    const tapWt = parseFloat(document.getElementById('cost_tap_wt').value) || 0;
+    const heatCost = parseFloat(document.getElementById('cost_heat_val').value) || 0;
+    const partWt = parseFloat(document.getElementById('cost_part_wt').value) || 0;
+
+    const lossKg = chargeWt - tapWt;
+    const lossPct = chargeWt > 0 ? (lossKg / chargeWt) * 100 : 0;
+    const liquidRate = tapWt > 0 ? heatCost / tapWt : 0;
+    const partCost = partWt * liquidRate;
+
+    document.getElementById('cost_res_loss').textContent = `${lossKg.toFixed(1)} kg (${lossPct.toFixed(2)}%)`;
+    document.getElementById('cost_res_liquid').textContent = `₹${liquidRate.toFixed(2)} / kg`;
+    document.getElementById('cost_res_part').textContent = `₹${partCost.toFixed(2)} / part`;
+  }
+
+  // Initialize calculations on load
+  calcMWAR();
+  calcRec();
+  calcCost();
+</script>
 </body>
 </html>
