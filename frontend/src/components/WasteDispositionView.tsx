@@ -5,10 +5,15 @@ import {
   Send, 
   X, 
   Search,
-  RefreshCw
+  RefreshCw,
+  RotateCcw,
+  Trash2,
+  Image as ImageIcon
 } from 'lucide-react';
-import type { WasteDisposition, MaterialItem, UOM, Department, UserRole } from '../types';
+import type { WasteDisposition, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
+import { useReferenceData } from '../hooks/useReferenceData';
+import { ReferenceDataNotice } from './ReferenceDataNotice';
 
 interface WasteDispositionViewProps {
   currentRole: UserRole;
@@ -19,9 +24,8 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
   const [actionError, setActionError] = useState<string | null>(null);
   const [wastes, setWastes] = useState<WasteDisposition[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [items, setItems] = useState<MaterialItem[]>([]);
-  const [uoms, setUoms] = useState<UOM[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const refs = useReferenceData(['items', 'uoms', 'departments']);
+  const { items, uoms, departments } = refs;
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedWaste, setSelectedWaste] = useState<WasteDisposition | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -34,6 +38,16 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
   const [sourceDeptId, setSourceDeptId] = useState<number | ''>('');
   const [destinationNotes, setDestinationNotes] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  // Foundry Re-inward vs External Disposal Stream
+  const [dispStream, setDispStream] = useState<'RE_INWARD_TO_RM' | 'EXTERNAL_DISPOSAL'>('RE_INWARD_TO_RM');
+  const [targetItemId, setTargetItemId] = useState<number | ''>('');
+  const [valuationRate, setValuationRate] = useState<string>('32.00');
+  const [disposalCost, setDisposalCost] = useState<string>('0.00');
+  const [disposalContractor, setDisposalContractor] = useState<string>('');
+  const [gatePassNo, setGatePassNo] = useState<string>('');
+  const [photoUrl, setPhotoUrl] = useState<string>('');
   const [lines, setLines] = useState<Array<{
     material_item_id: number | '';
     uom_id: number | '';
@@ -51,7 +65,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
       const res = await apiFetch('/api/v1/waste/');
       if (res.ok) {
         const data = await res.json();
-        setWastes(data);
+        setWastes(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch (err) {
       console.error('Error fetching waste disposition records:', err);
@@ -60,24 +74,8 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
     }
   };
 
-  const fetchReferences = async () => {
-    try {
-      const [iRes, uRes, dRes] = await Promise.all([
-        apiFetch('/api/v1/items?limit=500'),
-        apiFetch('/api/v1/uoms'),
-        apiFetch('/api/v1/departments'),
-      ]);
-      if (iRes.ok) setItems(await iRes.json());
-      if (uRes.ok) setUoms(await uRes.json());
-      if (dRes.ok) setDepartments(await dRes.json());
-    } catch (err) {
-      console.error('Error fetching references:', err);
-    }
-  };
-
   useEffect(() => {
     fetchWastes();
-    fetchReferences();
   }, []);
 
   const handleAddLine = () => {
@@ -116,13 +114,22 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
         reason: l.reason || 'Foundry generation',
       }));
 
+      const targetItem = targetItemId ? items.find(i => i.id === Number(targetItemId)) : null;
       const payload = {
         disposition_date: dispDate,
         waste_type: wasteType,
         disposition_type: dispType,
+        disposition_stream: dispStream,
         source_department_id: Number(sourceDeptId),
         destination_notes: destinationNotes || null,
         notes: notes || null,
+        target_item_id: targetItemId ? Number(targetItemId) : null,
+        target_item_code: targetItem?.item_code || null,
+        valuation_rate: dispStream === 'RE_INWARD_TO_RM' ? valuationRate : null,
+        disposal_cost: dispStream === 'EXTERNAL_DISPOSAL' ? disposalCost : null,
+        disposal_contractor: dispStream === 'EXTERNAL_DISPOSAL' ? disposalContractor : null,
+        gate_pass_number: dispStream === 'EXTERNAL_DISPOSAL' ? gatePassNo : null,
+        photo_url: dispStream === 'EXTERNAL_DISPOSAL' ? photoUrl : null,
         lines: payloadLines,
       };
 
@@ -139,6 +146,8 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
         fetchWastes();
         setShowModal(false);
         setLines([{ material_item_id: '', uom_id: '', quantity: '', reason: '' }]);
+        setSuccessToast(`Disposition ${data.waste_number || 'record'} logged successfully.`);
+        setTimeout(() => setSuccessToast(null), 4000);
       }
     } catch (err: any) {
       setFormError(err.message || 'Error occurred while saving waste disposition');
@@ -147,7 +156,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
     }
   };
 
-  const handleAction = async (wasteId: number, action: 'submit' | 'approve') => {
+  const handleAction = async (wasteId: number, action: 'submit' | 'approve' | 'reject') => {
     setActionError(null);
     try {
       const res = await apiFetch(`/api/v1/waste/${wasteId}/${action}`, {
@@ -156,11 +165,20 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
         body: JSON.stringify({ comments: `Action ${action}` }),
       });
       if (res.ok) {
+        const updated = await res.json();
         fetchWastes();
         if (selectedWaste && selectedWaste.id === wasteId) {
-          const updated = await res.json();
           setSelectedWaste(updated);
         }
+        if (action === 'approve') {
+          setSuccessToast(updated.disposition_stream === 'RE_INWARD_TO_RM' 
+            ? `Approved! Material inward successfully posted back to Raw Material inventory under ${updated.target_item_code || 'RM'}.`
+            : `Approved! Material disposed externally with gate pass & cost recorded.`
+          );
+        } else {
+          setSuccessToast(`Waste record ${action === 'submit' ? 'submitted for approval' : 'rejected'}.`);
+        }
+        setTimeout(() => setSuccessToast(null), 4000);
       } else {
         setActionError(await readApiError(res, 'Could not '+action+' the waste record'));
       }
@@ -181,6 +199,12 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
 
   return (
     <div className="erp-view">
+      {successToast && (
+        <div className="notification-banner banner-success mb-3">
+          <CheckCircle size={16} />
+          <span>{successToast}</span>
+        </div>
+      )}
       {actionError && (
         <div className="erp-alert alert-danger" role="alert">
           {actionError}
@@ -202,6 +226,8 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
           </button>
         </div>
       </div>
+
+      <ReferenceDataNotice refs={refs} />
 
       {/* Filter Toolbar */}
       <div className="filter-toolbar">
@@ -236,7 +262,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
               <th>Disposition #</th>
               <th>Date</th>
               <th>Waste Type</th>
-              <th>Disposition Type</th>
+              <th>Disposition Stream</th>
               <th>Source Dept</th>
               <th>Items</th>
               <th>Status</th>
@@ -257,7 +283,15 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                     <span className="badge badge-warning">{waste.waste_type}</span>
                   </td>
                   <td>
-                    <span className="badge badge-outline">{waste.disposition_type}</span>
+                    {waste.disposition_stream === 'RE_INWARD_TO_RM' ? (
+                      <span className="badge badge-success flex items-center gap-1 text-xs" title="Credited to Raw Material inventory">
+                        <RotateCcw size={11} /> Re-Inward ({waste.target_item_code || 'RM'})
+                      </span>
+                    ) : (
+                      <span className="badge badge-outline flex items-center gap-1 text-xs" title={`Disposal cost: ₹${waste.disposal_cost || 0}`}>
+                        <Trash2 size={11} /> Disposed (₹{waste.disposal_cost || '0'})
+                      </span>
+                    )}
                   </td>
                   <td>{waste.source_department_name}</td>
                   <td>{waste.lines?.length || 0} line(s)</td>
@@ -277,12 +311,22 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                         </button>
                       )}
                       {waste.status === 'SUBMITTED' && (
-                        <button
-                          className="erp-btn btn-sm btn-success"
-                          onClick={() => handleAction(waste.id, 'approve')}
-                        >
-                          <CheckCircle size={12} /> Approve
-                        </button>
+                        <>
+                          <button
+                            className="erp-btn btn-sm btn-success flex items-center gap-1"
+                            onClick={() => handleAction(waste.id, 'approve')}
+                            title={waste.disposition_stream === 'RE_INWARD_TO_RM' ? 'Approve & Credit to Inventory' : 'Approve Disposal'}
+                          >
+                            <CheckCircle size={12} /> Approve
+                          </button>
+                          <button
+                            className="erp-btn btn-sm btn-danger flex items-center gap-1"
+                            onClick={() => handleAction(waste.id, 'reject')}
+                            title="Reject waste disposition"
+                          >
+                            <X size={12} /> Reject
+                          </button>
+                        </>
                       )}
                     </div>
                   </td>
@@ -310,6 +354,43 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                 <div><strong>Destination / Handling:</strong> {selectedWaste.destination_notes || 'Internal'}</div>
                 <div><strong>Status:</strong> {selectedWaste.status}</div>
               </div>
+
+              {/* Stream Dossier */}
+              {selectedWaste.disposition_stream === 'RE_INWARD_TO_RM' ? (
+                <div className="audit-card p-3 mb-4 bg-emerald-50 border border-emerald-200 rounded">
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="font-semibold text-sm flex items-center gap-1 text-emerald-800">
+                      <RotateCcw size={16} /> Re-Inward to Raw Material Inventory (Remelt Recovery)
+                    </h4>
+                    <span className="badge badge-success font-mono font-bold">{selectedWaste.target_item_code || 'RM CREDITED'}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 mt-2">
+                    <div><strong>Valuation Rate:</strong> ₹{selectedWaste.valuation_rate || '32.00'} / KG</div>
+                    <div><strong>Live Stock Ledger:</strong> {selectedWaste.status === 'APPROVED' ? 'Stock Credited ✅' : 'Pending Approval'}</div>
+                    <div><strong>Destination:</strong> Foundry Storage Bin / Charge Yard</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="audit-card p-3 mb-4 bg-amber-50 border border-amber-200 rounded">
+                  <div className="flex justify-between items-center mb-1">
+                    <h4 className="font-semibold text-sm flex items-center gap-1 text-amber-800">
+                      <Trash2 size={16} /> External Scrap Disposal Record
+                    </h4>
+                    <span className="badge badge-warning font-mono font-bold">Cost: ₹{selectedWaste.disposal_cost || '0'}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 mt-2">
+                    <div><strong>Contractor / Buyer:</strong> {selectedWaste.disposal_contractor || 'External Scrap Dealer'}</div>
+                    <div><strong>Gate Pass #:</strong> {selectedWaste.gate_pass_number || 'N/A'}</div>
+                    <div><strong>Disposal Evidence:</strong> {selectedWaste.photo_url ? 'Photo Attached 📷' : 'Documented on Weighbridge'}</div>
+                  </div>
+                  {selectedWaste.photo_url && (
+                    <div className="mt-2 text-xs bg-white p-2 rounded border border-amber-100 flex items-center gap-2">
+                      <ImageIcon size={14} className="text-amber-600" />
+                      <span>Evidence Reference / Photo: <a href={selectedWaste.photo_url} target="_blank" rel="noreferrer" className="text-blue-600 underline">{selectedWaste.photo_url}</a></span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <h4 className="font-semibold mb-2">Line Items</h4>
               <table className="erp-table mb-4">
@@ -361,9 +442,136 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                 <button type="button" className="close-btn" onClick={() => setShowModal(false)}><X size={18} /></button>
               </div>
               <div className="modal-body">
+                <div className="mb-3">
+                  <ReferenceDataNotice refs={refs} />
+                </div>
                 {formError && (
                   <div className="alert-error p-3 mb-3 bg-red-50 text-red-700 text-sm rounded">
                     {formError}
+                  </div>
+                )}
+
+                {/* Disposition Stream Selector */}
+                <div className="audit-card p-3 mb-4 bg-slate-50 border rounded">
+                  <label className="form-label font-bold mb-2 block">Disposition Stream / Policy Action *</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className={`p-3 rounded border cursor-pointer flex items-start gap-2 ${dispStream === 'RE_INWARD_TO_RM' ? 'bg-emerald-50 border-emerald-500' : 'bg-white'}`}>
+                      <input
+                        type="radio"
+                        name="dispStream"
+                        checked={dispStream === 'RE_INWARD_TO_RM'}
+                        onChange={() => {
+                          setDispStream('RE_INWARD_TO_RM');
+                          setDispType('INTERNAL_RECOVERY');
+                        }}
+                        className="mt-1"
+                      />
+                      <div>
+                        <strong className="text-emerald-800 text-sm block">Re-Inward to Raw Material (Recycle)</strong>
+                        <span className="text-xs text-slate-500">For reusable Foundry Borings, Runners, Risers, Gatings & Returns. Adds directly back to available inventory upon approval.</span>
+                      </div>
+                    </label>
+
+                    <label className={`p-3 rounded border cursor-pointer flex items-start gap-2 ${dispStream === 'EXTERNAL_DISPOSAL' ? 'bg-amber-50 border-amber-500' : 'bg-white'}`}>
+                      <input
+                        type="radio"
+                        name="dispStream"
+                        checked={dispStream === 'EXTERNAL_DISPOSAL'}
+                        onChange={() => {
+                          setDispStream('EXTERNAL_DISPOSAL');
+                          setDispType('SCRAP_OUTWARD');
+                        }}
+                        className="mt-1"
+                      />
+                      <div>
+                        <strong className="text-amber-800 text-sm block">External Disposal / Scrap Sale</strong>
+                        <span className="text-xs text-slate-500">For non-reusable dross/slag or external scrap sales. Captures contractor, gate pass, disposal cost & photo.</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {dispStream === 'RE_INWARD_TO_RM' ? (
+                  <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-emerald-50/50 border border-emerald-200 rounded">
+                    <div>
+                      <label className="form-label">Matching Inward Raw Material Code *</label>
+                      <select
+                        className="form-control"
+                        value={targetItemId}
+                        onChange={(e) => setTargetItemId(e.target.value ? Number(e.target.value) : '')}
+                        required
+                      >
+                        <option value="">-- Select Target RM Code to Credit Stock --</option>
+                        {items
+                          .filter(i => i.item_code?.includes('RM') || i.category?.includes('Raw') || i.name?.toLowerCase().includes('scrap') || i.name?.toLowerCase().includes('return'))
+                          .map((i) => (
+                            <option key={i.id} value={i.id}>{i.item_code} - {i.name}</option>
+                          ))
+                        }
+                        {items.slice(0, 10).map((i) => (
+                          <option key={'all-'+i.id} value={i.id}>{i.item_code} - {i.name}</option>
+                        ))}
+                      </select>
+                      <small className="text-xs text-emerald-700">Stock will be credited to this Raw Material item upon approval.</small>
+                    </div>
+                    <div>
+                      <label className="form-label">Internal Recovery Rate (₹ / KG)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="form-control font-mono"
+                        value={valuationRate}
+                        onChange={(e) => setValuationRate(e.target.value)}
+                        placeholder="32.00"
+                      />
+                      <small className="text-xs text-slate-500">Accounting valuation for internal remelt inventory.</small>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-amber-50/50 border border-amber-200 rounded">
+                    <div>
+                      <label className="form-label">Disposal Cost / Realized Sale (₹) *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="form-control font-mono"
+                        value={disposalCost}
+                        onChange={(e) => setDisposalCost(e.target.value)}
+                        placeholder="0.00"
+                        required
+                      />
+                      <small className="text-xs text-slate-500">Cost paid to haul off, or revenue from scrap sale.</small>
+                    </div>
+                    <div>
+                      <label className="form-label">Disposal Contractor / Scrap Buyer</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={disposalContractor}
+                        onChange={(e) => setDisposalContractor(e.target.value)}
+                        placeholder="e.g. Mahalakshmi Metal Recyclers"
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Gate Pass / Weighment Slip #</label>
+                      <input
+                        type="text"
+                        className="form-control font-mono"
+                        value={gatePassNo}
+                        onChange={(e) => setGatePassNo(e.target.value)}
+                        placeholder="GP-2026-1049"
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <label className="form-label">Disposal Evidence Image / Photo Reference URL</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={photoUrl}
+                        onChange={(e) => setPhotoUrl(e.target.value)}
+                        placeholder="https://... or photo file note / weighbridge scale photo"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -413,7 +621,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                       onChange={(e) => setSourceDeptId(e.target.value ? Number(e.target.value) : '')}
                       required
                     >
-                      <option value="">-- Source Dept --</option>
+                      <option value="">{refs.placeholder('departments', '-- Source Dept --')}</option>
                       {departments.map((d) => (
                         <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
@@ -463,7 +671,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                           onChange={(e) => handleLineChange(idx, 'material_item_id', e.target.value)}
                           required
                         >
-                          <option value="">-- Select Material Item --</option>
+                          <option value="">{refs.placeholder('items', '-- Select Material Item --')}</option>
                           {items.map((it) => (
                             <option key={it.id} value={it.id}>{it.item_code} - {it.name}</option>
                           ))}
@@ -477,7 +685,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                           onChange={(e) => handleLineChange(idx, 'uom_id', e.target.value)}
                           required
                         >
-                          <option value="">-- UOM --</option>
+                          <option value="">{refs.placeholder('uoms', '-- UOM --')}</option>
                           {uoms.map((u) => (
                             <option key={u.id} value={u.id}>{u.code}</option>
                           ))}
@@ -524,7 +732,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="erp-btn btn-primary" disabled={submitting}>
+                <button type="submit" className="erp-btn btn-primary" disabled={submitting || refs.unavailable}>
                   {submitting ? 'Creating...' : 'Create Draft Waste Record'}
                 </button>
               </div>

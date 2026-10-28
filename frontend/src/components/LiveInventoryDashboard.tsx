@@ -33,7 +33,7 @@ export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () 
       const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
-        setBalances(data);
+        setBalances(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch (err) {
       console.error('Error fetching stock balances:', err);
@@ -53,7 +53,7 @@ export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () 
       const res = await apiFetch(`/api/v1/ledger/entries?material_item_id=${itemId}&size=100`);
       if (res.ok) {
         const data = await res.json();
-        setSelectedItemHistory(data.items);
+        setSelectedItemHistory(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch (err) {
       console.error('Error fetching movement history:', err);

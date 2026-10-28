@@ -11,8 +11,10 @@ import {
   Layers,
   Calendar
 } from 'lucide-react';
-import type { HeatHeader, MaterialItem, UOM, UserRole } from '../types';
+import type { HeatHeader, UserRole } from '../types';
 import { apiFetch } from '../api/client';
+import { useReferenceData } from '../hooks/useReferenceData';
+import { ReferenceDataNotice } from './ReferenceDataNotice';
 
 interface HeatLogManagementViewProps {
   currentRole: UserRole;
@@ -30,8 +32,10 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Master references
-  const [items, setItems] = useState<MaterialItem[]>([]);
-  const [uoms, setUoms] = useState<UOM[]>([]);
+  const refs = useReferenceData(['items', 'uoms']);
+  const { items, uoms } = refs;
+  // Items only feed the description suggestions; UOMs are written into the heat payload.
+  const uomsUnavailable = refs.loading || Boolean(refs.errors.uoms) || (uoms?.length ?? 0) === 0;
 
   // Form state
   const [heatNumber, setHeatNumber] = useState<string>('');
@@ -39,7 +43,15 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
   const [furnaceId, setFurnaceId] = useState<string>('FURNACE-1');
   const [shift, setShift] = useState<string>('SHIFT_A');
   const [metalTappedWeight, setMetalTappedWeight] = useState<string>('');
+  const [powerKwh, setPowerKwh] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+
+  // Configurable Costing & Yield Policy Parameters
+  const [showConfigPolicy, setShowConfigPolicy] = useState<boolean>(false);
+  const [powerTariff, setPowerTariff] = useState<number>(8.50);
+  const [consumableOverheadPerMt, setConsumableOverheadPerMt] = useState<number>(1200.00);
+  const [warningMeltLossPct, setWarningMeltLossPct] = useState<number>(6.5);
+  const [criticalMeltLossPct, setCriticalMeltLossPct] = useState<number>(8.0);
 
   // Charge lines builder
   const [chargeLines, setChargeLines] = useState<Array<{
@@ -70,7 +82,7 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
       const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
-        setHeats(data);
+        setHeats(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch {
       // fallback
@@ -79,22 +91,8 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
     }
   };
 
-  const fetchReferences = async () => {
-    try {
-      const [itemsRes, uomsRes] = await Promise.all([
-        apiFetch('/api/v1/items?limit=200'),
-        apiFetch('/api/v1/uoms')
-      ]);
-      if (itemsRes.ok) setItems(await itemsRes.json());
-      if (uomsRes.ok) setUoms(await uomsRes.json());
-    } catch {
-      // fallback
-    }
-  };
-
   useEffect(() => {
     fetchHeats();
-    fetchReferences();
   }, []);
 
   const addChargeRow = () => {
@@ -121,6 +119,46 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
     if (partsProduced.length > 1) {
       setPartsProduced(prev => prev.filter((_, i) => i !== idx));
     }
+  };
+
+  // Helper to compute metrics for a heat
+  const computeHeatMetrics = (h: HeatHeader) => {
+    const grossCharged = h.charge_lines?.reduce((sum, cl) => sum + (Number(cl.charged_quantity) || 0), 0) || 0;
+    const tapped = Number(h.metal_tapped_weight) || 0;
+    const meltLossKg = (grossCharged > 0 && tapped > 0) ? Math.max(0, grossCharged - tapped) : null;
+    const meltLossPct = (grossCharged > 0 && meltLossKg !== null) ? (meltLossKg / grossCharged) * 100 : null;
+    const yieldPct = meltLossPct !== null ? 100 - meltLossPct : null;
+    
+    // Status classification based on configurable policy
+    let yieldStatus: 'NORMAL' | 'WARNING' | 'CRITICAL' = 'NORMAL';
+    if (meltLossPct !== null) {
+      if (meltLossPct > criticalMeltLossPct) yieldStatus = 'CRITICAL';
+      else if (meltLossPct > warningMeltLossPct) yieldStatus = 'WARNING';
+    }
+
+    // Power & Consumable estimations
+    // Standard induction furnace energy: 550 KWH / MT tapped if not recorded
+    const estKwh = (tapped / 1000) * 550;
+    const powerCost = estKwh * powerTariff;
+    const overheadCost = (tapped / 1000) * consumableOverheadPerMt;
+    
+    // Estimated material cost using ₹42/kg average for metallic charge
+    const estMaterialCost = grossCharged * 42.0;
+    const totalEstCost = estMaterialCost + powerCost + overheadCost;
+    const costPerKg = tapped > 0 ? (totalEstCost / tapped) : null;
+
+    return {
+      grossCharged,
+      tapped,
+      meltLossKg,
+      meltLossPct,
+      yieldPct,
+      yieldStatus,
+      powerCost,
+      overheadCost,
+      totalEstCost,
+      costPerKg,
+    };
   };
 
   const handleCreateHeat = async (e: React.FormEvent) => {
@@ -195,6 +233,12 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
           </p>
         </div>
         <div className="header-actions">
+          <button 
+            className={`erp-btn ${showConfigPolicy ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setShowConfigPolicy(!showConfigPolicy)}
+          >
+            ⚡ Cost & Yield Policy
+          </button>
           {['Foundry', 'Management', 'Admin'].includes(currentRole) && (
             <button className="erp-btn btn-primary" onClick={() => setShowCreateModal(true)}>
               <Plus size={16} className="btn-icon" /> Log New Heat
@@ -206,12 +250,85 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
         </div>
       </div>
 
+      {/* Configurable Costing & Yield Policy Panel */}
+      {showConfigPolicy && (
+        <div style={{
+          background: '#ffffff',
+          border: '1.5px solid #bfdbfe',
+          borderRadius: '8px',
+          padding: '16px 20px',
+          marginBottom: '16px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h4 style={{ margin: 0, fontSize: '14px', color: '#1e3a8a', fontWeight: 700 }}>
+              ⚡ Costing & Melt Loss Policy Parameters
+            </h4>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              Used for live furnace heat valuation & yield tolerance checking
+            </span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Electric Power Tariff (₹/KWH)
+              </label>
+              <input 
+                type="number" 
+                step="0.1" 
+                value={powerTariff} 
+                onChange={(e) => setPowerTariff(Number(e.target.value) || 0)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Consumables Overhead (₹/MT Tapped)
+              </label>
+              <input 
+                type="number" 
+                step="50" 
+                value={consumableOverheadPerMt} 
+                onChange={(e) => setConsumableOverheadPerMt(Number(e.target.value) || 0)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Melt Loss Warning Threshold (%)
+              </label>
+              <input 
+                type="number" 
+                step="0.1" 
+                value={warningMeltLossPct} 
+                onChange={(e) => setWarningMeltLossPct(Number(e.target.value) || 0)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Critical Hold Threshold (%)
+              </label>
+              <input 
+                type="number" 
+                step="0.1" 
+                value={criticalMeltLossPct} 
+                onChange={(e) => setCriticalMeltLossPct(Number(e.target.value) || 0)}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {feedback && (
         <div className={`notification-banner ${feedback.type === 'success' ? 'banner-success' : 'banner-error'}`}>
           {feedback.type === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
           <span>{feedback.message}</span>
         </div>
       )}
+
+      <ReferenceDataNotice refs={refs} />
 
       {/* Filter Toolbar */}
       <div className="filter-toolbar">
@@ -244,46 +361,85 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
           <thead>
             <tr>
               <th>Heat Number</th>
-              <th>Normalized Ref</th>
-              <th>Date</th>
-              <th>Furnace</th>
+              <th>Date & Furnace</th>
               <th>Shift</th>
+              <th>Charged Qty</th>
               <th>Metal Tapped</th>
-              <th>Charge Items</th>
-              <th>Parts Cast</th>
+              <th>Melt Loss / Yield</th>
+              <th>Est. Direct Cost</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={10} className="text-center py-4">Loading furnace heat logs...</td></tr>
+              <tr><td colSpan={9} className="text-center py-4">Loading furnace heat logs...</td></tr>
             ) : heats.length === 0 ? (
-              <tr><td colSpan={10} className="text-center py-4 text-muted">No furnace heats recorded for this criteria.</td></tr>
+              <tr><td colSpan={9} className="text-center py-4 text-muted">No furnace heats recorded for this criteria.</td></tr>
             ) : (
-              heats.map((h) => (
-                <tr key={h.id}>
-                  <td><strong>{h.heat_number}</strong></td>
-                  <td><code className="code-badge">{h.normalized_heat_number}</code></td>
-                  <td>{h.heat_date}</td>
-                  <td>{h.furnace_id || '-'}</td>
-                  <td>{h.shift || '-'}</td>
-                  <td>{h.metal_tapped_weight ? `${Number(h.metal_tapped_weight).toLocaleString()} KG` : '-'}</td>
-                  <td><span className="badge badge-secondary">{h.charge_lines?.length || 0} materials</span></td>
-                  <td><span className="badge badge-secondary">{h.parts_produced?.length || 0} types</span></td>
-                  <td>
-                    <span className="badge badge-success">{h.production_status}</span>
-                  </td>
-                  <td>
-                    <button 
-                      className="erp-btn btn-sm btn-outline"
-                      onClick={() => setSelectedHeat(h)}
-                    >
-                      <Eye size={12} className="btn-icon" /> Details
-                    </button>
-                  </td>
-                </tr>
-              ))
+              heats.map((h) => {
+                const m = computeHeatMetrics(h);
+                return (
+                  <tr key={h.id}>
+                    <td>
+                      <div><strong>{h.heat_number}</strong></div>
+                      <div><code className="code-badge" style={{ fontSize: '10px' }}>{h.normalized_heat_number}</code></div>
+                    </td>
+                    <td>
+                      <div>{h.heat_date}</div>
+                      <small className="text-muted">{h.furnace_id || 'F-01'}</small>
+                    </td>
+                    <td><span className="badge badge-secondary">{h.shift || 'A'}</span></td>
+                    <td className="text-right">
+                      <strong>{m.grossCharged > 0 ? `${m.grossCharged.toLocaleString()} KG` : '—'}</strong>
+                      <div><small className="text-muted">{h.charge_lines?.length || 0} items</small></div>
+                    </td>
+                    <td className="text-right">
+                      <strong>{m.tapped > 0 ? `${m.tapped.toLocaleString()} KG` : '—'}</strong>
+                    </td>
+                    <td>
+                      {m.meltLossPct !== null ? (
+                        <div>
+                          <span className={`badge ${
+                            m.yieldStatus === 'CRITICAL' ? 'badge-danger' :
+                            m.yieldStatus === 'WARNING' ? 'badge-warning' : 'badge-success'
+                          }`} style={{ fontWeight: 700 }}>
+                            {m.meltLossPct.toFixed(2)}% Loss ({m.yieldPct?.toFixed(1)}% Yield)
+                          </span>
+                          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                            {m.meltLossKg?.toFixed(1)} KG unrecovered
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      {m.costPerKg !== null ? (
+                        <div>
+                          <strong style={{ color: '#1e3a8a' }}>₹{m.costPerKg.toFixed(2)} / kg</strong>
+                          <div style={{ fontSize: '10px', color: '#64748b' }}>
+                            ₹{(m.totalEstCost).toLocaleString('en-IN', { maximumFractionDigits: 0 })} total
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="badge badge-success">{h.production_status}</span>
+                    </td>
+                    <td>
+                      <button 
+                        className="erp-btn btn-sm btn-outline"
+                        onClick={() => setSelectedHeat(h)}
+                      >
+                        <Eye size={12} className="btn-icon" /> Details
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -321,6 +477,61 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
                   <div className="metric-val">{selectedHeat.created_by}</div>
                 </div>
               </div>
+
+              {/* Melt Yield & Costing Breakdown Panel */}
+              {(() => {
+                const m = computeHeatMetrics(selectedHeat);
+                return (
+                  <div style={{
+                    background: '#f8fafc',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '14px 18px',
+                    marginBottom: '18px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e3a8a' }}>
+                        🔥 Melt Loss, Yield & Cost Breakdown (Policy Applied)
+                      </span>
+                      <span className={`badge ${
+                        m.yieldStatus === 'CRITICAL' ? 'badge-danger' :
+                        m.yieldStatus === 'WARNING' ? 'badge-warning' : 'badge-success'
+                      }`} style={{ fontWeight: 700 }}>
+                        {m.meltLossPct !== null ? `${m.meltLossPct.toFixed(2)}% Loss (${m.yieldPct?.toFixed(1)}% Yield)` : 'Pending Weighment'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                      <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>Charged Weight</div>
+                        <div style={{ fontSize: '14px', fontWeight: 700 }}>{m.grossCharged.toLocaleString()} KG</div>
+                      </div>
+                      <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>Tapped Metal</div>
+                        <div style={{ fontSize: '14px', fontWeight: 700 }}>{m.tapped > 0 ? `${m.tapped.toLocaleString()} KG` : '—'}</div>
+                      </div>
+                      <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>Power Cost (@₹{powerTariff}/KWH)</div>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>
+                          ₹{m.powerCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        </div>
+                      </div>
+                      <div style={{ background: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>Overhead (@₹{consumableOverheadPerMt}/MT)</div>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>
+                          ₹{m.overheadCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                        </div>
+                      </div>
+                      <div style={{ background: '#ecfdf5', padding: '10px', borderRadius: '6px', border: '1.5px solid #a7f3d0' }}>
+                        <div style={{ fontSize: '11px', color: '#065f46', fontWeight: 700 }}>Net Cost / Kg</div>
+                        <div style={{ fontSize: '15px', fontWeight: 800, color: '#065f46' }}>
+                          {m.costPerKg ? `₹${m.costPerKg.toFixed(2)} / kg` : '—'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <h4>Furnace Charge Mix Breakdown</h4>
               <table className="erp-table mb-4">
@@ -398,6 +609,9 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
             </div>
             <form onSubmit={handleCreateHeat}>
               <div className="modal-body">
+                <div className="mb-3">
+                  <ReferenceDataNotice refs={refs} />
+                </div>
                 <div className="form-grid-3">
                   <div className="form-group">
                     <label>Heat Number *</label>
@@ -448,15 +662,73 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
                     />
                   </div>
                   <div className="form-group">
-                    <label>Notes / Metallurgy Remarks</label>
+                    <label>Melting Power Consumed (KWH)</label>
                     <input 
-                      type="text" 
-                      placeholder="Optional remarks" 
-                      value={notes} 
-                      onChange={(e) => setNotes(e.target.value)} 
+                      type="number" 
+                      step="0.1" 
+                      placeholder="e.g. 295 (calc at ₹8.50/KWH)" 
+                      value={powerKwh} 
+                      onChange={(e) => setPowerKwh(e.target.value)} 
                     />
                   </div>
                 </div>
+
+                <div className="form-group mb-2">
+                  <label>Notes / Metallurgy Remarks</label>
+                  <input 
+                    type="text" 
+                    placeholder="Optional remarks" 
+                    value={notes} 
+                    onChange={(e) => setNotes(e.target.value)} 
+                  />
+                </div>
+
+                {/* Live Yield & Melt Loss Simulator */}
+                {(() => {
+                  const modalGrossCharged = chargeLines.reduce((acc, row) => acc + (Number(row.charged_quantity) || 0), 0);
+                  const modalTapped = Number(metalTappedWeight) || 0;
+                  const modalLossKg = (modalGrossCharged > 0 && modalTapped > 0) ? Math.max(0, modalGrossCharged - modalTapped) : 0;
+                  const modalLossPct = modalGrossCharged > 0 ? (modalLossKg / modalGrossCharged) * 100 : 0;
+                  const modalYieldPct = 100 - modalLossPct;
+                  const modalKwh = Number(powerKwh) || (modalTapped > 0 ? (modalTapped / 1000) * 550 : 0);
+                  const modalPowerCost = modalKwh * powerTariff;
+                  const modalOverhead = (modalTapped / 1000) * consumableOverheadPerMt;
+                  const modalMatCost = modalGrossCharged * 42;
+                  const modalTotalCost = modalMatCost + modalPowerCost + modalOverhead;
+                  const modalCostPerKg = modalTapped > 0 ? modalTotalCost / modalTapped : 0;
+
+                  return (
+                    <div style={{
+                      background: modalLossPct > criticalMeltLossPct ? '#fef2f2' : modalLossPct > warningMeltLossPct ? '#fffbeb' : '#f0fdf4',
+                      border: `1.5px solid ${modalLossPct > criticalMeltLossPct ? '#fca5a5' : modalLossPct > warningMeltLossPct ? '#fde68a' : '#bbf7d0'}`,
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      marginTop: '10px',
+                      marginBottom: '14px'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
+                          ⚡ Live Heat Yield & Cost Estimation Preview
+                        </span>
+                        {modalGrossCharged > 0 && modalTapped > 0 && (
+                          <span className={`badge ${
+                            modalLossPct > criticalMeltLossPct ? 'badge-danger' :
+                            modalLossPct > warningMeltLossPct ? 'badge-warning' : 'badge-success'
+                          }`} style={{ fontWeight: 700 }}>
+                            {modalLossPct.toFixed(2)}% Melt Loss • {modalYieldPct.toFixed(2)}% Yield
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px', fontSize: '11px' }}>
+                        <div>Gross Charge: <strong>{modalGrossCharged.toLocaleString()} kg</strong></div>
+                        <div>Tapped Metal: <strong>{modalTapped.toLocaleString()} kg</strong></div>
+                        <div>Melt Loss: <strong>{modalLossKg.toFixed(1)} kg</strong></div>
+                        <div>Est. Power: <strong>₹{modalPowerCost.toFixed(0)}</strong></div>
+                        <div>Est. Net Cost: <strong style={{ color: '#065f46' }}>{modalCostPerKg > 0 ? `₹${modalCostPerKg.toFixed(2)}/kg` : '—'}</strong></div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="section-divider mt-4 mb-2">
                   <span className="section-title"><Layers size={14} className="inline-icon" /> Charge Materials</span>
@@ -582,7 +854,7 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="erp-btn btn-primary" disabled={submitting}>
+                <button type="submit" className="erp-btn btn-primary" disabled={submitting || uomsUnavailable}>
                   {submitting ? 'Recording Heat...' : 'Commit Heat Record'}
                 </button>
               </div>

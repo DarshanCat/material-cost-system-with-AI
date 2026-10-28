@@ -36,6 +36,7 @@ def preview_opening_balances(
     """
     items_by_code = {item.item_code.upper(): item for item in db.execute(select(MaterialItem)).scalars().all()}
     uoms_by_code = {u.code.upper(): u for u in db.execute(select(UOM)).scalars().all()}
+    mandatory_baseline = date(2026, 10, 12)
 
     findings: List[OpeningBalancePreviewRow] = []
     valid_count = 0
@@ -45,16 +46,27 @@ def preview_opening_balances(
         row_errors: List[str] = []
         row_warnings: List[str] = []
 
+        if baseline_date != mandatory_baseline:
+            row_errors.append(
+                f"Baseline date '{baseline_date}' is invalid. Per Rule L7, inventory baseline date must be strictly '{mandatory_baseline}'."
+            )
+
         item = items_by_code.get(row.item_code.strip().upper())
         if not item:
             row_errors.append(f"Material item code '{row.item_code}' not found in Item Master.")
+        elif not item.is_active:
+            row_errors.append(f"Material item '{item.item_code}' is inactive. Opening balance cannot be established for inactive items.")
 
         uom = uoms_by_code.get(row.uom_code.strip().upper())
         if not uom:
             row_errors.append(f"UOM '{row.uom_code}' not found in UOM Master.")
+        elif item and item.base_uom_id != uom.id:
+            row_errors.append(
+                f"UOM '{row.uom_code}' does not match Item Master base UOM for item '{item.item_code}'."
+            )
 
         # Check precision
-        if uom and item:
+        if uom and item and item.base_uom_id == uom.id:
             qty_res = validate_and_flag_quantity(row.quantity, uom, item.category, item.name)
             if not qty_res.is_valid:
                 row_errors.extend(qty_res.errors)
@@ -120,6 +132,13 @@ def _post_approved_opening_balances(
     """
     Atomically posts approved opening balance rows inside a single database transaction.
     """
+    mandatory_baseline = date(2026, 10, 12)
+    if request.baseline_date != mandatory_baseline:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Cannot post opening balances: Baseline date '{request.baseline_date}' violates Rule L7. Must strictly be '{mandatory_baseline}'.",
+        )
+
     # Preview first to assure 100% validity
     preview = preview_opening_balances(db, request.rows, request.baseline_date)
     if not preview.can_commit:

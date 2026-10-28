@@ -11,9 +11,10 @@ import {
   Phone,
   Mail,
   MapPin,
-  UserCheck
+  UserCheck,
+  Edit2
 } from 'lucide-react';
-import type { Vendor, PaginatedResponse, UserRole } from '../types';
+import type { Vendor, UserRole } from '../types';
 import { apiFetch } from '../api/client';
 
 interface VendorMasterViewProps {
@@ -34,6 +35,35 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
   // Modals
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+
+  // Edit Form State
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
+  const [editVendorId, setEditVendorId] = useState<number | null>(null);
+  const [editName, setEditName] = useState<string>('');
+  const [editGstin, setEditGstin] = useState<string>('');
+  const [editContact, setEditContact] = useState<string>('');
+  const [editPhone, setEditPhone] = useState<string>('');
+  const [editEmail, setEditEmail] = useState<string>('');
+  const [editAddress, setEditAddress] = useState<string>('');
+  const [editIsActive, setEditIsActive] = useState<boolean>(true);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState<boolean>(false);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  const canManageVendor = currentRole === 'Stores' || currentRole === 'Purchase' || currentRole === 'Management' || currentRole === 'Admin';
+
+  const openEditVendor = (v: Vendor) => {
+    setEditVendorId(v.id);
+    setEditName(v.name);
+    setEditGstin(v.gstin || '');
+    setEditContact(v.contact_person || '');
+    setEditPhone(v.phone || '');
+    setEditEmail(v.email || '');
+    setEditAddress(v.address || '');
+    setEditIsActive(v.is_active);
+    setEditError(null);
+    setShowEditModal(true);
+  };
 
   // Create Form State
   const [formName, setFormName] = useState<string>('');
@@ -57,9 +87,10 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
 
       const res = await apiFetch(`/api/v1/vendors?${params.toString()}`);
       if (res.ok) {
-        const data: PaginatedResponse<Vendor> = await res.json();
-        setVendors(data.items);
-        setTotal(data.total);
+        const data = await res.json();
+        const vendorList = Array.isArray(data) ? data : (data?.items || []);
+        setVendors(vendorList);
+        setTotal(typeof data?.total === 'number' ? data.total : vendorList.length);
       } else {
         const errData = await res.json().catch(() => ({}));
         setError(errData.detail || 'Unable to retrieve vendors.');
@@ -142,8 +173,54 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
     }
   };
 
+  const handleUpdateVendor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editVendorId) return;
+    setEditError(null);
+
+    if (editGstin.trim() && !isGstinValid(editGstin.trim())) {
+      setEditError('GSTIN syntax is invalid. Standard format: 22AAAAA0000A1Z5');
+      return;
+    }
+
+    setEditSubmitting(true);
+    try {
+      const res = await apiFetch(`/api/v1/vendors/${editVendorId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editName.trim(),
+          gstin: editGstin.trim().toUpperCase() || null,
+          contact_person: editContact.trim() || null,
+          phone: editPhone.trim() || null,
+          email: editEmail.trim() || null,
+          address: editAddress.trim() || null,
+          is_active: editIsActive,
+        }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setVendors((prev) => prev.map((v) => (v.id === editVendorId ? updated : v)));
+        if (selectedVendor && selectedVendor.id === editVendorId) {
+          setSelectedVendor(updated);
+        }
+        setShowEditModal(false);
+        setSuccessToast(`Vendor "${updated.name}" details updated successfully.`);
+        setTimeout(() => setSuccessToast(null), 4000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setEditError(err.detail || 'Failed to update vendor record.');
+      }
+    } catch (err: any) {
+      setEditError(`Network error: ${err.message}`);
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / pageSize) || 1;
-  const canManageVendors = currentRole === 'Purchase' || currentRole === 'Admin';
+  const canManageVendors = canManageVendor;
 
   return (
     <div className="module-container">
@@ -171,6 +248,13 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
         </div>
       </div>
 
+      {successToast && (
+        <div className="success-banner card mb-3">
+          <CheckCircle size={18} className="text-success inline mr-2" />
+          <span>{successToast}</span>
+        </div>
+      )}
+
       {createSuccessMsg && (
         <div className="success-banner card">
           <CheckCircle size={18} className="text-success" />
@@ -194,6 +278,13 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
           />
         </div>
       </div>
+
+      {successToast && (
+        <div className="success-banner card mb-3">
+          <CheckCircle size={18} className="text-success inline mr-2" />
+          <span>{successToast}</span>
+        </div>
+      )}
 
       {/* Error Banner */}
       {error && (
@@ -271,15 +362,23 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
                       </span>
                     </td>
                     <td>
-                      <button 
-                        className="table-action-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedVendor(v);
-                        }}
-                      >
-                        Details
-                      </button>
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          className="table-action-btn"
+                          onClick={() => setSelectedVendor(v)}
+                        >
+                          Details
+                        </button>
+                        {canManageVendors && (
+                          <button 
+                            className="secondary-btn text-xs py-1 px-2 flex items-center gap-1"
+                            onClick={() => openEditVendor(v)}
+                            title="Edit Contact Person, Phone, Email & Address"
+                          >
+                            <Edit2 size={12} /> Edit
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -502,10 +601,154 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
             </div>
 
             <div className="modal-footer">
+              {canManageVendors && (
+                <button 
+                  className="primary-btn flex items-center gap-1"
+                  onClick={() => {
+                    const v = selectedVendor;
+                    setSelectedVendor(null);
+                    openEditVendor(v);
+                  }}
+                >
+                  <Edit2 size={14} /> Edit Contact & Details
+                </button>
+              )}
               <button className="secondary-btn" onClick={() => setSelectedVendor(null)}>
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Vendor Modal */}
+      {showEditModal && (
+        <div className="modal-backdrop" onClick={() => !editSubmitting && setShowEditModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span className="phase-pill">Maintain Master Data</span>
+                <h3 className="modal-title">Edit Vendor: {editName}</h3>
+                <p className="modal-subtitle">Update contact person, phone number, GSTIN, or plant address.</p>
+              </div>
+              <button 
+                className="modal-close-btn" 
+                onClick={() => setShowEditModal(false)}
+                disabled={editSubmitting}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateVendor}>
+              <div className="modal-body">
+                {editError && (
+                  <div className="error-banner mb-3">
+                    <AlertCircle size={16} className="text-danger flex-shrink-0" />
+                    <span>{editError}</span>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Vendor Business Name *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid-2-col">
+                  <div className="form-group">
+                    <label className="form-label">GSTIN / Tax ID</label>
+                    <input
+                      type="text"
+                      className="form-control font-mono"
+                      value={editGstin}
+                      onChange={(e) => setEditGstin(e.target.value.toUpperCase())}
+                      placeholder="29AAAAA0000A1Z5"
+                      maxLength={15}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Contact Person *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={editContact}
+                      onChange={(e) => setEditContact(e.target.value)}
+                      placeholder="Primary Procurement / Sales Rep"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid-2-col">
+                  <div className="form-group">
+                    <label className="form-label">Phone / Mobile Number *</label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Email Address</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="vendor@company.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Plant / Yard / Billing Address</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    value={editAddress}
+                    onChange={(e) => setEditAddress(e.target.value)}
+                    placeholder="Plot / Industrial Area, City, State, PIN"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      checked={editIsActive}
+                      onChange={(e) => setEditIsActive(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span>Vendor is Active for Purchase Inwards & POs</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={editSubmitting}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="primary-btn" disabled={editSubmitting}>
+                  {editSubmitting ? 'Saving Changes...' : 'Update Vendor Details'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

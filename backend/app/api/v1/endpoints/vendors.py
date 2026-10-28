@@ -18,7 +18,8 @@ def list_vendors(
     q: Optional[str] = Query(None, description="Search query across vendor name, contact person, or GSTIN"),
     is_active: Optional[bool] = Query(True, description="Filter active status"),
     page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(25, ge=1, le=100, description="Page size"),
+    size: int = Query(25, ge=1, le=1000, description="Page size"),
+    limit: Optional[int] = Query(None, ge=1, le=1000, description="Alias for page size"),
     db: Session = Depends(get_db),
     _user=Depends(require_permission(Permission.VENDOR_READ)),
 ):
@@ -26,6 +27,7 @@ def list_vendors(
     Search and list vendor master records.
     Filters by normalized name, contact details, or GSTIN.
     """
+    effective_size = limit if limit is not None else size
     try:
         stmt = select(Vendor)
 
@@ -46,14 +48,14 @@ def list_vendors(
         total = db.scalar(count_stmt) or 0
 
         # Paginate
-        offset = (page - 1) * size
-        vendors = db.scalars(stmt.order_by(Vendor.name).offset(offset).limit(size)).all()
+        offset = (page - 1) * effective_size
+        vendors = db.scalars(stmt.order_by(Vendor.name).offset(offset).limit(effective_size)).all()
 
         return PaginatedVendorsResponse(
             items=[VendorRead.model_validate(v) for v in vendors],
             total=total,
             page=page,
-            size=size,
+            size=effective_size,
         )
     except SQLAlchemyError as exc:
         raise HTTPException(

@@ -1,0 +1,11 @@
+{
+  "dashboard-container": "Wrapper only; children (.welcome-banner, .grid-2-col, .audit-policy-card) carry their own spacing.",
+  "departments-card": "Modifier hook on .card; no extra styling needed.",
+  "feature-card": "Modifier hook on .card; no extra styling needed.",
+  "notice-icon": "Icon hook inside .notice-banner; colour comes from .text-amber.",
+  "policy-content": "Text column inside .audit-policy-card; flows as a normal block.",
+  "roadmap-overview-card": "Modifier hook on .card; no extra styling needed.",
+  "rule-card": "Modifier hook on .card; no extra styling needed.",
+  "tel-status": "Hook paired with .status-pill-ok / -warn / -wait, which provide the styling.",
+  "telemetry-card": "Modifier hook on .card; no extra styling needed."
+}

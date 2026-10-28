@@ -907,7 +907,7 @@ def test_item_request_api_creation_flow(client, stores_headers, db_session: Sess
     payload = {
         "requested_name": "Inoculant FeSi 75 Special",
         "proposed_department_id": fdy_dept.id,
-        "proposed_category": "FOUNDRY_RAW_MATERIALS",
+        "proposed_category": "RM",  # Nomenclature Standard v1.0 category (Raw Material)
         "proposed_subcategory": "INOCULANT",
         "proposed_uom_id": uom.id,
         "justification": "Required for ladle inoculation",

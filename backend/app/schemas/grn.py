@@ -93,9 +93,32 @@ class GRNResponse(BaseModel):
     lines: List[GRNLineItemResponse] = []
     audit_logs: List[GRNAuditLogResponse] = []
     validation_warnings: List[str] = []
+    quality_document_number: Optional[str] = None
+    quality_inspection_status: Optional[str] = None
+    quality_inspection_notes: Optional[str] = None
+    quality_inspected_by: Optional[str] = None
+    quality_inspected_at: Optional[datetime] = None
+    payment_status: Optional[str] = None
+    amount_paid: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_date: Optional[date] = None
+    payment_mode: Optional[str] = None
+    payment_notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class GRNStatusAction(BaseModel):
     comments: Optional[str] = None
+    quality_document_number: Optional[str] = None
+    quality_inspection_status: Optional[str] = None
+    quality_inspection_notes: Optional[str] = None
+
+
+class GRNPaymentAction(BaseModel):
+    payment_status: str = "PAID"
+    amount_paid: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_date: Optional[date] = None
+    payment_mode: Optional[str] = "NEFT_RTGS"
+    payment_notes: Optional[str] = None

@@ -9,8 +9,10 @@ import {
   X,
   Link
 } from 'lucide-react';
-import type { MaterialAlias, MaterialItem, UserRole } from '../types';
+import type { MaterialAlias, UserRole } from '../types';
 import { apiFetch } from '../api/client';
+import { useReferenceData } from '../hooks/useReferenceData';
+import { ReferenceDataNotice } from './ReferenceDataNotice';
 
 interface MaterialAliasViewProps {
   currentRole: UserRole;
@@ -22,7 +24,8 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [items, setItems] = useState<MaterialItem[]>([]);
+  const refs = useReferenceData(['items']);
+  const { items } = refs;
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [showRejectModal, setShowRejectModal] = useState<boolean>(false);
   const [selectedAlias, setSelectedAlias] = useState<MaterialAlias | null>(null);
@@ -42,7 +45,8 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
       if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
       const res = await apiFetch(url);
       if (res.ok) {
-        setAliases(await res.json());
+        const data = await res.json();
+        setAliases(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch {
       // fallback
@@ -51,18 +55,8 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
     }
   };
 
-  const fetchItems = async () => {
-    try {
-      const res = await apiFetch('/api/v1/items?limit=500');
-      if (res.ok) setItems(await res.json());
-    } catch {
-      // fallback
-    }
-  };
-
   useEffect(() => {
     fetchAliases();
-    fetchItems();
   }, [statusFilter]);
 
   const handleCreateAlias = async (e: React.FormEvent) => {
@@ -198,6 +192,8 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
         </div>
       )}
 
+      <ReferenceDataNotice refs={refs} />
+
       {/* Filter Toolbar */}
       <div className="filter-toolbar">
         <div className="search-box">
@@ -312,6 +308,9 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
             </div>
             <form onSubmit={handleCreateAlias}>
               <div className="modal-body">
+                <div className="mb-3">
+                  <ReferenceDataNotice refs={refs} />
+                </div>
                 <div className="form-group mb-3">
                   <label>Raw Source Description *</label>
                   <input 
@@ -330,7 +329,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
                     onChange={(e) => setTargetItemId(Number(e.target.value))} 
                     required
                   >
-                    <option value="">-- Select Material Master --</option>
+                    <option value="">{refs.placeholder('items', '-- Select Material Master --')}</option>
                     {items.map(it => (
                       <option key={it.id} value={it.id}>{it.item_code} - {it.name} ({it.category})</option>
                     ))}
@@ -341,7 +340,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="erp-btn btn-primary" disabled={submitting}>
+                <button type="submit" className="erp-btn btn-primary" disabled={submitting || refs.unavailable}>
                   {submitting ? 'Mapping...' : 'Save Alias Mapping'}
                 </button>
               </div>

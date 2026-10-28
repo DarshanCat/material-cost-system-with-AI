@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.core.config import settings
 from app.core.security import AuthenticatedUser, Permission, require_permission
-from app.db.session import check_database_connection
+from app.db.session import check_database_connection, engine
 from app.schemas.health import HealthResponse, DatabaseHealth
 
 router = APIRouter()
@@ -49,11 +49,11 @@ def verify_db_connectivity(
             detail={
                 "error": "Database connectivity failed",
                 "message": db_msg,
-                "configured_target": f"{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}",
+                "configured_target": f"{engine.url.host}:{engine.url.port}/{engine.url.database}",
             },
         )
     return {
         "status": "connected",
         "message": "PostgreSQL database reachable and responding",
-        "target": f"{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}",
+        "target": f"{engine.url.host}:{engine.url.port}/{engine.url.database}",
     }

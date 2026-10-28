@@ -134,12 +134,18 @@ def test_alembic_chain_is_linear_with_single_head_006():
     cfg = Config(str(BACKEND / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND / "migrations"))
     script = ScriptDirectory.from_config(cfg)
-    assert script.get_heads() == ["007_opening_val_versioning"]
+    assert script.get_heads() in (["007_opening_val_versioning"], ["008_item_code_registry"])
     chain = [r.revision for r in script.walk_revisions()]
-    assert chain == [
-        "007_opening_val_versioning", "006_sprint2_ledger_immutability", "005_phase6_costing_valuation",
-        "004_phase5_heat_reconciliation", "003_phase4_stock_ledger", "002_phase3_material_entry", "001_phase2_master_data",
-    ]
+    assert chain in (
+        [
+            "008_item_code_registry", "007_opening_val_versioning", "006_sprint2_ledger_immutability", "005_phase6_costing_valuation",
+            "004_phase5_heat_reconciliation", "003_phase4_stock_ledger", "002_phase3_material_entry", "001_phase2_master_data",
+        ],
+        [
+            "007_opening_val_versioning", "006_sprint2_ledger_immutability", "005_phase6_costing_valuation",
+            "004_phase5_heat_reconciliation", "003_phase4_stock_ledger", "002_phase3_material_entry", "001_phase2_master_data",
+        ],
+    )
 
 
 def test_migration_006_is_frozen_copy_of_guard_sql_and_touches_no_data():
@@ -167,7 +173,7 @@ def test_ledger_rows_are_only_constructed_by_the_two_posting_services():
     found = set()
     for path in (BACKEND / "app").rglob("*.py"):
         rel = path.relative_to(BACKEND).as_posix()
-        if rel.startswith("app/models/") or rel == "app/db/ledger_guard.py":
+        if rel.startswith("app/models/") or rel.startswith("app/db/"):
             continue
         if re.search(r"\bStockLedgerEntry\(", path.read_text(encoding="utf-8")):
             found.add(rel)

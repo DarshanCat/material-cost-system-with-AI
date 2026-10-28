@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VSPL Work Instruction & Project Flow</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0f172a;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8fafc;
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      color: #fff;
+      padding: 24px 28px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .doc-meta { font-size: 12px; color: #93c5fd; margin-top: 6px; }
+    
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card {
+      background: var(--card-bg);
+      padding: 16px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .kpi-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .kpi-value { font-size: 22px; font-weight: 800; color: var(--secondary); margin-top: 4px; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--secondary);
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Flow Chart */
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .flow-node {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      color: #1e40af;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 150px;
+      text-align: center;
+    }
+    .flow-node.highlight {
+      background: #fef3c7;
+      border-color: #fcd34d;
+      color: #92400e;
+    }
+    .flow-node.success {
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
+    }
+    .flow-arrow {
+      color: #94a3b8;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    /* Timeline */
+    .timeline {
+      position: relative;
+      border-left: 3px solid #3b82f6;
+      margin-left: 14px;
+      padding-left: 20px;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -27px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3b82f6;
+      border: 2px solid #fff;
+    }
+    .timeline-time {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .timeline-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin: 2px 0;
+    }
+    .timeline-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: #f8fafc; color: #475569; font-weight: 700; text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: #334155; vertical-align: top; }
+    tr:hover td { background: #f8fafc; }
+    .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 10px; }
+    .tag-r { background: #fee2e2; color: #991b1b; }
+    .tag-a { background: #fef3c7; color: #92400e; }
+    .tag-c { background: #e0e7ff; color: #3730a3; }
+    .tag-i { background: #f1f5f9; color: #475569; }
+
+    /* SOP Cards */
+    .sop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .sop-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #ffffff;
+    }
+    .sop-role { font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; }
+    .sop-title { font-size: 14px; font-weight: 700; margin: 4px 0 8px 0; color: var(--secondary); }
+    .sop-list { list-style-type: none; font-size: 12px; color: #475569; }
+    .sop-list li { margin-bottom: 6px; position: relative; padding-left: 14px; }
+    .sop-list li::before { content: "•"; position: absolute; left: 0; color: #3b82f6; font-weight: bold; }
+
+    .footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .live-link {
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .live-link:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1 style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em;">VIJAY SPHEROIDALS PVT. LTD. (VSPL)</h1>
+        <p style="font-size: 13px; color: #bfdbfe; margin-top: 2px;">Standard Work Instruction & System Flow (WI-MM-001 | Rev 1.0)</p>
+        <div class="doc-meta">Peenya Foundry (Plant 1) • Tumkur Machine Shop (Plant 2) • Central Stores & Accounts</div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span class="badge badge-success">Approved / Effective</span>
+        <span class="badge badge-amber">Cycle: 13:00 - 13:00</span>
+        <span class="badge badge-blue">Phase 6 Active</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="grid-4">
+    <div class="kpi-card">
+      <div class="kpi-title">Raw Material Catalog</div>
+      <div class="kpi-value">24 SKUs</div>
+      <div class="kpi-sub">Standardized to Nomenclature v1.0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Total Inventory Valuation</div>
+      <div class="kpi-value">₹46,52,929</div>
+      <div class="kpi-sub">Moving Weighted-Average Run</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Daily Accounting Window</div>
+      <div class="kpi-value">13:00 – 13:00</div>
+      <div class="kpi-sub">Hard Cut-Off at 13:00 Daily</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Melting Yield / Loss</div>
+      <div class="kpi-value">95.2% / 4.8%</div>
+      <div class="kpi-sub">Tolerance: 3.0% - 6.5% Max</div>
+    </div>
+  </div>
+
+  <!-- Section 1: End-to-End System Project Flow -->
+  <div class="section">
+    <div class="section-title">
+      <span>1. End-to-End System Flow (Procurement to Valuation)</span>
+    </div>
+    <div class="flow-container">
+      <div class="flow-row">
+        <div class="flow-node"><strong>1. Gate & Weighbridge</strong><br>Truck Inward & Tare Weighment</div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node"><strong>2. Central Stores GRN</strong><br>Challan Verification & Binning</div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node"><strong>3. QA Lab Testing</strong><br>Chemical & Spectro Clearance</div>
+        <div class="flow-arrow">➔</div>
+        <div class="flow-node highlight"><strong>4. Stock Ledger Post</strong><br>Append-Only Inward Ledger</div>
+      </div>
+      <div style="text-align: center; color: #94a3b8; font-weight: bold; margin: 4px 0;">▼</div>
+      <div class="flow-row">
+        <div class="flow-node success"><strong>8. Management Web App</strong><br>Vercel Dashboard / Reports</div>
+        <div class="flow-arrow">⬅</div>
+        <div class="flow-node highlight"><strong>7. Daily Costing Run</strong><br>Phase 6 Weighted Avg & Heats</div>
+        <div class="flow-arrow">⬅</div>
+        <div class="flow-node"><strong>6. 13:00 Hard Cut-Off</strong><br>Automated Freeze & Anomaly Check</div>
+        <div class="flow-arrow">⬅</div>
+        <div class="flow-node"><strong>5. Melt Shop Charging</strong><br>Heat Log & Raw Material Draw</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Daily 1 PM – 1 PM Accounting Timeline -->
+  <div class="section">
+    <div class="section-title">
+      <span>2. The Daily 1 PM – 1 PM Accounting Cycle (SOP Timeline)</span>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-time">13:00 (Day T)</div>
+        <div class="timeline-title">Cycle Start & Handover</div>
+        <div class="timeline-desc">Previous 24-hr accounting cycle is archived. New cycle begins tracking all incoming raw materials, scrap, and foundry issues.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">13:00 – 12:30 (Day T+1)</div>
+        <div class="timeline-title">Continuous Real-Time Data Capture</div>
+        <div class="timeline-desc">Stores records GRNs immediately upon truck unload. Melt Shop operators enter Heat Logs (charging weights, ferroalloys, power KWH, tapped metal) immediately after each tap.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">12:30 – 13:00</div>
+        <div class="timeline-title">Pre-Closing Sanity Check</div>
+        <div class="timeline-desc">Stores Supervisor audits pending delivery challans. Melting Lead verifies all heats tapped before 12:30 have complete charge slips entered.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">13:00 (Day T+1)</div>
+        <div class="timeline-title">HARD CUT-OFF (Transaction Freeze)</div>
+        <div class="timeline-desc">Strict system cut-off. Any receipt or issue logged after 13:00:00 automatically rolls into the subsequent day's cycle.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">13:15</div>
+        <div class="timeline-title">Automated Cost & Valuation Run</div>
+        <div class="timeline-desc">Engine calculates moving weighted-average costs per unit for all items, generates the daily stock journal, and computes net liquid metal cost per kg.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-time">13:20 – 14:00</div>
+        <div class="timeline-title">Anomaly Resolution & Sign-Off Window</div>
+        <div class="timeline-desc">Cost Accountant & Plant Head review exceptions (negative stock, abnormal melt loss &gt; 8%, unmapped item codes). Approved ledger snapshot is committed to Finance.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: End-to-End Cost Calculation Flow -->
+  <div class="section">
+    <div class="section-title">
+      <span>3. Calculation Flow & Valuation Engine (With Worked 500 Kg Heat Example)</span>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 18px;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Stage 1: Inventory Moving Average</div>
+        <div style="font-size: 12px; margin-top: 6px; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          R_new = (Q_curr × R_prev + Q_grn × R_landed) / (Q_curr + Q_grn)
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Recalculated upon every accepted GRN. Dispatches are issued at current R_new.</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: #d97706; text-transform: uppercase;">Stage 2: Melt Loss & Yield</div>
+        <div style="font-size: 12px; margin-top: 6px; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          Melt Loss % = [(Q_gross - Q_tapped) / Q_gross] × 100
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Standard Tolerance: 3.0% – 6.5%. &gt;6.5% triggers warning; &gt;8.0% critical audit hold.</div>
+      </div>
+
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: #059669; text-transform: uppercase;">Stage 3: Net Liquid Metal Rate</div>
+        <div style="font-size: 12px; margin-top: 6px; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+          Rate/Kg = (Cost_RM + Cost_Power + Cost_Consumables) / Q_tapped
+        </div>
+        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Unrecovered metallic loss is absorbed into yield, determining true cost per kg.</div>
+      </div>
+    </div>
+
+    <!-- Numerical Worked Example Table -->
+    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 13px; font-weight: 700; color: #0f172a;">Standard 500 Kg Induction Furnace Heat (EN-GJS-500-7)</span>
+        <span class="badge badge-success">Yield: 95.16% • Loss: 4.84%</span>
+      </div>
+      <table style="margin-bottom: 12px;">
+        <thead>
+          <tr>
+            <th>Material Code</th>
+            <th>Description</th>
+            <th>Qty (Kg)</th>
+            <th>Rate (₹/Kg)</th>
+            <th>Total (₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>FDY-RM-001</td><td>Pig Iron Grade 1</td><td>250.0</td><td>₹44.00</td><td>₹11,000.00</td></tr>
+          <tr><td>FDY-RM-002</td><td>CRCA Steel Scrap</td><td>150.0</td><td>₹38.00</td><td>₹5,700.00</td></tr>
+          <tr><td>FDY-RM-003</td><td>Foundry Returns (Internal)</td><td>100.0</td><td>₹36.00</td><td>₹3,600.00</td></tr>
+          <tr><td>FDY-CON-001</td><td>Recarburizer (98.5% C)</td><td>5.0</td><td>₹65.00</td><td>₹325.00</td></tr>
+          <tr><td>FDY-FA-001</td><td>Ferro Silicon (FeSi 70%)</td><td>4.0</td><td>₹115.00</td><td>₹460.00</td></tr>
+          <tr><td>FDY-NOD-001</td><td>FeSiMg Nodulizer (9% Mg)</td><td>6.0</td><td>₹240.00</td><td>₹1,440.00</td></tr>
+          <tr><td>FDY-INO-001</td><td>Foundry Inoculant</td><td>2.0</td><td>₹180.00</td><td>₹360.00</td></tr>
+          <tr style="background: #f1f5f9; font-weight: 700;">
+            <td colspan="2">Gross Charge Subtotal</td>
+            <td>517.0 Kg</td>
+            <td>—</td>
+            <td>₹22,885.00</td>
+          </tr>
+          <tr>
+            <td colspan="2">Electric Power (295 KWH consumed @ ₹8.50/KWH)</td>
+            <td>295 KWH</td>
+            <td>₹8.50</td>
+            <td>₹2,507.50</td>
+          </tr>
+          <tr style="background: #dbeafe; font-weight: 800; color: #1e40af;">
+            <td colspan="2">Total Direct Heat Cost</td>
+            <td colspan="2">Liquid Metal Tapped: 492.0 Kg</td>
+            <td>₹25,392.50</td>
+          </tr>
+          <tr style="background: #d1fae5; font-weight: 800; color: #065f46;">
+            <td colspan="2">Final Net Liquid Metal Cost per Kg</td>
+            <td colspan="3" style="font-size: 13px;">₹25,392.50 ÷ 492.0 Kg = ₹51.61 / Kg (₹51,610.77 / MT)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 4: RACI Governance Matrix -->
+  <div class="section">
+    <div class="section-title">
+      <span>4. RACI Responsibility Matrix</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Operation / Workflow Step</th>
+          <th>Stores</th>
+          <th>Melt Shop</th>
+          <th>Quality (QA)</th>
+          <th>Cost Accounts</th>
+          <th>Plant Head</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Inward Material Receipts (GRN)</strong></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+        </tr>
+        <tr>
+          <td><strong>QA Inspection & Release</strong></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-a">A - Accountable</span></td>
+        </tr>
+        <tr>
+          <td><strong>Furnace Heat Log & Additions</strong></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-a">A - Accountable</span></td>
+        </tr>
+        <tr>
+          <td><strong>13:00 Hard Cut-Off Execution</strong></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-a">A - Accountable</span></td>
+        </tr>
+        <tr>
+          <td><strong>Phase 6 Costing & Ledger Valuation</strong></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-i">I - Informed</span></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-a">A - Accountable</span></td>
+        </tr>
+        <tr>
+          <td><strong>Melt Loss & Anomaly Resolution</strong></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-r">R - Responsible</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-c">C - Consulted</span></td>
+          <td><span class="tag tag-a">A - Accountable</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 5: Standard Operating Procedures (SOPs) -->
+  <div class="section">
+    <div class="section-title">
+      <span>5. Standard Operating Procedures (By Role)</span>
+    </div>
+    <div class="sop-grid">
+      <div class="sop-card">
+        <div class="sop-role">Stores Department</div>
+        <div class="sop-title">Inward & Issue Execution</div>
+        <ul class="sop-list">
+          <li>Weigh delivery trucks upon arrival (Gross & Tare).</li>
+          <li>Log GRN in MMS with Supplier Challan No, exact item code (e.g. <code>FDY-RM-001</code>), and landed rate.</li>
+          <li>Ensure quarantine until QA testing releases material.</li>
+          <li>Never dispatch material without approved MMS requisition.</li>
+          <li>Complete all pending day entries prior to 12:30.</li>
+        </ul>
+      </div>
+      <div class="sop-card">
+        <div class="sop-role">Foundry Melt Shop</div>
+        <div class="sop-title">Heat Log & Charge Logging</div>
+        <ul class="sop-list">
+          <li>Record furnace number, target grade (e.g. <code>EN-GJS-500-7</code>), and operator name.</li>
+          <li>Weigh and record exact metallic charge: Pig Iron, CRCA Scrap, Returns.</li>
+          <li>Log ferroalloy additions (FeSi, FeSiMg nodulizer, inoculant, recarburizer).</li>
+          <li>Record starting and finishing KWH meter readings and tap temp.</li>
+          <li>Weigh and log liquid metal tapped for melt loss calculation.</li>
+        </ul>
+      </div>
+      <div class="sop-card">
+        <div class="sop-role">Finance & Cost Accounting</div>
+        <div class="sop-title">Valuation & Exceptions</div>
+        <ul class="sop-list">
+          <li>Enforce 13:00 transaction freeze across plants.</li>
+          <li>Execute <code>material_ledger_engine.py</code> and Cost Run Phase 6 at 13:15.</li>
+          <li>Review Anomaly Register: Negative stock balances, abnormal melt losses (&gt; 6.5%).</li>
+          <li>Sign off daily moving weighted-average valuation.</li>
+          <li>Export official valuation snapshot to ERP / Accounts.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6: Anomaly Escalation Protocol -->
+  <div class="section">
+    <div class="section-title">
+      <span>6. Anomaly Resolution & Tolerance Protocol</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Anomaly Type</th>
+          <th>Threshold / Condition</th>
+          <th>Operational Cause</th>
+          <th>Resolution Protocol</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: #dc2626;">Negative Stock</strong></td>
+          <td>Calculated balance &lt; 0</td>
+          <td>Physical issue logged before GRN entry</td>
+          <td>Stores has 30 mins to enter missing GRN or post physical count credit. Escalates to Plant Head at 13:45.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #d97706;">High Melt Loss</strong></td>
+          <td>Melt loss &gt; 6.5% (Warning) &gt; 8% (Critical)</td>
+          <td>Scrap rust, scale error, high slagging</td>
+          <td>Melt supervisor inspects weigh scale calibration and scrap oxidation. Critical heats held for QA review.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #2563eb;">Unmapped Alias</strong></td>
+          <td>Vendor challan text unmatched</td>
+          <td>Supplier changed item description</td>
+          <td>Held in quarantine alias queue. Master Data Admin maps alias to standard nomenclature code.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: #7c3aed;">High Power Consumption</strong></td>
+          <td>&gt; 620 KWH / MT liquid metal</td>
+          <td>Refractory lining erosion or delays</td>
+          <td>Furnace maintenance alerted for lining patch inspection.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-bar">
+    <div>
+      <strong>Vijay Spheroidals Pvt. Ltd.</strong> • Material Management & Costing System v1.0 • Connected to Supabase Cloud
+    </div>
+    <div>
+      <a href="https://frontend-rouge-xi-35.vercel.app/" target="_blank" class="live-link">Open Live Dashboard ↗</a>
+    </div>
+  </div>
+
+</body>
+</html>

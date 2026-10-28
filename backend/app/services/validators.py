@@ -9,10 +9,6 @@ from typing import Optional
 # Format: 2 digits (State code), 5 letters (PAN), 4 digits, 1 letter, 1 alphanumeric (entity code), 'Z', 1 checksum
 GSTIN_REGEX = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
 
-# Item Code Pattern: DEPT-CATEGORY-SERIAL (e.g. FDY-RM-016)
-ITEM_CODE_REGEX = re.compile(r"^[A-Z0-9]{2,5}-[A-Z0-9]{2,5}-[0-9]{3,6}$")
-
-
 def normalize_vendor_name(name: str) -> str:
     """
     Normalizes vendor name for duplicate detection and search indexing.
@@ -41,86 +37,7 @@ def validate_gstin_format(gstin: Optional[str]) -> bool:
     return bool(GSTIN_REGEX.match(clean_gstin))
 
 
-MATERIAL_CATEGORIES = {
-    "RAW_MATERIAL": {
-        "category": "RAW_MATERIAL",
-        "code": "RM",
-        "name": "Raw Material",
-        "description": "Primary melting stock: pig iron, scrap, returns",
-    },
-    "ALLOY": {
-        "category": "ALLOY",
-        "code": "FA",
-        "name": "Ferro Alloy",
-        "description": "Nodulizing agents, ferro-silicon, ferro-manganese",
-    },
-    "CONSUMABLE": {
-        "category": "CONSUMABLE",
-        "code": "CON",
-        "name": "Consumables",
-        "description": "Refractories, sand binders, foundry tooling",
-    },
-    "RETURN": {
-        "category": "RETURN",
-        "code": "RET",
-        "name": "Return Scrap",
-        "description": "Foundry returns, rejected castings, remelt stock",
-    },
-    "BORING": {
-        "category": "BORING",
-        "code": "BOR",
-        "name": "Machine Boring",
-        "description": "Borings and swarf from machining lines",
-    },
-    "GATING": {
-        "category": "GATING",
-        "code": "GAT",
-        "name": "Gatings & Runners",
-        "description": "Runner bars, risers, pour cups",
-    },
-    "MAINTENANCE": {
-        "category": "MAINTENANCE",
-        "code": "MNT",
-        "name": "Maintenance",
-        "description": "Spares, electrical components, furnace relining",
-    },
-    "PACKING": {
-        "category": "PACKING",
-        "code": "PKG",
-        "name": "Packing Materials",
-        "description": "Crates, strapping, protective wrapping",
-    },
-}
-
-
-def get_material_categories_list() -> list[dict]:
-    """Returns the list of supported material master categories."""
-    return list(MATERIAL_CATEGORIES.values())
-
-
-def get_category_code(category: str) -> str:
-    """
-    Maps category name to standard item code abbreviation.
-    """
-    mapping = {
-        "RAW_MATERIAL": "RM",
-        "RAW MATERIAL": "RM",
-        "ALLOY": "FA",
-        "FERRO_ALLOY": "FA",
-        "FERRO ALLOY": "FA",
-        "CONSUMABLE": "CON",
-        "CONSUMABLES": "CON",
-        "RETURN": "RET",
-        "RETURNS": "RET",
-        "BORING": "BOR",
-        "BORINGS": "BOR",
-        "GATING": "GAT",
-        "GATINGS": "GAT",
-        "MAINTENANCE": "MNT",
-        "PACKING": "PKG",
-    }
-    cat_upper = category.strip().upper().replace("-", "_")
-    return mapping.get(cat_upper, cat_upper[:3].replace(" ", ""))
+# Item code and category rules live in app/services/item_nomenclature.py (Item Nomenclature Standard v1.0).
 
 
 def normalize_heat_number(raw_heat_number: str) -> str:

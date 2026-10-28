@@ -2,13 +2,30 @@
 
 ## 1. Master Data & Requisition Rules (Established in Phase 2)
 
-### Rule M1: Item Code Format Convention
-* **Statement:** All material master items must follow the standard identifier pattern: `DEPT-CATEGORY-SERIAL`.
-* **Format:** `^[A-Z0-9]{2,5}-[A-Z0-9]{2,5}-[0-9]{3,6}$` (e.g., `FDY-RM-001`, `MSP-BOR-012`).
-* **Enforcement:** Generated automatically by the `ItemRequestService` upon request approval. Serial numbers increment per `(department, category)` partition. Duplicate item codes are rejected at the database constraint level.
+### Rule M1: Item Code Format — VSPL Item Nomenclature Standard v1.0
+* **Source of truth:** `VSPL_Item_Nomenclature_Standard.docx` (Version 1.0, owner Stores). Machine-readable copy: `backend/app/services/item_nomenclature.py`. Details, legacy report and rollout: `docs/ITEM_CODE_GENERATOR.md`.
+* **Statement:** New items receive a permanent code `DEPT-CAT-###`: 3-letter owning department, 2-letter category, 3-digit serial `001`–`999` (e.g. `FDY-RM-001`, `MCS-CB-004`).
+* **Format (new items):** `^[A-Z]{3}-[A-Z]{2}-[0-9]{3}$`. Departments: FDY, MCS, MNT, QLY, PKD, UTL, GEN. Each of the 15 categories belongs to exactly one department and one cost head (Standard Section 4). Unknown department/category combinations are rejected; codes are never derived from free text.
+* **Enforcement:** Allocated only when Management approves a request, from a row-locked `(department, category)` sequence. The serial is the highest serial ever issued for the pair plus one (existing items active or inactive, the permanent registry and the sequence). Gaps are never filled. Serial `999` exhausted → `409`; four-digit serials are never created. Duplicate codes are also rejected by unique constraints on `material_items.item_code` and `item_code_registry.item_code`.
+
+### Rule M1a: Permanent Codes, Retirement and History
+* **Statement:** A code once issued is never edited, deleted or reused. To stop using an item, mark it Inactive (retire it).
+* **Enforcement:** Every generator-issued code is recorded in the append-only `item_code_registry`. Registration, retirement, reactivation and approved corrections are recorded in the append-only `item_master_audit_logs` (ORM guard, SQLite triggers, PostgreSQL triggers in revision `008_item_code_registry`). Renaming an item (a description correction) and retiring/reactivating it require `change_reason` and the `item:update` permission (Management, Admin). An item missing from an updated workbook is **not** treated as retired.
+
+### Rule M1b: Strict Validation of New Item Requests
+* **Statement:** New requests are validated strictly against v1.0 at draft creation, draft update, submission and approval.
+* **Enforcement:** Department code must be a v1.0 department; category must be an exact v1.0 code or name owned by that department; UOM must be one of `Kg`, `Nos`, `Ltr`, `Pack`, `Roll`, `Mtr` (legacy aliases Kgs→Kg, Pcs/Pieces→Nos, Ltrs→Ltr). The description is rejected for missing text, leading/trailing spaces, repeated spaces, tabs or line breaks; Title Case, ALL CAPS, price and department-code findings are warnings only. Inserts & Tools (IT) descriptions are ISO designations kept verbatim. Violations return `422` with `{message, errors: [{field, code, message}]}`. New departments or categories require an approved update to the standard.
+
+### Rule M1c: Duplicate Detection
+* **Statement:** One material, one code. Search the master before registering.
+* **Enforcement:** Descriptions are compared by normalised key (lower-case, punctuation to spaces, collapsed whitespace) and by the same key with spaces removed, across all items (active and inactive, every department), approved material aliases, and open requests. Matches with items or aliases, or with a `SUBMITTED` request, block with `409`; a matching `DRAFT` request is a warning. A non-reserving preview (`POST /api/v1/item-codes/preview`) shows errors, warnings, duplicates and the provisional code.
+
+### Rule M1d: Legacy Data Reconciliation (Grandfathering)
+* **Statement:** Existing items whose codes or categories are outside v1.0 are grandfathered. They are not rejected, renamed, deleted or deactivated because of non-compliance, and remain readable and usable.
+* **Enforcement:** Legacy compatibility is separate from new-item validation: new requests are never relaxed to accommodate legacy data. Non-standard records are reported read-only by `GET /api/v1/item-codes/compliance`; fixing or migrating them is a separate, approved task.
 
 ### Rule M2: Separation of Duties — Prohibition of Self-Approval
-* **Statement:** No actor may approve an item creation request that they themselves initiated.
+* **Statement:** No actor may approve an item creation request that they themselves initiated. Stores raises item requests; Management (or Admin) approves them.
 * **Enforcement:** If `reviewer_id == requester_id` during an approval call, the backend immediately halts the transaction and returns `HTTP 403 Forbidden` (`Self-approval violation: Requester cannot approve their own item request`).
 
 ### Rule M3: Mandatory Rejection Justification

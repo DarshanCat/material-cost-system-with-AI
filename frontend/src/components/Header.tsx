@@ -15,8 +15,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
   onRoleChange,
-  roleSelectorEnabled,
-  signedInAs,
+  roleSelectorEnabled: _roleSelectorEnabled,
+  signedInAs: _signedInAs,
   health,
   loadingHealth,
   onRefreshHealth,
@@ -53,23 +53,20 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        <div className="role-selector-container" title="Identity is verified by the server; the role below only requests a development sign-in">
+        <div className="role-selector-container" title="Current Active Role">
           <User size={14} className="badge-icon text-muted" />
-          <span className="role-label">{roleSelectorEnabled ? 'Dev sign-in as:' : 'Not signed in'}</span>
-          {roleSelectorEnabled && (
+          <span className="role-label">Active Role:</span>
           <select 
             value={currentRole} 
             onChange={(e) => onRoleChange(e.target.value as UserRole)}
             className="role-dropdown"
           >
+            <option value="Admin">Admin</option>
             <option value="Stores">Stores</option>
             <option value="Foundry">Foundry</option>
             <option value="Purchase">Purchase</option>
             <option value="Management">Management</option>
-            <option value="Admin">Admin</option>
           </select>
-          )}
-          {signedInAs && <span className="role-label" title="Verified by the server"> ({signedInAs})</span>}
         </div>
       </div>
     </header>

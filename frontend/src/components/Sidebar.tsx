@@ -13,7 +13,8 @@ import {
   Scale,
   Layers,
   FileSpreadsheet,
-  Lock
+  Lock,
+  ShoppingCart
 } from 'lucide-react';
 import type { ModuleId } from '../types';
 
@@ -71,6 +72,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
   ];
 
   const operationalNavItems: NavItem[] = [
+    {
+      id: 'purchase-orders',
+      label: 'Purchase Orders (PO)',
+      icon: <ShoppingCart size={18} />,
+      badge: 'Active',
+    },
     {
       id: 'grn-management',
       label: 'Goods Receipt (GRN)',

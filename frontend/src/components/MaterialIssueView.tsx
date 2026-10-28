@@ -9,8 +9,10 @@ import {
   Flame,
   RefreshCw
 } from 'lucide-react';
-import type { MaterialIssue, MaterialItem, UOM, Department, UserRole } from '../types';
+import type { MaterialIssue, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
+import { useReferenceData } from '../hooks/useReferenceData';
+import { ReferenceDataNotice } from './ReferenceDataNotice';
 
 interface MaterialIssueViewProps {
   currentRole: UserRole;
@@ -21,9 +23,8 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   const [actionError, setActionError] = useState<string | null>(null);
   const [issues, setIssues] = useState<MaterialIssue[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [items, setItems] = useState<MaterialItem[]>([]);
-  const [uoms, setUoms] = useState<UOM[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const refs = useReferenceData(['items', 'uoms', 'departments']);
+  const { items, uoms, departments } = refs;
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedIssue, setSelectedIssue] = useState<MaterialIssue | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -53,7 +54,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
       const res = await apiFetch('/api/v1/issues/');
       if (res.ok) {
         const data = await res.json();
-        setIssues(data);
+        setIssues(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch (err) {
       console.error('Error fetching issue slips:', err);
@@ -62,24 +63,8 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
     }
   };
 
-  const fetchReferences = async () => {
-    try {
-      const [iRes, uRes, dRes] = await Promise.all([
-        apiFetch('/api/v1/items?limit=500'),
-        apiFetch('/api/v1/uoms'),
-        apiFetch('/api/v1/departments'),
-      ]);
-      if (iRes.ok) setItems(await iRes.json());
-      if (uRes.ok) setUoms(await uRes.json());
-      if (dRes.ok) setDepartments(await dRes.json());
-    } catch (err) {
-      console.error('Error fetching references:', err);
-    }
-  };
-
   useEffect(() => {
     fetchIssues();
-    fetchReferences();
   }, []);
 
   const handleAddLine = () => {
@@ -218,6 +203,8 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
           </ul>
         </div>
       )}
+
+      <ReferenceDataNotice refs={refs} />
 
       {/* Filter Toolbar */}
       <div className="filter-toolbar">
@@ -379,6 +366,9 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                 <button type="button" className="close-btn" onClick={() => setShowModal(false)}><X size={18} /></button>
               </div>
               <div className="modal-body">
+                <div className="mb-3">
+                  <ReferenceDataNotice refs={refs} />
+                </div>
                 {formError && (
                   <div className="alert-error p-3 mb-3 bg-red-50 text-red-700 text-sm rounded">
                     {formError}
@@ -404,7 +394,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                       onChange={(e) => setIssuingDeptId(e.target.value ? Number(e.target.value) : '')}
                       required
                     >
-                      <option value="">-- Select Issuing Dept --</option>
+                      <option value="">{refs.placeholder('departments', '-- Select Issuing Dept --')}</option>
                       {departments.map((d) => (
                         <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
                       ))}
@@ -418,7 +408,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                       onChange={(e) => setReceivingDeptId(e.target.value ? Number(e.target.value) : '')}
                       required
                     >
-                      <option value="">-- Select Receiving Dept --</option>
+                      <option value="">{refs.placeholder('departments', '-- Select Receiving Dept --')}</option>
                       {departments.map((d) => (
                         <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
                       ))}
@@ -468,7 +458,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                           onChange={(e) => handleLineChange(idx, 'material_item_id', e.target.value)}
                           required
                         >
-                          <option value="">-- Select Material Item --</option>
+                          <option value="">{refs.placeholder('items', '-- Select Material Item --')}</option>
                           {items.map((it) => (
                             <option key={it.id} value={it.id}>{it.item_code} - {it.name}</option>
                           ))}
@@ -482,7 +472,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                           onChange={(e) => handleLineChange(idx, 'uom_id', e.target.value)}
                           required
                         >
-                          <option value="">-- UOM --</option>
+                          <option value="">{refs.placeholder('uoms', '-- UOM --')}</option>
                           {uoms.map((u) => (
                             <option key={u.id} value={u.id}>{u.code}</option>
                           ))}
@@ -519,7 +509,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="erp-btn btn-primary" disabled={submitting}>
+                <button type="submit" className="erp-btn btn-primary" disabled={submitting || refs.unavailable}>
                   {submitting ? 'Creating...' : 'Create Draft Issue Slip'}
                 </button>
               </div>

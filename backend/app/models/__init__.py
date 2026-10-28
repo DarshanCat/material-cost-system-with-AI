@@ -8,6 +8,7 @@ from app.models.uom import UOM
 from app.models.item import MaterialItem
 from app.models.vendor import Vendor
 from app.models.item_request import ItemRequest, ItemRequestAuditLog, RequestStatus
+from app.models.item_code import ItemCodeSequence, ItemCodeRegistry, ItemMasterAuditLog
 from app.models.grn import GRNHeader, GRNLineItem, GRNAuditLog, GRNSourceType, GRNStatus
 from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueAuditLog, IssueStatus
 from app.models.waste import (
@@ -77,6 +78,9 @@ __all__ = [
     "ItemRequest",
     "ItemRequestAuditLog",
     "RequestStatus",
+    "ItemCodeSequence",
+    "ItemCodeRegistry",
+    "ItemMasterAuditLog",
     "GRNHeader",
     "GRNLineItem",
     "GRNAuditLog",
@@ -138,3 +142,8 @@ __all__ = [
 from app.db.ledger_guard import install_ledger_guard  # noqa: E402
 
 install_ledger_guard()
+
+# Append-only protection for issued item codes and item master history; see app/db/item_code_guard.py
+from app.db.item_code_guard import install_item_code_guard  # noqa: E402
+
+install_item_code_guard()

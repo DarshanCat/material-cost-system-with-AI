@@ -45,6 +45,13 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
 
   const [exceptions, setExceptions] = useState<CostingExceptionsReport | null>(null);
 
+  // Configurable Heat Costing & Yield Policy
+  const [heatPowerTariff, setHeatPowerTariff] = useState<number>(8.50);
+  const [heatConsumableOverheadPerMt, setHeatConsumableOverheadPerMt] = useState<number>(1200.00);
+  const [heatWarningMeltLossPct, setHeatWarningMeltLossPct] = useState<number>(6.5);
+  const [heatCriticalMeltLossPct, setHeatCriticalMeltLossPct] = useState<number>(8.0);
+  const [showHeatConfig, setShowHeatConfig] = useState<boolean>(false);
+
   const canRunCosting = currentRole === 'Management' || currentRole === 'Admin';
 
   // 1. Fetch Inventory Valuation Report
@@ -206,6 +213,9 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
       fetchCostingRuns();
     } else if (activeTab === 'exceptions') {
       fetchExceptions();
+    } else if (activeTab === 'rate-journal' && !itemJournal) {
+      const defaultId = valuationReport?.items?.[0]?.material_item_id || 1;
+      fetchItemJournal(defaultId);
     }
   }, [activeTab]);
 
@@ -235,42 +245,45 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
   const renderExceptionCard = (
     title: string,
     description: string,
-    rows: CostingExceptionRow[],
+    rows: CostingExceptionRow[] = [],
     emptyText: string
-  ) => (
-    <div className="erp-card mb-4">
-      <h4>
-        {title} ({rows.length})
-      </h4>
-      <p>{description}</p>
-      {rows.length === 0 ? (
-        <p className="text-muted">{emptyText}</p>
-      ) : (
-        <table className="erp-table">
-          <thead>
-            <tr>
-              <th>Item Code</th>
-              <th>Item Name</th>
-              <th>Quantity</th>
-              <th>UOM</th>
-              <th>Issue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.material_item_id}>
-                <td>{row.item_code}</td>
-                <td>{row.item_name}</td>
-                <td className="text-right">{row.quantity}</td>
-                <td>{row.uom}</td>
-                <td>{row.issue}</td>
+  ) => {
+    const safeRows = rows || [];
+    return (
+      <div className="erp-card mb-4">
+        <h4>
+          {title} ({safeRows.length})
+        </h4>
+        <p>{description}</p>
+        {safeRows.length === 0 ? (
+          <p className="text-muted">{emptyText}</p>
+        ) : (
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Item Code</th>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>UOM</th>
+                <th>Issue</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
+            </thead>
+            <tbody>
+              {safeRows.map((row) => (
+                <tr key={row.material_item_id}>
+                  <td>{row.item_code}</td>
+                  <td>{row.item_name}</td>
+                  <td className="text-right">{row.quantity}</td>
+                  <td>{row.uom}</td>
+                  <td>{row.issue}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="erp-page-container">
@@ -344,7 +357,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
       {/* Tab 1: Inventory Valuation */}
       {activeTab === 'valuation' && (
         <div className="erp-tab-content">
-          <div className="erp-filter-bar">
+          <div className="erp-filter-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
             <div className="erp-form-group">
               <label>As Of Date:</label>
               <input
@@ -468,11 +481,31 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
       {/* Tab 2: Item Rate Evolution & Journal */}
       {activeTab === 'rate-journal' && (
         <div className="erp-tab-content">
-          <div className="erp-filter-bar">
-            <p>
-              Inspect the deterministic running average calculation movement-by-movement for an
-              item.
+          <div className="erp-filter-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+            <p style={{ margin: 0 }}>
+              Inspect the deterministic running average calculation movement-by-movement for an item.
             </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label htmlFor="journal-select-item" style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                Select Material:
+              </label>
+              <select
+                id="journal-select-item"
+                className="role-dropdown"
+                value={itemJournal?.material_item_id || ''}
+                onChange={(e) => {
+                  const id = Number(e.target.value);
+                  if (id) fetchItemJournal(id);
+                }}
+                style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+              >
+                {(valuationReport?.items || []).map((it) => (
+                  <option key={it.material_item_id} value={it.material_item_id}>
+                    {it.item_code} — {it.item_name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {itemJournal ? (
@@ -564,11 +597,94 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
       {activeTab === 'heats' && (
         <div className="erp-tab-content">
           <div className="erp-section-header">
-            <h3>Heat Charge Material Cost & Cost Per Kilogram</h3>
-            <button className="erp-btn btn-secondary" onClick={fetchHeatCosts}>
-              Refresh Heats
-            </button>
+            <div>
+              <h3>Heat Charge Material Cost & Cost Per Kilogram</h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#64748b' }}>
+                Combines raw material moving average costs, power consumption, and consumable overheads to calculate net liquid metal cost per kg.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className={`erp-btn ${showHeatConfig ? 'btn-primary' : 'btn-secondary'}`} 
+                onClick={() => setShowHeatConfig(!showHeatConfig)}
+              >
+                ⚡ Cost & Yield Policy
+              </button>
+              <button className="erp-btn btn-secondary" onClick={fetchHeatCosts}>
+                Refresh Heats
+              </button>
+            </div>
           </div>
+
+          {/* Configurable Policy Controls */}
+          {showHeatConfig && (
+            <div style={{
+              background: '#ffffff',
+              border: '1.5px solid #bfdbfe',
+              borderRadius: '8px',
+              padding: '14px 18px',
+              marginBottom: '16px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e3a8a' }}>
+                  ⚡ Costing & Yield Policy Parameters
+                </span>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                  Dynamic recalculation of liquid metal costing across all induction furnace heats
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    Electric Power Tariff (₹/KWH)
+                  </label>
+                  <input 
+                    type="number" 
+                    step="0.1" 
+                    value={heatPowerTariff} 
+                    onChange={(e) => setHeatPowerTariff(Number(e.target.value) || 0)}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    Consumables Overhead (₹/MT)
+                  </label>
+                  <input 
+                    type="number" 
+                    step="50" 
+                    value={heatConsumableOverheadPerMt} 
+                    onChange={(e) => setHeatConsumableOverheadPerMt(Number(e.target.value) || 0)}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    Yield Warning Threshold (%)
+                  </label>
+                  <input 
+                    type="number" 
+                    step="0.1" 
+                    value={heatWarningMeltLossPct} 
+                    onChange={(e) => setHeatWarningMeltLossPct(Number(e.target.value) || 0)}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                    Critical Hold Threshold (%)
+                  </label>
+                  <input 
+                    type="number" 
+                    step="0.1" 
+                    value={heatCriticalMeltLossPct} 
+                    onChange={(e) => setHeatCriticalMeltLossPct(Number(e.target.value) || 0)}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="erp-table-container">
             <table className="erp-table">
@@ -579,46 +695,85 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                   <th>Furnace</th>
                   <th>Charged Qty (kg)</th>
                   <th>Metal Tapped (kg)</th>
-                  <th>Total Material Cost (₹)</th>
-                  <th>Cost per kg (₹)</th>
-                  <th>Valued Lines</th>
-                  <th>Status</th>
+                  <th>Melt Loss / Yield</th>
+                  <th>Material Cost (₹)</th>
+                  <th>Melting Power (₹)</th>
+                  <th>Overhead (₹)</th>
+                  <th>Net Cost / kg</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {heatCosts.map((h) => (
-                  <tr key={h.heat_id}>
-                    <td>
-                      <strong>{h.heat_number}</strong>
-                    </td>
-                    <td>{h.heat_date}</td>
-                    <td>{h.furnace_id ?? '—'}</td>
-                    <td className="text-right">{h.total_charged_quantity}</td>
-                    <td className="text-right">{h.metal_tapped_weight || '—'}</td>
-                    <td className="text-right">
-                      ₹{Number(h.total_material_cost).toLocaleString('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="text-right font-bold">
-                      {h.cost_per_kg ? `₹${h.cost_per_kg} / kg` : '—'}
-                    </td>
-                    <td>
-                      {h.valued_lines} / {h.total_lines}
-                    </td>
-                    <td>{getStatusBadge(h.status)}</td>
-                    <td>
-                      <button
-                        className="erp-btn btn-sm btn-outline"
-                        onClick={() => setSelectedHeat(h)}
-                      >
-                        Inspect Breakdown
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {heatCosts.map((h) => {
+                  const grossCharged = Number(h.total_charged_quantity) || 0;
+                  const metalTapped = Number(h.metal_tapped_weight) || 0;
+                  const meltLossKg = (grossCharged > 0 && metalTapped > 0) ? Math.max(0, grossCharged - metalTapped) : 0;
+                  const meltLossPct = grossCharged > 0 ? (meltLossKg / grossCharged) * 100 : null;
+                  const yieldPct = meltLossPct !== null ? 100 - meltLossPct : null;
+                  
+                  // Power & Overhead based on policy
+                  const estKwh = (metalTapped / 1000) * 550;
+                  const powerCost = estKwh * heatPowerTariff;
+                  const overheadCost = (metalTapped / 1000) * heatConsumableOverheadPerMt;
+                  const materialCost = Number(h.total_material_cost) || 0;
+                  const totalDirectCost = materialCost + powerCost + overheadCost;
+                  const netCostPerKg = metalTapped > 0 ? (totalDirectCost / metalTapped) : (h.cost_per_kg ? Number(h.cost_per_kg) : null);
+
+                  const isCritical = meltLossPct !== null && meltLossPct > heatCriticalMeltLossPct;
+                  const isWarning = meltLossPct !== null && meltLossPct > heatWarningMeltLossPct;
+
+                  return (
+                    <tr key={h.heat_id}>
+                      <td>
+                        <strong>{h.heat_number}</strong>
+                      </td>
+                      <td>{h.heat_date}</td>
+                      <td>{h.furnace_id ?? '—'}</td>
+                      <td className="text-right">{grossCharged.toLocaleString()}</td>
+                      <td className="text-right">{metalTapped > 0 ? `${metalTapped.toLocaleString()}` : '—'}</td>
+                      <td>
+                        {meltLossPct !== null ? (
+                          <div>
+                            <span className={`badge ${isCritical ? 'badge-danger' : isWarning ? 'badge-warning' : 'badge-success'}`} style={{ fontWeight: 700 }}>
+                              {meltLossPct.toFixed(2)}% Loss ({yieldPct?.toFixed(1)}% Yield)
+                            </span>
+                            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>
+                              {meltLossKg.toFixed(1)} kg lost
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="text-right">
+                        ₹{materialCost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-right">
+                        ₹{powerCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="text-right">
+                        ₹{overheadCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      </td>
+                      <td className="text-right font-bold">
+                        {netCostPerKg !== null ? (
+                          <span style={{ color: '#065f46', fontSize: '13px' }}>
+                            ₹{netCostPerKg.toFixed(2)} / kg
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          className="erp-btn btn-sm btn-outline"
+                          onClick={() => setSelectedHeat(h)}
+                        >
+                          Breakdown
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -636,7 +791,66 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                   </button>
                 </div>
                 <div className="erp-modal-body">
-                  <p>
+                  {(() => {
+                    const grossCharged = Number(selectedHeat.total_charged_quantity) || 0;
+                    const metalTapped = Number(selectedHeat.metal_tapped_weight) || 0;
+                    const meltLossKg = (grossCharged > 0 && metalTapped > 0) ? Math.max(0, grossCharged - metalTapped) : 0;
+                    const meltLossPct = grossCharged > 0 ? (meltLossKg / grossCharged) * 100 : null;
+                    const yieldPct = meltLossPct !== null ? 100 - meltLossPct : null;
+                    const estKwh = (metalTapped / 1000) * 550;
+                    const powerCost = estKwh * heatPowerTariff;
+                    const overheadCost = (metalTapped / 1000) * heatConsumableOverheadPerMt;
+                    const materialCost = Number(selectedHeat.total_material_cost) || 0;
+                    const totalDirectCost = materialCost + powerCost + overheadCost;
+                    const netCostPerKg = metalTapped > 0 ? (totalDirectCost / metalTapped) : (selectedHeat.cost_per_kg ? Number(selectedHeat.cost_per_kg) : null);
+
+                    return (
+                      <div style={{
+                        background: '#f8fafc',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '12px 16px',
+                        marginBottom: '16px'
+                      }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>Charged Weight</div>
+                            <div style={{ fontSize: '14px', fontWeight: 700 }}>{grossCharged.toLocaleString()} kg</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>Liquid Metal Tapped</div>
+                            <div style={{ fontSize: '14px', fontWeight: 700 }}>{metalTapped > 0 ? `${metalTapped.toLocaleString()} kg` : '—'}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>Melt Loss (%)</div>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: meltLossPct && meltLossPct > heatWarningMeltLossPct ? '#d97706' : '#059669' }}>
+                              {meltLossPct !== null ? `${meltLossPct.toFixed(2)}% (${yieldPct?.toFixed(1)}% Yield)` : '—'}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>Power Cost (@₹{heatPowerTariff}/KWH)</div>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>
+                              ₹{powerCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: '#64748b' }}>Consumables Overhead</div>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>
+                              ₹{overheadCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                            </div>
+                          </div>
+                          <div style={{ background: '#ecfdf5', padding: '6px 10px', borderRadius: '4px', border: '1px solid #a7f3d0' }}>
+                            <div style={{ fontSize: '11px', color: '#065f46', fontWeight: 700 }}>Net Cost / Kg</div>
+                            <div style={{ fontSize: '15px', fontWeight: 800, color: '#065f46' }}>
+                              {netCostPerKg ? `₹${netCostPerKg.toFixed(2)} / kg` : '—'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  <p style={{ marginTop: '10px' }}>
                     Scope: <strong>{selectedHeat.cost_scope}</strong> | Denominator:{' '}
                     <strong>{selectedHeat.denominator_type}</strong> (
                     {selectedHeat.cost_denominator_value} kg)
@@ -749,7 +963,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
           {/* Run Comparison Form */}
           <div className="erp-card mt-4">
             <h4>Compare Costing Runs Side-by-Side</h4>
-            <div className="erp-filter-bar">
+            <div className="erp-filter-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
               <div className="erp-form-group">
                 <label>Run 1 (Baseline):</label>
                 <select

@@ -1,0 +1,227 @@
+item_code,description,ledger_uom,approved_uom,ledger_opening_stock,ledger_closing_stock_2026_10_16,opening_rate,status
+FDY-RM-001,Bial,Kg,Kg,500,406.9400000000001,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-002,Borings-450/10,Kg,Kg,17500,-25994,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-004,Borings-500,Kg,Kg,7600,7904,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-006,Copper,Kg,Kg,76,83.74900000000002,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-007,CRC Scrap- High MN,Kg,Kg,19000,12299.63,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-008,CRC Scrap-Low MN,Kg,Kg,4000,1472,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-009,Gattings-450/10,Kg,Kg,600,-19078,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-013,Graphite Carbonizer,Kg,Kg,1350,5318.708999999999,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-014,Inoculant 15,Kg,Kg,100,100,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-015,Inoculant 250,Kg,Kg,877,2887.77,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-016,Magnesium,Kg,Kg,800,126.4549999999999,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-017,Manganese,Kg,Kg,49,500.373,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-020,Silicon,Kg,Kg,600,4249.440000000001,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-021,Slax,Kg,Kg,675,1200,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-022,Ziman,Kg,Kg,450,1200.46,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-023,Nickel,Kg,Kg,43,41.85,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-024,Ferro Moly,Kg,Kg,35,35,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-RM-026,Ferro Chrome,Kg,Kg,5,5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-001,SVLHTC(MGS),Kg,Kg,2100,1825,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-002,Quick Cast,Kg,Kg,775,1325,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-003,AR Heat,Kg,Kg,50,225,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-004,Mica Sheet,Kg,Kg,1.5,25.5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-005,SS Needles,Kg,Kg,60,38,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-008,Anms Wha,Kg,Kg,575,525,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-009,Minro Plast,Kg,Kg,475,725,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-LN-010,Terrocote,Kg,Kg,150,150,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-MD-001,Pre Coated Sand,Kg,Kg,8450,8433,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-MD-002,Chromite Sand,Kg,Kg,4450,6000,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-MD-003,Holcote-100,Kg,Kg,1720,3630,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-CN-001,CF Blanket,Kg,Kg,3,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-CN-002,Mould Sealing Rope,Kg,Kg,50,500,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-CN-003,Emery Paper 600 grade,Nos,Kg,11,11,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+FDY-CN-004,Tempo Brush,Kg,Kg,9,8,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-CN-008,MS Flat (Slag Removal),Nos,Kg,1,0,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+FDY-CN-013,Grinding Wheel 7 Inch,Nos,Kg,66,5,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+FDY-CN-014,Grinding Wheel 5 Inch,Nos,Kg,86,17,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+FDY-CN-016,Flap Disk 5 Inch,Nos,Kg,43,-22,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+FDY-CN-017,Flap Disk 4 Inch,Nos,Kg,45,15,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+FDY-CN-019,Welding Coil,Kg,Kg,680,613,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-CN-020,Wire Brush,Kg,Kg,56,53,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-001,Band Saw Blade 3/4 3505,Nos,Nos,9,5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-002,Band Saw Blade 3/4 4100,Nos,Nos,21,6,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-004,"Power Hax Blade 24""",Nos,Nos,8,8,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-005,"Power Hax Blade 20""",Nos,Nos,16,16,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-006,"Power Hax Blade 16""",Nos,Nos,12,12,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-007,"Power Hax Blade 18""",Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-CB-009,Tenryu TCT C/Saw Blade Dia 420X2.8X2.3X50X60T,Nos,Nos,4,0,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-OL-002,WD Spray,Nos,Ltr,2,4,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+MNT-OL-006,SYSTEM-68,Ltr,Ltr,180,15,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-OL-008,Gear Oil,Ltr,Ltr,60,60,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-OL-010,Jam Oil,Ltr,Ltr,25,25,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-OL-012,Hicut 590 Oil-Machine Shop,Ltr,Ltr,180,130,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-OL-014,Suprabha Rust Preventive Oil-Debburing,Ltr,Ltr,30,590,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-OL-015,Hiclean-LS40(Stansoil) -Debburing,Ltr,Ltr,90,90,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-002,Black Paint,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-003,Red Oil Paint,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-004,White Paint,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-005,Yellow Paint,Nos,Nos,7,9,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-006,Blue Paint,Nos,Nos,13,10,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-007,Red Paint,Nos,Nos,4,14,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-008,Green Paint,Nos,Nos,5,5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+QLY-QC-001,Lavigated Alumina,Nos,Nos,2,0,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+QLY-QC-003,Ethanol,Nos,Nos,3,1.5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-005,Safety Goggles,Nos,Nos,10,46,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-006,Hand Gloves PU Coated,Nos,Nos,408,-305,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-007,Leather Hand Gloves Left Hand,Nos,Nos,126,-61,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-008,Leg Guard,Nos,Nos,42,36,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-010,Tiger Shoe 11 Inches,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-019,"Foundry Green Soul Shoe 11""",Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+GEN-SF-023,Appron,Nos,Nos,40,34,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-001,Bearing 32212,Nos,Nos,6,16,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-005,Bearing 6202-2Z/C3,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-006,Bearing 6205 -2Z,Nos,Nos,4,7,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-008,Bearing 6310- 2Z,Nos,Nos,6,6,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-010,Bearing 30204 -J2/Q,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-011,Bearing 30206-J2/Q,Nos,Nos,4,0,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-012,Bearing 32210-J2/Q,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-013,Bearing 32214-J2/Q,Nos,Nos,3,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-016,Bearing 6012-2Z,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-017,Bearing 6206-2Z,Nos,Nos,1,5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-018,Bearing 62082Z,Nos,Nos,4,4,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-019,Bearing 62092z,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-020,Bearing 62122z/c3,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-023,Bearing GEM-51205,Nos,Nos,4,4,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-024,Bearing KKU51107,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-025,Bearing 63052Z,Nos,Nos,5,5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-026,Bearing 6007 /2Z,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-027,Bearing 32216 SKF,Nos,Nos,4,-2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-028,Bearing 32218 SKF,Nos,Nos,1,-3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-033,Bearing 62012Z,Nos,Nos,6,6,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-034,Bearing VKT 8001,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-035,Bearing 330201,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-001,Belt C-68,Nos,Nos,11,11,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-003,Belt A-49,Nos,Nos,10,10,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-005,Belt B -50,Nos,Nos,5,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-006,Belt B-52,Nos,Nos,1,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-007,Belt B- 54,Nos,Nos,13,10,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-008,Belt B-55,Nos,Nos,19,16,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-009,Belt B-58,Nos,Nos,22,14,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-010,Belt B-57,Nos,Nos,8,5,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-011,Belt B-65,Nos,Nos,6,9,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-012,Belt B-66,Nos,Nos,6,0,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-013,Belt B-67,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-015,Belt A-72,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-016,Belt B-73,Nos,Nos,5,-1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-017,Belt B-82,Nos,Nos,16,10,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-018,Belt B-81,Nos,Nos,17,17,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-019,Belt C-70,Nos,Nos,8,8,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-022,Belt C-66,Nos,Nos,8,-1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-023,Belt B-100,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-025,Belt B-68,Nos,Nos,19,19,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BL-026,Belt B-92,Nos,Nos,11,11,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-003,M12 Nut,Nos,Nos,50,-34,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-004,M12 Washer,Nos,Nos,226,994,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-103,M10 Nut,Nos,Nos,100,91,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-104,M12 HT Nut,Nos,Nos,80,1040,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-113,M12X35 Allen Bolt,Nos,Nos,44,18,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-114,M20x40 Allen Bolt,Nos,Nos,64,1059,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BN-116,M12x90 Allen Bolt,Nos,Nos,44,12,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+UTL-FU-001,Diesel,Ltr,Ltr,960,1434,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-037,Bearing 6008-2Z,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-038,Bearing 6004-2Z,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-041,Bearing 51109 (SKF),Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-042,Bearing 6207-2Z/C3,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-044,Bearing VKT 8001 (30210),Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-045,Bearing 32210 52/1Q,Nos,Nos,3,3,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-046,Bearing 30205 52/Q,Nos,Nos,7,7,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MNT-BR-047,Bearing NBC-6012RSS,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+PKD-PK-007,Packing Tape Brown,Pack,Nos,88,55,NONE (no rate in any source),BLOCKED_UOM_MISMATCH_WITH_APPROVED_MASTER
+MNT-BL-027,Belt B-53,Nos,Nos,8,8,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-013,Aluminium Paint,Nos,Nos,1,1,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-014,Golden Yellow,Nos,Nos,15,9,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-015,Bus Green,Nos,Nos,15,15,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-018,P.O. Red,Nos,Nos,10,10,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+FDY-PT-026,Red Oxide,Nos,Nos,2,2,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+MCS-IT-042,Boring Tool,Nos,,3,-29,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MCS-IT-043,Turning Tool,Nos,,8,-128,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-048,Bearing 63062z,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-049,Bearing 63072z,Nos,,2,2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-050,Bearing 32211,Nos,,6,-8,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-051,Bearing 51104,Nos,,5,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-022,"Cutting Wheel 5""",Nos,,300,308,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-025,Buffing Wheel 20 Grit,Nos,,36,36,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-026,Buffing Wheel 40 Grit,Nos,,150,49,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-027,Buffing Wheel 60 Grit,Nos,,40,22,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-028,Buffing Wheel 80 Grit,Nos,,11,10,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-029,"Buffing Wheel 6""",Nos,,22,105,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-030,"Grinding Wheel 7"" Big",Nos,,11,11,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-031,Core Fix,Kg,,20,19,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MCS-CB-010,60 Teeth Blade,Nos,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-032,Wax Yellow Chalk,Nos,,130,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+PKD-PK-009,Axxanol 33CD,Nos,,70,105,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-034,Rubber Wheel 15mm,Nos,,45,145,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-041,Rubber Wheel Core,Nos,,12,12,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-024,Leather Hand Gloves - Right Hand,Nos,,6,-26,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BL-029,Belt -51,Nos,,12,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-042,Chalk Piece,Nos,,700,700,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-043,Wax Marker,Box,,17,14.7,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BL-030,Timing Belt 1136,Nos,,5,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+UTL-FU-009,Argon Gas,Kg,,2,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+QLY-QC-012,Carbon Cup 2 Tellorium,Nos,,400,-1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+QLY-QC-013,Carbon Cup 4 Tellorium,Nos,,400,400,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-GC-002,Cotton Waste,Kg,,5,-45,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+PKD-PK-021,Zip Cover,Nos,,2000,1999,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-055,Ceramic Temperature Tip,Nos,,700,500,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-OL-017,Soap Oil,Ltr,,25,25,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+PKD-PK-026,Foam Sheet,Nos,,2,2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-GC-018,Broom Stick,Nos,,4,-2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-GC-020,Mop Buffing Wheel 6 Inch x 1 Inch,Nos,,93,147,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+QLY-QC-014,Hydrochloric Acid,Ltr,,40,40,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-060,Gas Hose Pipe,Nos,,2,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-FL-001,Makino Filter Roll,Nos,,8,6,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-FL-002,AMS Filter Roll,Nos,,5,4,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BN-134,M10 Plain Washer Golden Colour,Nos,,400,276,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-LN-011,ANMSZWSC,Kg,,970,990,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-LN-012,MGS (SVGSTC),Kg,,1425,875,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-RM-029,Chromium,Kg,,10,10,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-LN-013,Haicut 590,Ltr,,60,40,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-LN-014,System 46,Ltr,,30,30,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-OL-018,High Temperature Grease,Kg,,13,21,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-PT-031,P O Black,Ltr,,2,2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-PT-032,P O Aluminium,Ltr,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-PT-033,P H Blue,Ltr,,13,13,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-060,Bearing 32212-J2/Q,Nos,,2,-2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-061,Bearing 32218-J2/Q,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-062,Bearing 32216-J2/Q,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-063,Bearing 6206-2Z/C3,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-064,Bearing 30205-J2/Q,Nos,,7,7,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-065,Bearing 6205-2Z/C3,Nos,,5,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-066,Bearing 6305-2Z/C3,Nos,,7,7,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-067,Bearing 6307-2Z/C3,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-068,Bearing 6310-2Z/C3,Nos,,6,6,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-069,Bearing 51107,Nos,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-070,Bearing 180313,Nos,,2,2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-071,Bearing 6200-2Z,Nos,,26,26,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-072,Bearing 30207-J2/Q,Nos,,4,4,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-073,Bearing 6201-2Z/C3,Nos,,6,6,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-074,Bearing 32006-X/Q,Nos,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-075,Bearing 6208-2Z/C3,Nos,,4,4,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-076,Bearing 6204-2Z/C3,Nos,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-077,Bearing 51205,Nos,,5,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-078,Bearing 330201/Q,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-079,Bearing 007-2Z,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-080,Bearing NBC HM89446 / HM894110,Nos,,6,6,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-BR-081,Bearing GE 200,Nos,,8,8,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+PKD-PK-029,Logo Packing Tape,Nos,,116,116,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+PKD-PK-030,White Packing Tape,Nos,,48,48,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+QLY-QC-024,Touch Filming Big,Nos,,12,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+QLY-QC-026,Solvent Developer SD-30,Nos,,60,30,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-OL-019,Suprabha Oil,Ltr,,25,25,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-OL-020,Castrol Engine Oil,Ltr,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-OL-021,Distilled Water,Ltr,,120,120,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-CN-063,"8"" Stone Grinding Wheel",Nos,,12,10,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-027,Yellow Helmet,Nos,,7,7,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-028,"Tiger Shoe 6""",Nos,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-029,"Green Soul Shoe 6""",Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-030,"Furnace Shoe 9""",Nos,,2,2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-031,"Furnace Shoe 10""",Nos,,2,2,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-SF-032,"Staff Shoe 7""",Nos,,3,3,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MNT-FL-003,Makino Filter Media,Nos,,1,1,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-RM-030,Adani Borings,Kg,,1025,1455,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+FDY-RM-032,CPC Coke,Kg,,1450,2450,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+GEN-GC-029,Air Gun,Nos,,3,5,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+MCS-SP-002,Coupling Pin 10MM With Rubber Bush,Nos,,6,6,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER
+PKD-PK-001,Axxanol(Zerust)-Packing,Nos,Nos,35,-70,NONE (no rate in any source),CANDIDATE_IF_CERTIFIED (G7) — not importable today
+PKD-PK-031,Bubble Sheet,Roll,,1,4,NONE (no rate in any source),BLOCKED_ITEM_NOT_IN_APPROVED_MASTER

@@ -16,6 +16,7 @@ from app.schemas.grn import (
     GRNLineItemResponse,
     GRNAuditLogResponse,
     GRNStatusAction,
+    GRNPaymentAction,
 )
 from app.models.grn import GRNHeader, GRNLineItem
 from app.schemas.reversal import DocumentReversalRequest, DocumentReversalResponse
@@ -167,3 +168,38 @@ def reverse_grn_action(
     db: Session = Depends(get_db),
 ):
     return reverse_grn(db, grn_id, user.user_id, payload.get_reason())
+
+
+@router.post("/{grn_id}/reject", response_model=GRNResponse)
+def reject_grn_action(
+    grn_id: int,
+    action: GRNStatusAction,
+    user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_APPROVE)),
+    db: Session = Depends(get_db),
+):
+    header = db.query(GRNHeader).filter(GRNHeader.id == grn_id).first()
+    if not header:
+        raise HTTPException(status_code=404, detail="GRN not found")
+    header.status = "REJECTED"
+    db.commit()
+    return _serialize_grn(header)
+
+
+@router.post("/{grn_id}/payment", response_model=GRNResponse)
+def record_grn_payment(
+    grn_id: int,
+    payload: GRNPaymentAction,
+    user: AuthenticatedUser = Depends(require_permission(Permission.RECEIPT_APPROVE)),
+    db: Session = Depends(get_db),
+):
+    header = db.query(GRNHeader).filter(GRNHeader.id == grn_id).first()
+    if not header:
+        raise HTTPException(status_code=404, detail="GRN not found")
+    res = _serialize_grn(header)
+    res.payment_status = payload.payment_status
+    res.amount_paid = payload.amount_paid
+    res.payment_reference = payload.payment_reference
+    res.payment_date = payload.payment_date
+    res.payment_mode = payload.payment_mode
+    res.payment_notes = payload.payment_notes
+    return res

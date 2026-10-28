@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, Query, Path, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import select, and_, desc
+from sqlalchemy import select, and_, desc, func
 
 from app.db.session import get_db
 from app.core.security import (
@@ -153,7 +153,8 @@ def _generate_valuation_report(
     if department_id:
         query = query.where(MaterialItem.department_id == department_id)
     if category:
-        query = query.where(MaterialItem.category == category)
+        # Same case-insensitive category match as GET /api/v1/items.
+        query = query.where(func.lower(MaterialItem.category) == category.lower())
 
     items = db.execute(query.order_by(MaterialItem.item_code)).scalars().all()
 

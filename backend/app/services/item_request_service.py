@@ -1,22 +1,20 @@
 """
 Item Request and Approval Workflow Service.
 Enforces state machine transitions, separation of duties (no self-approval),
-conflict detection, atomic material item generation, and immutable audit logs.
+strict Nomenclature Standard v1.0 validation for new items, duplicate detection,
+concurrency-safe item code allocation at approval, and immutable audit logs.
 """
 
 from datetime import datetime, timezone
-import re
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
-from app.models.department import Department
-from app.models.uom import UOM
-from app.models.item import MaterialItem
 from app.models.item_request import ItemRequest, ItemRequestAuditLog, RequestStatus
 from app.core.security import DevUserContext
-from app.services.validators import get_category_code
+from app.services.item_code_service import ItemCodeService, ProposalCheck, validation_exception
 from app.services.document_number_service import (
     DocumentType,
     generate_document_number,
@@ -32,31 +30,41 @@ class ItemRequestService:
         """Generates next request number: REQ-YYYYMMDD-XXXX."""
         return generate_document_number(self.db, DocumentType.ITEM_REQUEST)
 
-    def generate_next_item_code(self, department_id: int, category: str) -> str:
+    def _get_for_update(self, request_id: int) -> ItemRequest:
+        """Loads and row-locks a request so concurrent decisions on it serialise (no-op lock on SQLite)."""
+        req = self.db.scalar(
+            select(ItemRequest)
+            .where(ItemRequest.id == request_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if not req:
+            raise HTTPException(status_code=404, detail="Item request not found.")
+        return req
+
+    def _check_proposal(
+        self,
+        requested_name: str,
+        proposed_department_id: int,
+        proposed_category: str,
+        proposed_uom_id: int,
+        action: str,
+        exclude_request_id: Optional[int] = None,
+    ) -> ProposalCheck:
         """
-        Generates unique item code following the convention: DEPT-CATEGORY-SERIAL (e.g. FDY-RM-016).
+        Strict v1.0 validation for a NEW item plus duplicate search. Raises 422 for rule violations and
+        409 for duplicates of existing items, approved aliases or submitted requests.
         """
-        dept = self.db.get(Department, department_id)
-        if not dept:
-            raise HTTPException(status_code=400, detail="Invalid department ID")
-
-        dept_code = dept.code.upper()
-        cat_code = get_category_code(category)
-        prefix = f"{dept_code}-{cat_code}-"
-
-        # Query all existing item codes with this prefix
-        existing_codes = self.db.scalars(
-            select(MaterialItem.item_code).where(MaterialItem.item_code.like(f"{prefix}%"))
-        ).all()
-
-        max_serial = 0
-        for code in existing_codes:
-            suffix = code[len(prefix):]
-            if suffix.isdigit():
-                max_serial = max(max_serial, int(suffix))
-
-        next_serial = max_serial + 1
-        return f"{prefix}{next_serial:03d}"
+        codes = ItemCodeService(self.db)
+        check = codes.validate_proposal(proposed_department_id, proposed_category, requested_name, proposed_uom_id)
+        if not check.valid:
+            raise validation_exception(
+                f"{action} rejected: the item does not meet the Item Nomenclature Standard.", check.errors
+            )
+        duplicate = codes.duplicate_exception(codes.find_duplicates(requested_name, exclude_request_id), action)
+        if duplicate:
+            raise duplicate
+        return check
 
     def create_draft(
         self,
@@ -68,23 +76,17 @@ class ItemRequestService:
         justification: str,
         actor: DevUserContext,
     ) -> ItemRequest:
-        """Creates a new request in DRAFT status."""
-        # Validate department
-        dept = self.db.get(Department, proposed_department_id)
-        if not dept or not dept.is_active:
-            raise HTTPException(status_code=400, detail="Invalid or inactive department specified.")
-
-        # Validate UOM
-        uom = self.db.get(UOM, proposed_uom_id)
-        if not uom or not uom.is_active:
-            raise HTTPException(status_code=400, detail="Invalid or inactive UOM specified.")
+        """Creates a new request in DRAFT status after strict v1.0 validation and duplicate search."""
+        check = self._check_proposal(
+            requested_name, proposed_department_id, proposed_category, proposed_uom_id, "Item request"
+        )
 
         def _create(req_number: str) -> ItemRequest:
             req = ItemRequest(
                 request_number=req_number,
-                requested_name=requested_name.strip(),
+                requested_name=requested_name,
                 proposed_department_id=proposed_department_id,
-                proposed_category=proposed_category.strip().upper(),
+                proposed_category=check.category.code,
                 proposed_subcategory=proposed_subcategory.strip().upper() if proposed_subcategory else None,
                 proposed_uom_id=proposed_uom_id,
                 justification=justification.strip(),
@@ -130,10 +132,8 @@ class ItemRequestService:
         justification: str,
         actor: DevUserContext,
     ) -> ItemRequest:
-        """Updates draft request details."""
-        req = self.db.get(ItemRequest, request_id)
-        if not req:
-            raise HTTPException(status_code=404, detail="Item request not found.")
+        """Updates draft request details (strict v1.0 validation and duplicate search)."""
+        req = self._get_for_update(request_id)
 
         if req.status != RequestStatus.DRAFT.value:
             raise HTTPException(
@@ -141,17 +141,14 @@ class ItemRequestService:
                 detail=f"Cannot edit request in '{req.status}' state. Only DRAFT requests can be modified directly."
             )
 
-        # Validate department & UOM
-        dept = self.db.get(Department, proposed_department_id)
-        if not dept or not dept.is_active:
-            raise HTTPException(status_code=400, detail="Invalid or inactive department specified.")
-        uom = self.db.get(UOM, proposed_uom_id)
-        if not uom or not uom.is_active:
-            raise HTTPException(status_code=400, detail="Invalid or inactive UOM specified.")
+        check = self._check_proposal(
+            requested_name, proposed_department_id, proposed_category, proposed_uom_id,
+            "Draft update", exclude_request_id=req.id,
+        )
 
-        req.requested_name = requested_name.strip()
+        req.requested_name = requested_name
         req.proposed_department_id = proposed_department_id
-        req.proposed_category = proposed_category.strip().upper()
+        req.proposed_category = check.category.code
         req.proposed_subcategory = proposed_subcategory.strip().upper() if proposed_subcategory else None
         req.proposed_uom_id = proposed_uom_id
         req.justification = justification.strip()
@@ -172,10 +169,8 @@ class ItemRequestService:
         return req
 
     def submit_request(self, request_id: int, actor: DevUserContext) -> ItemRequest:
-        """Transitions request from DRAFT to SUBMITTED."""
-        req = self.db.get(ItemRequest, request_id)
-        if not req:
-            raise HTTPException(status_code=404, detail="Item request not found.")
+        """Transitions request from DRAFT to SUBMITTED after re-validating against v1.0."""
+        req = self._get_for_update(request_id)
 
         if req.status != RequestStatus.DRAFT.value:
             raise HTTPException(
@@ -183,19 +178,11 @@ class ItemRequestService:
                 detail=f"Cannot submit request in '{req.status}' status. Only DRAFT requests can be submitted."
             )
 
-        # Pre-check for duplicate active item with same name in department
-        conflict = self.db.scalar(
-            select(MaterialItem).where(
-                MaterialItem.department_id == req.proposed_department_id,
-                func.lower(MaterialItem.name) == func.lower(req.requested_name),
-                MaterialItem.is_active == True,
-            )
+        # Drafts created before v1.0 enforcement must be corrected (update the draft) before submission.
+        self._check_proposal(
+            req.requested_name, req.proposed_department_id, req.proposed_category, req.proposed_uom_id,
+            "Submission", exclude_request_id=req.id,
         )
-        if conflict:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Conflict detected: Item '{conflict.name}' already exists in this department with code '{conflict.item_code}'."
-            )
 
         req.status = RequestStatus.SUBMITTED.value
         req.submitted_at = datetime.now(timezone.utc)
@@ -217,9 +204,7 @@ class ItemRequestService:
 
     def cancel_request(self, request_id: int, actor: DevUserContext, comments: Optional[str] = None) -> ItemRequest:
         """Cancels a DRAFT or SUBMITTED request."""
-        req = self.db.get(ItemRequest, request_id)
-        if not req:
-            raise HTTPException(status_code=404, detail="Item request not found.")
+        req = self._get_for_update(request_id)
 
         if req.status in (RequestStatus.APPROVED.value, RequestStatus.REJECTED.value, RequestStatus.CANCELLED.value):
             raise HTTPException(
@@ -249,10 +234,11 @@ class ItemRequestService:
         """
         Approves a SUBMITTED request, creates exactly one MaterialItem in an atomic transaction,
         and links it to the request. Prevents self-approval and duplicate approvals.
+
+        The request row is locked for the decision, the request is re-validated strictly against v1.0, and the
+        item code is allocated here (never earlier) from the locked (department, category) sequence.
         """
-        req = self.db.get(ItemRequest, request_id)
-        if not req:
-            raise HTTPException(status_code=404, detail="Item request not found.")
+        req = self._get_for_update(request_id)
 
         if req.status != RequestStatus.SUBMITTED.value:
             raise HTTPException(
@@ -267,36 +253,23 @@ class ItemRequestService:
                 detail="Self-approval violation: Requester cannot approve their own item request."
             )
 
-        # Conflict check: ensure no active item with same name in same department
-        conflict = self.db.scalar(
-            select(MaterialItem).where(
-                MaterialItem.department_id == req.proposed_department_id,
-                func.lower(MaterialItem.name) == func.lower(req.requested_name),
-                MaterialItem.is_active == True,
-            )
+        # Strict v1.0 re-validation (requests submitted before enforcement fail here and must be rejected)
+        # and duplicate search across items (active and retired), approved aliases and other submitted requests.
+        check = self._check_proposal(
+            req.requested_name, req.proposed_department_id, req.proposed_category, req.proposed_uom_id,
+            "Approval", exclude_request_id=req.id,
         )
-        if conflict:
+
+        # Atomic transaction: allocate code, create MaterialItem, registry entry and item history, update request
+        try:
+            item = ItemCodeService(self.db).register_item(req, check, actor)
+        except IntegrityError:
+            self.db.rollback()
             raise HTTPException(
-                status_code=409,
-                detail=f"Approval blocked: Item '{conflict.name}' already exists in this department with code '{conflict.item_code}'."
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Item code allocation collided with a concurrent change. Nothing was created; retry the approval.",
             )
-
-        # Generate unique item code
-        item_code = self.generate_next_item_code(req.proposed_department_id, req.proposed_category)
-
-        # Atomic transaction: Create MaterialItem & Update Request
-        item = MaterialItem(
-            item_code=item_code,
-            name=req.requested_name,
-            department_id=req.proposed_department_id,
-            category=req.proposed_category,
-            subcategory=req.proposed_subcategory,
-            base_uom_id=req.proposed_uom_id,
-            description=req.justification,
-            is_active=True,
-        )
-        self.db.add(item)
-        self.db.flush()  # Populates item.id
+        item_code = item.item_code
 
         now = datetime.now(timezone.utc)
         req.status = RequestStatus.APPROVED.value
@@ -331,9 +304,7 @@ class ItemRequestService:
                 detail="Rejection requires an explicit explanation/reason in decision comments."
             )
 
-        req = self.db.get(ItemRequest, request_id)
-        if not req:
-            raise HTTPException(status_code=404, detail="Item request not found.")
+        req = self._get_for_update(request_id)
 
         if req.status != RequestStatus.SUBMITTED.value:
             raise HTTPException(

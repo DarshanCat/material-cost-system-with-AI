@@ -10,10 +10,19 @@ import {
   Building2,
   Tag,
   Info,
+  History,
   X
 } from 'lucide-react';
-import type { MaterialItem, Department, PaginatedResponse, UserRole } from '../types';
-import { apiFetch } from '../api/client';
+import type { MaterialItem, Department, ItemHistory, UserRole } from '../types';
+import { apiFetch, readApiError } from '../api/client';
+
+interface ItemCategoryOption {
+  category: string;
+  code: string;
+  name: string;
+  department_code?: string;
+  cost_head?: string;
+}
 
 interface MaterialMasterViewProps {
   currentRole: UserRole;
@@ -21,11 +30,12 @@ interface MaterialMasterViewProps {
 }
 
 export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
-  currentRole: _currentRole,
+  currentRole,
   onRequestNewItem,
 }) => {
   const [items, setItems] = useState<MaterialItem[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [categories, setCategories] = useState<ItemCategoryOption[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,14 +49,44 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
 
   // Selected item modal
   const [selectedItem, setSelectedItem] = useState<MaterialItem | null>(null);
+  const [history, setHistory] = useState<ItemHistory | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [statusReason, setStatusReason] = useState<string>('');
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [statusSaving, setStatusSaving] = useState<boolean>(false);
 
-  // Load departments for filter dropdown
+  // Retire / reactivate is limited to the approving roles (ITEM_UPDATE: Management, Admin); the server enforces it.
+  const canChangeStatus = currentRole === 'Management' || currentRole === 'Admin';
+
+  // Load departments and the Nomenclature Standard v1.0 categories for the filter dropdowns
   useEffect(() => {
     apiFetch('/api/v1/departments')
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setDepartments(data))
       .catch(() => {});
+    apiFetch('/api/v1/items/categories')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setCategories(data))
+      .catch(() => {});
   }, []);
+
+  const loadHistory = (itemId: number) => {
+    setHistory(null);
+    setHistoryError(null);
+    apiFetch(`/api/v1/items/${itemId}/history`)
+      .then(async (res) => {
+        if (res.ok) setHistory(await res.json());
+        else setHistoryError(await readApiError(res, 'Unable to load item history'));
+      })
+      .catch((err: Error) => setHistoryError(`Network error: ${err.message}`));
+  };
+
+  const openItem = (item: MaterialItem) => {
+    setSelectedItem(item);
+    setStatusReason('');
+    setStatusError(null);
+    loadHistory(item.id);
+  };
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -61,9 +101,10 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
 
       const res = await apiFetch(`/api/v1/items?${params.toString()}`);
       if (res.ok) {
-        const data: PaginatedResponse<MaterialItem> = await res.json();
-        setItems(data.items);
-        setTotal(data.total);
+        const data = await res.json();
+        const itemsList = Array.isArray(data) ? data : (data?.items || []);
+        setItems(itemsList);
+        setTotal(typeof data?.total === 'number' ? data.total : itemsList.length);
       } else {
         const errData = await res.json().catch(() => ({}));
         setError(errData.detail || 'Unable to load items from backend.');
@@ -83,6 +124,36 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
     fetchItems();
   }, [fetchItems]);
 
+  const handleStatusChange = async () => {
+    if (!selectedItem) return;
+    setStatusError(null);
+    if (statusReason.trim().length < 5) {
+      setStatusError('Give a reason (at least 5 characters); it is recorded permanently in the item history.');
+      return;
+    }
+    setStatusSaving(true);
+    try {
+      const res = await apiFetch(`/api/v1/items/${selectedItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !selectedItem.is_active, change_reason: statusReason.trim() }),
+      });
+      if (res.ok) {
+        const updated: MaterialItem = await res.json();
+        setSelectedItem(updated);
+        setStatusReason('');
+        loadHistory(updated.id);
+        fetchItems();
+      } else {
+        setStatusError(await readApiError(res, 'Status change failed'));
+      }
+    } catch (err: any) {
+      setStatusError(`Network error: ${err.message}`);
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / pageSize) || 1;
 
   return (
@@ -94,7 +165,8 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
           <h2 className="view-title">Material Item Master Catalog</h2>
           <p className="view-subtitle">
             Controlled inventory definitions across ~741 SG Iron foundry materials.
-            Code convention: <code>DEPT-CATEGORY-SERIAL</code> (e.g. <code>FDY-RM-016</code>).
+            New codes follow the Item Nomenclature Standard v1.0: <code>DEPT-CAT-###</code> (e.g. <code>MCS-CB-004</code>).
+            Existing codes outside v1.0 are kept unchanged. Codes are permanent and never reused.
           </p>
         </div>
         <div>
@@ -148,12 +220,11 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
             }}
           >
             <option value="">All Categories</option>
-            <option value="RAW_MATERIAL">Raw Material (RM)</option>
-            <option value="ALLOY">Ferro Alloy (FA)</option>
-            <option value="CONSUMABLE">Consumable (CON)</option>
-            <option value="RETURN">Return Scrap (RET)</option>
-            <option value="BORING">Machine Boring (BOR)</option>
-            <option value="GATING">Gatings / Runners (GAT)</option>
+            {categories.map((c) => (
+              <option key={c.code} value={c.category}>
+                {c.name} ({c.code})
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -207,7 +278,7 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} onClick={() => setSelectedItem(item)} className="cursor-pointer">
+                  <tr key={item.id} onClick={() => openItem(item)} className="cursor-pointer">
                     <td>
                       <code className="item-code-badge">{item.item_code}</code>
                     </td>
@@ -232,7 +303,7 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
                         className="table-action-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedItem(item);
+                          openItem(item);
                         }}
                       >
                         Details
@@ -332,9 +403,89 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
                   <p className="text-sm text-muted">{selectedItem.description}</p>
                 </div>
               )}
+
+              {/* Permanent code registry and item history */}
+              <div className="audit-timeline-container mt-3">
+                <h4 className="card-title text-sm mb-2">
+                  <History size={16} className="text-primary inline mr-1" />
+                  Item Code History
+                </h4>
+                {historyError && <p className="text-xs text-danger">{historyError}</p>}
+                {!history && !historyError && <p className="text-xs text-muted">Loading history…</p>}
+                {history && !history.registry_installed && (
+                  <p className="text-xs text-muted">Code registry not installed (migration 008 pending); no history recorded yet.</p>
+                )}
+                {history && history.registry_installed && (
+                  <>
+                    <p className="text-xs text-muted mb-2">
+                      {history.registry
+                        ? `Issued by the generator (standard v${history.registry.standard_version}) on ${new Date(history.registry.issued_at).toLocaleString()} by ${history.registry.issued_by}.`
+                        : 'Existing code created before the generator; kept unchanged (grandfathered).'}
+                    </p>
+                    {(history.events || []).length === 0 ? (
+                      <p className="text-xs text-muted">No changes recorded.</p>
+                    ) : (
+                      <div className="timeline-list">
+                        {(history.events || []).map((ev) => (
+                          <div key={ev.id} className="timeline-entry">
+                            <div className="timeline-marker"></div>
+                            <div className="timeline-content">
+                              <div className="flex justify-between items-center">
+                                <span className="font-semibold text-xs text-main">
+                                  {ev.action}{ev.field_name ? ` (${ev.field_name})` : ''}
+                                </span>
+                                <span className="text-2xs text-muted">{new Date(ev.timestamp).toLocaleString()}</span>
+                              </div>
+                              <div className="text-2xs text-muted">
+                                Actor: <strong>{ev.actor_id}</strong> [{ev.actor_role}]
+                              </div>
+                              {(ev.old_value || ev.new_value) && (
+                                <div className="text-xs">
+                                  {ev.old_value ? `${ev.old_value} → ` : ''}{ev.new_value}
+                                </div>
+                              )}
+                              {ev.reason && <div className="text-xs text-slate-700 mt-1 italic">"{ev.reason}"</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {canChangeStatus && (
+                <div className="form-group mt-3">
+                  <label className="form-label">
+                    {selectedItem.is_active ? 'Retire item (mark Inactive)' : 'Reactivate item'} — reason{' '}
+                    <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    rows={2}
+                    placeholder={
+                      selectedItem.is_active
+                        ? 'Why is this item being retired? The code stays reserved and is never reused.'
+                        : 'Why is this item being brought back into use?'
+                    }
+                    value={statusReason}
+                    onChange={(e) => setStatusReason(e.target.value)}
+                  />
+                  {statusError && <span className="text-xs text-danger">{statusError}</span>}
+                </div>
+              )}
             </div>
 
             <div className="modal-footer">
+              {canChangeStatus && (
+                <button
+                  className={selectedItem.is_active ? 'action-btn-danger' : 'primary-btn'}
+                  onClick={handleStatusChange}
+                  disabled={statusSaving}
+                >
+                  {statusSaving ? 'Saving…' : selectedItem.is_active ? 'Retire Item' : 'Reactivate Item'}
+                </button>
+              )}
               <button className="secondary-btn" onClick={() => setSelectedItem(null)}>
                 Close
               </button>

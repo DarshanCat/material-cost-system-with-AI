@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     items,
     vendors,
     item_requests,
+    item_codes,
     grn,
     issues,
     waste,
@@ -19,6 +20,7 @@ from app.api.v1.endpoints import (
     reconciliation,
     heat_import,
     costing,
+    purchase_orders,
 )
 
 api_router = APIRouter()
@@ -28,7 +30,9 @@ api_router.include_router(departments.router, prefix="/departments", tags=["Depa
 api_router.include_router(uoms.router, prefix="/uoms", tags=["UOM Master"])
 api_router.include_router(items.router, prefix="/items", tags=["Material Item Master"])
 api_router.include_router(vendors.router, prefix="/vendors", tags=["Vendor Master"])
+api_router.include_router(purchase_orders.router, prefix="/purchase-orders", tags=["Purchase Orders (P2P)"])
 api_router.include_router(item_requests.router, prefix="/item-requests", tags=["Item Approval Workflow"])
+api_router.include_router(item_codes.router, prefix="/item-codes", tags=["Item Code Generator"])
 api_router.include_router(grn.router, prefix="/grn", tags=["Goods Receipt Note (GRN)"])
 api_router.include_router(issues.router, prefix="/issues", tags=["Material Issue"])
 api_router.include_router(waste.router, prefix="/waste", tags=["Waste Disposition"])

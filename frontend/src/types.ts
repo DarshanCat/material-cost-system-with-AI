@@ -2,6 +2,7 @@ export type ModuleId =
   | 'dashboard'
   | 'material-master'
   | 'vendor-master'
+  | 'purchase-orders'
   | 'item-requests'
   | 'references'
   | 'grn-management'
@@ -74,6 +75,119 @@ export interface MaterialItem {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/* ---- Item Code Generator (Item Nomenclature Standard v1.0) ---- */
+
+export interface ItemCodeIssue {
+  field: string;
+  code: string;
+  message: string;
+}
+
+export interface ItemCodeDuplicate {
+  source: 'ITEM' | 'ALIAS' | 'REQUEST';
+  match_type: 'EXACT' | 'COMPACT';
+  name: string;
+  item_id?: number | null;
+  item_code?: string | null;
+  is_active?: boolean | null;
+  department_code?: string | null;
+  request_id?: number | null;
+  request_number?: string | null;
+  request_status?: string | null;
+  blocking: boolean;
+}
+
+export interface ItemCodeRuleDepartment {
+  code: string;
+  name: string;
+  department_id: number | null;
+  provisioned: boolean;
+}
+
+export interface ItemCodeRuleCategory {
+  code: string;
+  name: string;
+  department_code: string;
+  cost_head: string;
+  pattern: string;
+  example: string;
+  verbatim_description: boolean;
+}
+
+export interface ItemCodeRuleUom {
+  code: string;
+  label: string;
+  meaning: string;
+  uom_id: number | null;
+  provisioned: boolean;
+}
+
+export interface ItemCodeRules {
+  standard: string;
+  version: string;
+  code_format: string;
+  serial_min: number;
+  serial_max: number;
+  naming_formula: string;
+  departments: ItemCodeRuleDepartment[];
+  categories: ItemCodeRuleCategory[];
+  uoms: ItemCodeRuleUom[];
+  uom_aliases: { alias: string; maps_to: string }[];
+  abbreviations: { abbreviation: string; meaning: string }[];
+  registry_installed: boolean;
+  unprovisioned_departments: string[];
+  unprovisioned_uoms: string[];
+}
+
+export interface ItemCodePreview {
+  valid: boolean;
+  provisional: boolean;
+  proposed_code: string | null;
+  next_serial: number | null;
+  serials_remaining: number | null;
+  department_code: string | null;
+  category_code: string | null;
+  category_name: string | null;
+  cost_head: string | null;
+  uom_code: string | null;
+  errors: ItemCodeIssue[];
+  warnings: ItemCodeIssue[];
+  duplicates: ItemCodeDuplicate[];
+  registry_installed: boolean;
+  standard_version: string;
+  note: string;
+}
+
+export interface ItemHistoryEvent {
+  id: number;
+  action: string;
+  field_name?: string | null;
+  old_value?: string | null;
+  new_value?: string | null;
+  reason?: string | null;
+  item_request_id?: number | null;
+  actor_id: string;
+  actor_role: string;
+  timestamp: string;
+}
+
+export interface ItemHistory {
+  item_id: number;
+  item_code: string;
+  registry_installed: boolean;
+  registry: {
+    item_code: string;
+    department_code: string;
+    category_code: string;
+    serial: number;
+    item_request_id?: number | null;
+    standard_version: string;
+    issued_by: string;
+    issued_at: string;
+  } | null;
+  events: ItemHistoryEvent[];
 }
 
 export interface Vendor {
@@ -159,13 +273,77 @@ export interface GRN {
   invoice_date?: string | null;
   reference_document?: string | null;
   notes?: string | null;
-  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED';
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   created_by: string;
   created_at: string;
   updated_at: string;
   lines: GRNLineItem[];
   audit_logs: AuditLog[];
   validation_warnings?: string[];
+  // Quality Inspection & Certification
+  quality_document_number?: string | null;
+  quality_inspection_status?: 'PENDING' | 'PASSED' | 'REJECTED' | 'CONDITIONAL' | null;
+  quality_inspection_notes?: string | null;
+  quality_inspected_by?: string | null;
+  quality_inspected_at?: string | null;
+  // P2P Purchase Order & Payment Settlement Tracking
+  po_id?: number | null;
+  po_number?: string | null;
+  payment_status?: 'PENDING' | 'PARTIALLY_PAID' | 'PAID';
+  amount_paid?: string | number | null;
+  payment_reference?: string | null;
+  payment_date?: string | null;
+  payment_mode?: 'NEFT_RTGS' | 'CHEQUE' | 'BANK_TRANSFER' | 'UPI' | 'CASH' | null;
+  payment_notes?: string | null;
+}
+
+export interface POLineItem {
+  id?: number;
+  line_number: number;
+  material_item_id: number;
+  item_code?: string;
+  item_name?: string;
+  uom_id: number;
+  uom_code?: string;
+  quantity: string | number;
+  unit_rate_ex_gst: string | number;
+  gst_percent: string | number;
+  line_total: string | number;
+  remarks?: string;
+}
+
+export interface PurchaseOrder {
+  id: number;
+  po_number: string;
+  po_date: string;
+  expected_delivery_date: string;
+  vendor_id: number;
+  vendor_name: string;
+  vendor_gstin?: string;
+  department_id: number;
+  department_name: string;
+  payment_terms: string;
+  delivery_terms?: string;
+  notes?: string;
+  total_amount_ex_gst: string | number;
+  total_gst_amount: string | number;
+  grand_total: string | number;
+  status: 'DRAFT' | 'SUBMITTED' | 'DEPT_APPROVED' | 'SCM_APPROVED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  current_approval_level: 'DEPARTMENT' | 'SUPPLY_CHAIN' | 'MANAGEMENT' | 'COMPLETED';
+  dept_approved_by?: string | null;
+  dept_approved_at?: string | null;
+  scm_approved_by?: string | null;
+  scm_approved_at?: string | null;
+  mgmt_approved_by?: string | null;
+  mgmt_approved_at?: string | null;
+  rejection_reason?: string | null;
+  grn_count?: number;
+  fulfilled_percentage?: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  lines: POLineItem[];
+  audit_logs: AuditLog[];
 }
 
 export interface MaterialIssueLineItem {
@@ -210,6 +388,12 @@ export interface WasteDispositionLineItem {
   item_code?: string;
   item_name?: string;
   uom_code?: string;
+  // Foundry Return vs External Disposal Stream
+  disposition_stream?: 'RE_INWARD_TO_RM' | 'EXTERNAL_DISPOSAL';
+  target_item_id?: number | null;
+  target_item_code?: string | null;
+  valuation_rate?: string | number | null;
+  disposal_cost?: string | number | null;
 }
 
 export interface WasteDisposition {
@@ -218,11 +402,23 @@ export interface WasteDisposition {
   disposition_date: string;
   waste_type: string;
   disposition_type: string;
+  disposition_stream: 'RE_INWARD_TO_RM' | 'EXTERNAL_DISPOSAL';
   source_department_id: number;
   source_department_name?: string;
   destination_notes?: string | null;
   notes?: string | null;
-  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'CANCELLED';
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  // Re-inward to RM fields
+  target_item_id?: number | null;
+  target_item_code?: string | null;
+  valuation_rate?: string | number | null;
+  ledger_posted?: boolean;
+  // External Disposal fields
+  disposal_cost?: string | number | null;
+  disposal_contractor?: string | null;
+  gate_pass_number?: string | null;
+  photo_url?: string | null;
+  photo_note?: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;

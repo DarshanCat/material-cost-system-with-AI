@@ -8,8 +8,10 @@ import {
   RefreshCw,
   Eye
 } from 'lucide-react';
-import type { PhysicalAudit, MaterialItem, UOM, Department, UserRole } from '../types';
+import type { PhysicalAudit, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
+import { useReferenceData } from '../hooks/useReferenceData';
+import { ReferenceDataNotice } from './ReferenceDataNotice';
 
 interface PhysicalAuditViewProps {
   currentRole: UserRole;
@@ -20,9 +22,8 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
   const [actionError, setActionError] = useState<string | null>(null);
   const [audits, setAudits] = useState<PhysicalAudit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [items, setItems] = useState<MaterialItem[]>([]);
-  const [uoms, setUoms] = useState<UOM[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const refs = useReferenceData(['items', 'uoms', 'departments']);
+  const { items, uoms, departments } = refs;
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedAudit, setSelectedAudit] = useState<PhysicalAudit | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -50,7 +51,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
       const res = await apiFetch('/api/v1/physical-audits/');
       if (res.ok) {
         const data = await res.json();
-        setAudits(data);
+        setAudits(Array.isArray(data) ? data : (data?.items || []));
       }
     } catch (err) {
       console.error('Error fetching physical audits:', err);
@@ -59,24 +60,8 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
     }
   };
 
-  const fetchReferences = async () => {
-    try {
-      const [iRes, uRes, dRes] = await Promise.all([
-        apiFetch('/api/v1/items?limit=500'),
-        apiFetch('/api/v1/uoms'),
-        apiFetch('/api/v1/departments'),
-      ]);
-      if (iRes.ok) setItems(await iRes.json());
-      if (uRes.ok) setUoms(await uRes.json());
-      if (dRes.ok) setDepartments(await dRes.json());
-    } catch (err) {
-      console.error('Error fetching references:', err);
-    }
-  };
-
   useEffect(() => {
     fetchAudits();
-    fetchReferences();
   }, []);
 
   const handleAddLine = () => {
@@ -197,6 +182,8 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
           </button>
         </div>
       </div>
+
+      <ReferenceDataNotice refs={refs} />
 
       {/* Filter Toolbar */}
       <div className="filter-toolbar">
@@ -367,6 +354,9 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
                 <button type="button" className="close-btn" onClick={() => setShowModal(false)}>✕</button>
               </div>
               <div className="modal-body">
+                <div className="mb-3">
+                  <ReferenceDataNotice refs={refs} />
+                </div>
                 {formError && (
                   <div className="alert-error p-3 mb-3 bg-red-50 text-red-700 text-sm rounded">
                     {formError}
@@ -428,7 +418,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
                           onChange={(e) => handleLineChange(idx, 'material_item_id', e.target.value)}
                           required
                         >
-                          <option value="">-- Select Material Item --</option>
+                          <option value="">{refs.placeholder('items', '-- Select Material Item --')}</option>
                           {items.map((it) => (
                             <option key={it.id} value={it.id}>{it.item_code} - {it.name}</option>
                           ))}
@@ -442,7 +432,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
                           onChange={(e) => handleLineChange(idx, 'uom_id', e.target.value)}
                           required
                         >
-                          <option value="">-- UOM --</option>
+                          <option value="">{refs.placeholder('uoms', '-- UOM --')}</option>
                           {uoms.map((u) => (
                             <option key={u.id} value={u.id}>{u.code}</option>
                           ))}
@@ -489,7 +479,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="erp-btn btn-primary" disabled={submitting}>
+                <button type="submit" className="erp-btn btn-primary" disabled={submitting || refs.unavailable}>
                   {submitting ? 'Calculating Variances...' : 'Create Draft Audit Record'}
                 </button>
               </div>

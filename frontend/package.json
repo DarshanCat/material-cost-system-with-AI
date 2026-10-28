@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "check:css": "node scripts/check-css-classes.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -48,7 +48,12 @@ export const ReconciliationDashboard: React.FC<ReconciliationDashboardProps> = (
     try {
       const res = await apiFetch('/api/v1/reconciliation/runs?limit=50');
       if (res.ok) {
-        setRuns(await res.json());
+        const data = await res.json();
+        const runsList = Array.isArray(data) ? data : (data?.items || []);
+        setRuns(runsList);
+        if (runsList.length > 0 && !selectedRun) {
+          fetchRunDetail(runsList[0].id);
+        }
       }
     } catch {
       // fallback
