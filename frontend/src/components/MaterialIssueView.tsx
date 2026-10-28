@@ -47,6 +47,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [formWarnings, setFormWarnings] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [availableHeats, setAvailableHeats] = useState<any[]>([]);
 
   const fetchIssues = async () => {
     setLoading(true);
@@ -65,6 +66,16 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
 
   useEffect(() => {
     fetchIssues();
+    // Load existing heats so stores operators can select active furnace heats
+    (async () => {
+      try {
+        const res = await apiFetch('/api/v1/heats?limit=100');
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableHeats(Array.isArray(data) ? data : (data?.items || []));
+        }
+      } catch {}
+    })();
   }, []);
 
   const handleAddLine = () => {
@@ -418,14 +429,37 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
-                    <label className="form-label">Heat Reference Number (e.g. 102603-3721)</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="form-label mb-0">Heat Reference Number</label>
+                      <span className="text-xs text-muted">Links to Heat Log</span>
+                    </div>
                     <input
                       type="text"
+                      list="available-heats-list"
                       className="form-control"
-                      placeholder="Normalizes automatically to H-102603-3721"
+                      placeholder="e.g. 102603-3801 or H-102603-3801"
                       value={heatRefNo}
                       onChange={(e) => setHeatRefNo(e.target.value)}
+                      onBlur={(e) => {
+                        const val = e.target.value.trim();
+                        if (val) {
+                          setHeatRefNo(val.toUpperCase().startsWith('H-') ? val.toUpperCase() : `H-${val.toUpperCase()}`);
+                        }
+                      }}
                     />
+                    <datalist id="available-heats-list">
+                      {availableHeats.map((h: any) => (
+                        <option 
+                          key={h.id || h.heat_number} 
+                          value={h.normalized_heat_number || (h.heat_number.startsWith('H-') ? h.heat_number : `H-${h.heat_number}`)}
+                        >
+                          Heat {h.heat_number} ({h.heat_date || ''} · {h.furnace_id || 'Furnace'})
+                        </option>
+                      ))}
+                    </datalist>
+                    <div className="text-xs text-muted mt-1">
+                      Auto-normalizes to <code>H-XXXXXX-XXXX</code>. Reflects directly into the Foundry Heat Log for 1-click crucible charge import.
+                    </div>
                   </div>
                   <div>
                     <label className="form-label">Notes / Justification</label>

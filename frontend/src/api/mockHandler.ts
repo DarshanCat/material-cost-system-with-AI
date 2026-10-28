@@ -37,6 +37,62 @@ const liveItems = [...demoData.items];
 const liveVendors = [...demoData.vendors];
 const liveGrns = [...demoData.grns];
 const liveIssues = [...demoData.issues];
+
+// Ensure an approved Stores Issue exists linked to demo heat H-102603-3801 for instant floor verification
+if (!liveIssues.some(i => i.heat_reference_number === 'H-102603-3801')) {
+  liveIssues.unshift({
+    id: 101,
+    issue_slip_number: 'ISS-20261022-0042',
+    issue_date: '2026-10-22',
+    issuing_department_id: 4,
+    issuing_department_name: 'General/Stores',
+    receiving_department_id: 1,
+    receiving_department_name: 'Foundry',
+    heat_reference_number: 'H-102603-3801',
+    notes: 'Furnace Charge Allocation for Heat 102603-3801 (SG Iron 500/7)',
+    status: 'APPROVED',
+    created_by: 'usr_stores_01',
+    created_at: '2026-10-22T06:30:00Z',
+    lines: [
+      {
+        id: 1,
+        issue_id: 101,
+        line_number: 1,
+        material_item_id: 1,
+        item_code: 'FDY-RM-001',
+        item_name: 'Pig Iron (Foundry Grade 1)',
+        uom_id: 1,
+        uom_code: 'KG',
+        quantity: '4000.0000',
+        remarks: 'Base charge Pig Iron',
+      },
+      {
+        id: 2,
+        issue_id: 101,
+        line_number: 2,
+        material_item_id: 2,
+        item_code: 'FDY-RM-002',
+        item_name: 'CRCA Steel Scrap (Low Manganese)',
+        uom_id: 1,
+        uom_code: 'KG',
+        quantity: '5500.0000',
+        remarks: 'Low Mn scrap charge',
+      },
+      {
+        id: 3,
+        issue_id: 101,
+        line_number: 3,
+        material_item_id: 4,
+        item_code: 'FDY-RM-004',
+        item_name: 'Ferro Silicon 75% (FeSi)',
+        uom_id: 1,
+        uom_code: 'KG',
+        quantity: '85.0000',
+        remarks: 'Inoculation base alloy',
+      },
+    ],
+  } as any);
+}
 const liveHeats = [...demoData.heats];
 const liveWaste = [...demoData.waste];
 const liveAudits = [...demoData.audits];
@@ -700,7 +756,21 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
         return jsonResponse({ detail: 'Failed to create Material Issue' }, 400);
       }
     }
-    return jsonResponse(liveIssues);
+    const statusParam = url.searchParams.get('status');
+    const heatRefParam = url.searchParams.get('heat_reference_number');
+    let filtered = [...liveIssues];
+    if (statusParam) {
+      filtered = filtered.filter(i => (i.status || '').toUpperCase() === statusParam.toUpperCase());
+    }
+    if (heatRefParam) {
+      const q = heatRefParam.toLowerCase().replace(/[^a-z0-9]/g, '');
+      filtered = filtered.filter(i => {
+        if (!i.heat_reference_number) return false;
+        const h = i.heat_reference_number.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return h.includes(q) || q.includes(h);
+      });
+    }
+    return jsonResponse(filtered);
   }
 
   if (path.startsWith('/api/v1/issues/')) {
@@ -721,7 +791,54 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
 
   // 10. Heats
   if (path === '/api/v1/heats') {
-    return jsonResponse(liveHeats);
+    if (method === 'POST') {
+      try {
+        const body = JSON.parse(String(init?.body || '{}'));
+        const newId = liveHeats.length + 1;
+        const newHeat = {
+          id: newId,
+          heat_number: body.heat_number,
+          original_heat_number: body.heat_number,
+          normalized_heat_number: body.heat_number.startsWith('H-') ? body.heat_number : `H-${body.heat_number}`,
+          heat_date: body.heat_date || new Date().toISOString().slice(0, 10),
+          furnace_id: body.furnace_id || 'FURNACE-1',
+          shift: body.shift || 'SHIFT_A',
+          metal_tapped_weight: body.metal_tapped_weight,
+          metal_tapped_uom_id: body.metal_tapped_uom_id || 1,
+          production_status: body.production_status || 'COMPLETED',
+          notes: body.notes,
+          charge_lines: (body.charge_lines || []).map((c: any, idx: number) => ({
+            id: idx + 1,
+            heat_id: newId,
+            line_number: idx + 1,
+            original_material_description: c.original_material_description,
+            charged_quantity: String(c.charged_quantity),
+            uom_id: c.uom_id || 1,
+            remarks: c.remarks,
+          })),
+          parts_produced: (body.parts_produced || []).map((p: any, idx: number) => ({
+            id: idx + 1,
+            heat_id: newId,
+            line_number: idx + 1,
+            original_part_description: p.original_part_description,
+            quantity_produced: String(p.quantity_produced),
+            unit_cast_weight: p.unit_cast_weight,
+            classification: p.classification || 'GOOD',
+          })),
+        };
+        liveHeats.unshift(newHeat as any);
+        return jsonResponse(newHeat, 201);
+      } catch (e) {
+        return jsonResponse({ detail: 'Failed to record heat' }, 400);
+      }
+    }
+    const search = url.searchParams.get('search');
+    let results = [...liveHeats];
+    if (search) {
+      const q = search.toLowerCase();
+      results = results.filter(h => (h.heat_number || '').toLowerCase().includes(q) || (h.normalized_heat_number || '').toLowerCase().includes(q));
+    }
+    return jsonResponse(results);
   }
 
   // 11. Waste Dispositions

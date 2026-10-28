@@ -1,4 +1,5 @@
-import { Activity, Calendar, User } from 'lucide-react';
+import React from 'react';
+import { Activity, Calendar, User, ShieldCheck, Key } from 'lucide-react';
 import type { UserRole, SystemHealthData } from '../types';
 
 interface HeaderProps {
@@ -10,16 +11,18 @@ interface HeaderProps {
   health: SystemHealthData | null;
   loadingHealth: boolean;
   onRefreshHealth: () => void;
+  onOpenSignInModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
-  onRoleChange,
+  onRoleChange: _onRoleChange,
   roleSelectorEnabled: _roleSelectorEnabled,
-  signedInAs: _signedInAs,
+  signedInAs,
   health,
   loadingHealth,
   onRefreshHealth,
+  onOpenSignInModal,
 }) => {
   const isDbConnected = health?.database?.connected ?? false;
 
@@ -53,20 +56,49 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        <div className="role-selector-container" title="Current Active Role">
-          <User size={14} className="badge-icon text-muted" />
-          <span className="role-label">Active Role:</span>
-          <select 
-            value={currentRole} 
-            onChange={(e) => onRoleChange(e.target.value as UserRole)}
-            className="role-dropdown"
+        {/* Authentication & User Session Pill */}
+        <div 
+          className="role-selector-container cursor-pointer"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', background: 'rgba(255,255,255,0.08)' }}
+          title="Click to manage authentication or switch roles"
+          onClick={onOpenSignInModal}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            {currentRole === 'Admin' ? (
+              <ShieldCheck size={15} style={{ color: '#38bdf8' }} />
+            ) : (
+              <User size={15} style={{ color: '#94a3b8' }} />
+            )}
+            <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
+              {signedInAs || `usr_${currentRole.toLowerCase()}_01`}
+            </span>
+          </div>
+
+          <span 
+            className="pill p-steel" 
+            style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 600 }}
           >
-            <option value="Admin">Admin</option>
-            <option value="Stores">Stores</option>
-            <option value="Foundry">Foundry</option>
-            <option value="Purchase">Purchase</option>
-            <option value="Management">Management</option>
-          </select>
+            {currentRole}
+          </span>
+
+          <button
+            type="button"
+            className="erp-btn btn-sm btn-secondary"
+            style={{ 
+              padding: '2px 8px', 
+              fontSize: '11px', 
+              height: 'auto', 
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'transparent',
+              color: '#f1f5f9'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenSignInModal) onOpenSignInModal();
+            }}
+          >
+            <Key size={11} style={{ marginRight: '3px' }} /> Auth
+          </button>
         </div>
       </div>
     </header>

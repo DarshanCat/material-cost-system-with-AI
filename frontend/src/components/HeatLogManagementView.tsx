@@ -63,6 +63,73 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
     { original_material_description: '', charged_quantity: '', uom_id: '', remarks: '' }
   ]);
 
+  // Stores Issue Linking State
+  const [linkedIssues, setLinkedIssues] = useState<any[]>([]);
+  const [loadingLinkedIssues, setLoadingLinkedIssues] = useState<boolean>(false);
+  const [selectedHeatIssues, setSelectedHeatIssues] = useState<any[]>([]);
+  const [loadingSelectedHeatIssues, setLoadingSelectedHeatIssues] = useState<boolean>(false);
+
+  // Auto-query approved Stores Issues when Heat Number is typed in the modal
+  useEffect(() => {
+    const trimmed = heatNumber.trim();
+    if (!trimmed || trimmed.length < 3) {
+      setLinkedIssues([]);
+      return;
+    }
+    const norm = trimmed.toUpperCase().startsWith('H-') ? trimmed.toUpperCase() : `H-${trimmed.toUpperCase()}`;
+    const timer = setTimeout(async () => {
+      setLoadingLinkedIssues(true);
+      try {
+        const res = await apiFetch(`/api/v1/issues?status=APPROVED&heat_reference_number=${encodeURIComponent(norm)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLinkedIssues(Array.isArray(data) ? data : (data?.items || []));
+        }
+      } catch {
+        setLinkedIssues([]);
+      } finally {
+        setLoadingLinkedIssues(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [heatNumber]);
+
+  // Query linked Stores Issues when inspecting an existing heat
+  useEffect(() => {
+    if (!selectedHeat) {
+      setSelectedHeatIssues([]);
+      return;
+    }
+    const heatRef = selectedHeat.normalized_heat_number || selectedHeat.heat_number;
+    if (!heatRef) return;
+    setLoadingSelectedHeatIssues(true);
+    apiFetch(`/api/v1/issues?status=APPROVED&heat_reference_number=${encodeURIComponent(heatRef)}`)
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setSelectedHeatIssues(Array.isArray(data) ? data : (data?.items || []));
+        }
+      })
+      .catch(() => setSelectedHeatIssues([]))
+      .finally(() => setLoadingSelectedHeatIssues(false));
+  }, [selectedHeat]);
+
+  const handleImportFromIssue = (issue: any) => {
+    if (!issue.lines || issue.lines.length === 0) return;
+    const defaultUom = uoms.find(u => u.code === 'KG') || uoms[0];
+    const newLines = issue.lines.map((l: any) => ({
+      original_material_description: l.item_name || l.item_code || 'Furnace Raw Material',
+      charged_quantity: String(Number(l.quantity) || ''),
+      uom_id: l.uom_id || defaultUom?.id || '',
+      remarks: `Imported from Stores Issue Slip #${issue.issue_slip_number}`,
+    }));
+    setChargeLines(newLines);
+    setFeedback({
+      type: 'success',
+      message: `Imported ${newLines.length} materials from Stores Issue ${issue.issue_slip_number} directly into Crucible Charge lines!`,
+    });
+  };
+
   // Parts produced builder
   const [partsProduced, setPartsProduced] = useState<Array<{
     original_part_description: string;
@@ -533,6 +600,62 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
                 );
               })()}
 
+              {/* Linked Stores Issues Section */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginBottom: '18px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Layers size={16} className="text-steel" />
+                    <strong style={{ fontSize: '13px', color: '#1e293b' }}>
+                      Stores Material Issue Slips (Traceability Reflection)
+                    </strong>
+                  </div>
+                  <span className="pill p-steel" style={{ fontSize: '11px' }}>
+                    {selectedHeatIssues.length} Slip(s) Linked
+                  </span>
+                </div>
+
+                {loadingSelectedHeatIssues ? (
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>Checking linked stores issues...</div>
+                ) : selectedHeatIssues.length === 0 ? (
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>
+                    No Stores Issue slips explicitly tagged with Heat Ref <code>{selectedHeat.normalized_heat_number || selectedHeat.heat_number}</code> yet.
+                  </div>
+                ) : (
+                  <div>
+                    {selectedHeatIssues.map((iss) => {
+                      const totalIssuedKg = iss.lines?.reduce((s: number, l: any) => s + (Number(l.quantity) || 0), 0) || 0;
+                      return (
+                        <div key={iss.id} style={{ 
+                          background: '#fff', 
+                          border: '1px solid #e2e8f0', 
+                          borderRadius: '6px', 
+                          padding: '10px 12px',
+                          marginBottom: '8px'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600 }}>
+                              {iss.issue_slip_number} · {iss.issue_date}
+                            </span>
+                            <span className="pill p-posted" style={{ fontSize: '11px' }}>
+                              Issued: {totalIssuedKg.toLocaleString()} KG
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#475569' }}>
+                            {iss.lines?.map((l: any) => `${l.item_name}: ${Number(l.quantity).toLocaleString()} ${l.uom_code || 'KG'}`).join(' | ')}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <h4>Furnace Charge Mix Breakdown</h4>
               <table className="erp-table mb-4">
                 <thead>
@@ -682,6 +805,63 @@ export const HeatLogManagementView: React.FC<HeatLogManagementViewProps> = ({ cu
                     onChange={(e) => setNotes(e.target.value)} 
                   />
                 </div>
+
+                {/* Linked Stores Issues Detection & 1-Click Import */}
+                {loadingLinkedIssues && (
+                  <div style={{ fontSize: '12px', color: '#64748b', margin: '8px 0' }}>
+                    Checking Stores Material Issue slips for heat {heatNumber}...
+                  </div>
+                )}
+                {linkedIssues.length > 0 && (
+                  <div style={{ 
+                    background: '#f0fdf4', 
+                    border: '1.5px solid #86efac', 
+                    borderRadius: '8px', 
+                    padding: '12px 14px', 
+                    margin: '10px 0 14px 0' 
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <CheckCircle size={18} style={{ color: '#16a34a' }} />
+                        <strong style={{ fontSize: '13px', color: '#166534' }}>
+                          Stores Issue Found for this Heat ({linkedIssues.length} slip)
+                        </strong>
+                      </div>
+                      <span className="pill p-posted" style={{ fontSize: '11px' }}>Approved in Stores</span>
+                    </div>
+
+                    {linkedIssues.map((issue) => (
+                      <div key={issue.id} style={{ 
+                        background: '#ffffff', 
+                        border: '1px solid #bbf7d0', 
+                        borderRadius: '6px', 
+                        padding: '10px 12px',
+                        marginTop: '6px' 
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: '#14532d' }}>
+                            {issue.issue_slip_number} ({issue.issue_date})
+                          </span>
+                          <button
+                            type="button"
+                            className="erp-btn btn-sm btn-primary"
+                            onClick={() => handleImportFromIssue(issue)}
+                            style={{ fontSize: '12px', padding: '4px 10px', background: '#16a34a', borderColor: '#16a34a' }}
+                          >
+                            📥 Copy Issued Materials to Crucible Charges
+                          </button>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#374151' }}>
+                          {issue.lines?.map((l: any) => (
+                            <span key={l.id || l.line_number} style={{ display: 'inline-block', marginRight: '10px' }}>
+                              <strong>{l.item_name}</strong>: {Number(l.quantity).toLocaleString()} {l.uom_code || 'KG'}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Live Yield & Melt Loss Simulator */}
                 {(() => {

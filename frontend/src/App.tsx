@@ -23,6 +23,7 @@ import { MaterialAliasView } from './components/MaterialAliasView';
 import { ReconciliationDashboard } from './components/ReconciliationDashboard';
 import { HeatExcelImportView } from './components/HeatExcelImportView';
 import { CostingDashboard } from './components/CostingDashboard';
+import { SignInModal } from './components/SignInModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import {
   apiFetch,
@@ -43,6 +44,7 @@ export const App: React.FC = () => {
   const [activeModule, setActiveModule] = useState<ModuleId>('dashboard');
   const [health, setHealth] = useState<SystemHealthData | null>(null);
   const [loadingHealth, setLoadingHealth] = useState<boolean>(false);
+  const [showSignInModal, setShowSignInModal] = useState<boolean>(false);
   const [auth, setAuth] = useState<AuthState>({
     phase: 'ready',
     user: { user_id: 'usr_admin_01', role: 'Admin', department: 'Admin' },
@@ -81,8 +83,10 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const onUnauthorized = () =>
+    const onUnauthorized = () => {
       setAuth((prev) => ({ ...prev, phase: 'signed-out', user: null, message: 'Your session is missing or has expired. Please sign in again.' }));
+      setShowSignInModal(true);
+    };
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   }, []);
@@ -298,6 +302,7 @@ export const App: React.FC = () => {
         health={health}
         loadingHealth={loadingHealth}
         onRefreshHealth={fetchHealth}
+        onOpenSignInModal={() => setShowSignInModal(true)}
       />
       <div className="erp-body">
         <Sidebar
@@ -308,6 +313,24 @@ export const App: React.FC = () => {
           <ErrorBoundary resetKey={activeModule}>{renderContent()}</ErrorBoundary>
         </main>
       </div>
+
+      <SignInModal
+        isOpen={showSignInModal}
+        onClose={() => setShowSignInModal(false)}
+        currentRole={currentRole}
+        currentUserId={currentUserId}
+        onSelectRole={async (role) => {
+          await signInAs(role);
+        }}
+        onSignOut={() => {
+          setAuth({
+            phase: 'signed-out',
+            user: null,
+            loginAvailable: true,
+            message: 'You have signed out.',
+          });
+        }}
+      />
     </div>
   );
 };
