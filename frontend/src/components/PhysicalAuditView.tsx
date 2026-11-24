@@ -12,13 +12,16 @@ import type { PhysicalAudit, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
 import { useReferenceData } from '../hooks/useReferenceData';
 import { ReferenceDataNotice } from './ReferenceDataNotice';
+import { hasPermission } from '../auth/permissions';
 
 interface PhysicalAuditViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
+export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = ({ currentRole }) => {
+  const canAdjustStock = hasPermission(currentRole, 'stock:adjust');
+  const canApproveAudit = hasPermission(currentRole, 'stock_audit:approve');
   const [actionError, setActionError] = useState<string | null>(null);
   const [audits, setAudits] = useState<PhysicalAudit[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -177,9 +180,11 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
           <button className="erp-btn btn-secondary" onClick={fetchAudits}>
             <RefreshCw size={14} className="btn-icon" /> Refresh
           </button>
-          <button className="erp-btn btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={14} className="btn-icon" /> Record Physical Count
-          </button>
+          {canAdjustStock && (
+            <button className="erp-btn btn-primary" onClick={() => setShowModal(true)}>
+              <Plus size={14} className="btn-icon" /> Record Physical Count
+            </button>
+          )}
         </div>
       </div>
 
@@ -244,7 +249,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
                   <td>{a.created_by}</td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
-                      {a.status === 'DRAFT' && (
+                      {a.status === 'DRAFT' && canAdjustStock && (
                         <button
                           className="erp-btn btn-sm btn-outline"
                           onClick={() => handleAction(a.id, 'submit')}
@@ -252,7 +257,7 @@ export const PhysicalAuditView: React.FC<PhysicalAuditViewProps> = () => {
                           <Send size={12} /> Submit
                         </button>
                       )}
-                      {a.status === 'SUBMITTED' && (
+                      {a.status === 'SUBMITTED' && canApproveAudit && (
                         <button
                           className="erp-btn btn-sm btn-success"
                           onClick={() => handleAction(a.id, 'approve')}

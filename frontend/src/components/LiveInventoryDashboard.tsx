@@ -4,7 +4,7 @@ import {
   RefreshCw, 
   Eye
 } from 'lucide-react';
-import type { StockBalance, StockLedgerEntry, UserRole } from '../types';
+import type { StockBalance, StockLedgerEntry, UOMStockSummary, UserRole } from '../types';
 import { apiFetch } from '../api/client';
 
 interface LiveInventoryDashboardProps {
@@ -14,6 +14,7 @@ interface LiveInventoryDashboardProps {
 
 export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () => {
   const [balances, setBalances] = useState<StockBalance[]>([]);
+  const [uomSummaries, setUomSummaries] = useState<UOMStockSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -30,10 +31,22 @@ export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () 
       if (asOfDate) params.append('as_of_date', asOfDate);
       if (params.toString()) url += `?${params.toString()}`;
 
-      const res = await apiFetch(url);
+      let summaryUrl = '/api/v1/ledger/summary-by-uom';
+      if (params.toString()) summaryUrl += `?${params.toString()}`;
+
+      const [res, sumRes] = await Promise.all([
+        apiFetch(url),
+        apiFetch(summaryUrl),
+      ]);
+
       if (res.ok) {
         const data = await res.json();
         setBalances(Array.isArray(data) ? data : (data?.items || []));
+      }
+
+      if (sumRes.ok) {
+        const sumData = await sumRes.json();
+        setUomSummaries(Array.isArray(sumData) ? sumData : []);
       }
     } catch (err) {
       console.error('Error fetching stock balances:', err);
@@ -100,6 +113,42 @@ export const LiveInventoryDashboard: React.FC<LiveInventoryDashboardProps> = () 
           </button>
         </div>
       </div>
+
+      {/* UOM-Segregated Stock Summary Banner */}
+      {uomSummaries.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {uomSummaries.map((uom) => (
+            <div
+              key={uom.uom_code}
+              className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {uom.uom_name}
+                  </span>
+                  <span className="badge badge-outline font-mono text-xs font-bold text-slate-700">
+                    {uom.uom_code}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="font-mono text-xl font-bold text-slate-900">
+                    {Number(uom.total_quantity).toLocaleString(undefined, {
+                      minimumFractionDigits: uom.decimal_precision,
+                      maximumFractionDigits: uom.decimal_precision,
+                    })}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-500">{uom.uom_code}</span>
+                </div>
+              </div>
+              <div className="text-xs text-slate-500 mt-2.5 pt-2 border-t border-slate-100 flex justify-between">
+                <span>{uom.item_count} {uom.item_count === 1 ? 'item' : 'items'}</span>
+                <span>{uom.movement_count} journal {uom.movement_count === 1 ? 'entry' : 'entries'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filter Toolbar */}
       <div className="filter-toolbar">

@@ -16,6 +16,7 @@ from fastapi import HTTPException, status
 from app.models.heat import HeatHeader, HeatChargeLine, HeatChargeValidationStatus
 from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueStatus
 from app.models.item import MaterialItem
+from app.models.department import Department
 from app.models.uom import UOM
 from app.models.reconciliation import (
     ReconciliationRun,
@@ -34,6 +35,12 @@ from app.services.document_number_service import (
     DocumentType,
     generate_document_number,
     execute_with_document_number_retry,
+)
+from app.services.item_nomenclature import (
+    RECON_HEAT_TRACEABLE,
+    RECON_NON_HEAT_SPECIFIC,
+    RECON_REVIEW_REQUIRED,
+    resolve_effective_reconciliation_category,
 )
 
 
@@ -119,6 +126,16 @@ def compute_string_similarity(s1: str, s2: str) -> float:
     return (2.0 * len(intersection)) / (len(pairs1) + len(pairs2))
 
 
+def _has_reconciliation_category_column(db: Session) -> bool:
+    try:
+        from sqlalchemy import inspect
+        insp = inspect(db.get_bind())
+        cols = {c["name"] for c in insp.get_columns("material_items")}
+        return "reconciliation_category" in cols
+    except Exception:
+        return False
+
+
 def run_reconciliation(
     db: Session,
     created_by: str,
@@ -155,7 +172,8 @@ def run_reconciliation(
         target_date=run_timestamp.date(),
     )
 
-    # 1. Fetch relevant Issue Slips (Approved issues)
+    # 1. Fetch relevant Issue Slips (Approved issues for Foundry receiving department)
+    foundry_dept = db.execute(select(Department).where(Department.code == "FDY")).scalar_one_or_none()
     issue_stmt = (
         select(MaterialIssueHeader)
         .options(
@@ -164,6 +182,8 @@ def run_reconciliation(
         )
         .where(MaterialIssueHeader.status == IssueStatus.APPROVED.value)
     )
+    if foundry_dept:
+        issue_stmt = issue_stmt.where(MaterialIssueHeader.receiving_department_id == foundry_dept.id)
     if date_from:
         issue_stmt = issue_stmt.where(MaterialIssueHeader.issue_date >= date_from)
     if date_to:
@@ -202,6 +222,60 @@ def run_reconciliation(
     results: List[ReconciliationResult] = []
     candidates: List[ReconciliationCandidateMatch] = []
     exceptions: List[ReconciliationException] = []
+
+    # -------------------------------------------------------------
+    # PRE-PASS: Classify and Segregate Floor Consumables
+    # -------------------------------------------------------------
+    has_recon_col = _has_reconciliation_category_column(db)
+    segregated_consumables_count = 0
+    for issue in issues:
+        for il in issue.lines:
+            item = il.material_item
+            explicit_cat = getattr(item, "reconciliation_category", None) if (item and has_recon_col) else None
+            cat_text = item.category if item else None
+            item_code = item.item_code if item else None
+
+            recon_class = resolve_effective_reconciliation_category(
+                item_code=item_code,
+                category_text=cat_text,
+                explicit_category=explicit_cat,
+            )
+
+            if recon_class == RECON_NON_HEAT_SPECIFIC:
+                allocated_issue_line_ids.add(il.id)
+                segregated_consumables_count += 1
+                res = ReconciliationResult(
+                    run_id=run.id,
+                    material_item_id=il.material_item_id,
+                    heat_id=None,
+                    match_method=MatchMethod.CONSUMABLE_SEGREGATED.value,
+                    issued_quantity=il.quantity,
+                    charged_quantity=Decimal("0.0000"),
+                    variance_quantity=il.quantity,
+                    variance_percentage=None,
+                    applied_tolerance=Decimal("0.0000"),
+                    tolerance_basis="Segregated floor/moulding consumable (excluded from furnace bath charge matching)",
+                    variance_class=VarianceClass.OK.value,
+                    contributing_issue_ids=json.dumps([issue.id]),
+                    contributing_issue_line_ids=json.dumps([il.id]),
+                    notes=f"Floor consumable '{item.name if item else ''}' ({item_code or ''}) issued on slip {issue.issue_slip_number} without heat attribution.",
+                    status="SEGREGATED",
+                )
+                results.append(res)
+            elif recon_class == RECON_REVIEW_REQUIRED:
+                exc = ReconciliationException(
+                    run_id=run.id,
+                    exception_type=VarianceClass.PENDING_REVIEW.value,
+                    source_reference=f"Slip {issue.issue_slip_number} / Line {il.line_number}",
+                    description=(
+                        f"Uncertain material classification for item '{item.name if item else il.material_item_id}' ({item_code or ''}). "
+                        "Management review required to determine heat traceability."
+                    ),
+                    assigned_role="Stores",
+                    priority="HIGH",
+                    status=ExceptionStatus.OPEN.value,
+                )
+                exceptions.append(exc)
 
     # Build lookup dictionaries
     # Map heats by normalized heat number and raw heat number
@@ -515,6 +589,11 @@ def run_reconciliation(
 
     db.commit()
     db.refresh(run)
+    run.segregated_consumables_count = segregated_consumables_count
+    run.segregated_consumables_quantity = sum(
+        (r.issued_quantity for r in results if r.match_method == MatchMethod.CONSUMABLE_SEGREGATED.value),
+        Decimal("0.0000"),
+    )
     return run
 
 
@@ -666,7 +745,7 @@ def resolve_exception(
 
 def get_reconciliation_run_detail(db: Session, run_id: int) -> Optional[ReconciliationRun]:
     """Retrieves full reconciliation run with results, candidates, and exceptions."""
-    return db.execute(
+    run = db.execute(
         select(ReconciliationRun)
         .options(
             selectinload(ReconciliationRun.results).selectinload(ReconciliationResult.material_item),
@@ -677,6 +756,14 @@ def get_reconciliation_run_detail(db: Session, run_id: int) -> Optional[Reconcil
         )
         .where(ReconciliationRun.id == run_id)
     ).scalar_one_or_none()
+    if run:
+        seg_results = [r for r in run.results if r.match_method == MatchMethod.CONSUMABLE_SEGREGATED.value]
+        run.segregated_consumables_count = len(seg_results)
+        run.segregated_consumables_quantity = sum(
+            (r.issued_quantity for r in seg_results),
+            Decimal("0.0000"),
+        )
+    return run
 
 
 def list_reconciliation_runs(
@@ -687,7 +774,28 @@ def list_reconciliation_runs(
     """Lists reconciliation runs with pagination."""
     stmt = select(ReconciliationRun)
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
-    items = db.execute(
+    items = list(db.execute(
         stmt.order_by(ReconciliationRun.id.desc()).offset(offset).limit(limit)
-    ).scalars().all()
+    ).scalars().all())
+
+    if items:
+        run_ids = [r.id for r in items]
+        counts_res = db.execute(
+            select(
+                ReconciliationResult.run_id,
+                func.count(ReconciliationResult.id),
+                func.coalesce(func.sum(ReconciliationResult.issued_quantity), Decimal("0.0000")),
+            )
+            .where(
+                ReconciliationResult.run_id.in_(run_ids),
+                ReconciliationResult.match_method == MatchMethod.CONSUMABLE_SEGREGATED.value,
+            )
+            .group_by(ReconciliationResult.run_id)
+        ).all()
+        count_map = {row[0]: (row[1], row[2]) for row in counts_res}
+        for r in items:
+            cnt, qty = count_map.get(r.id, (0, Decimal("0.0000")))
+            r.segregated_consumables_count = cnt
+            r.segregated_consumables_quantity = qty
+
     return items, total

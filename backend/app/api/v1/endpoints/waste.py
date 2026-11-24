@@ -5,7 +5,7 @@ Waste Disposition API Endpoints.
 from typing import List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, Query, status, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import select, desc
 
 from app.core.security import AuthenticatedUser, Permission, require_permission
@@ -17,7 +17,7 @@ from app.schemas.waste import (
     WasteAuditLogResponse,
     WasteStatusAction,
 )
-from app.models.waste import WasteDispositionHeader
+from app.models.waste import WasteDispositionHeader, WasteDispositionLineItem
 from app.services.waste_service import (
     create_waste_disposition,
     submit_waste_disposition,
@@ -103,7 +103,16 @@ def list_waste_dispositions(
     db: Session = Depends(get_db),
     _user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_READ)),
 ):
-    query = select(WasteDispositionHeader).order_by(desc(WasteDispositionHeader.created_at))
+    query = (
+        select(WasteDispositionHeader)
+        .options(
+            joinedload(WasteDispositionHeader.source_department),
+            selectinload(WasteDispositionHeader.lines).joinedload(WasteDispositionLineItem.material_item),
+            selectinload(WasteDispositionHeader.lines).joinedload(WasteDispositionLineItem.uom),
+            selectinload(WasteDispositionHeader.audit_logs),
+        )
+        .order_by(desc(WasteDispositionHeader.created_at))
+    )
     if status:
         query = query.where(WasteDispositionHeader.status == status.upper())
     if waste_type:
@@ -116,7 +125,7 @@ def list_waste_dispositions(
         query = query.where(WasteDispositionHeader.disposition_date <= to_date)
 
     query = query.offset(skip).limit(limit)
-    headers = db.execute(query).scalars().all()
+    headers = db.execute(query).scalars().unique().all()
     return [_serialize_waste(h) for h in headers]
 
 
@@ -126,7 +135,17 @@ def get_waste_by_id(
     db: Session = Depends(get_db),
     _user: AuthenticatedUser = Depends(require_permission(Permission.WASTE_READ)),
 ):
-    waste = db.get(WasteDispositionHeader, waste_id)
+    query = (
+        select(WasteDispositionHeader)
+        .options(
+            joinedload(WasteDispositionHeader.source_department),
+            selectinload(WasteDispositionHeader.lines).joinedload(WasteDispositionLineItem.material_item),
+            selectinload(WasteDispositionHeader.lines).joinedload(WasteDispositionLineItem.uom),
+            selectinload(WasteDispositionHeader.audit_logs),
+        )
+        .where(WasteDispositionHeader.id == waste_id)
+    )
+    waste = db.execute(query).scalars().unique().first()
     if not waste:
         raise HTTPException(status_code=404, detail="Waste disposition record not found")
     return _serialize_waste(waste)

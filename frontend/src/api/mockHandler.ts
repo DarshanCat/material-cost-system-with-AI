@@ -28,7 +28,10 @@ const CATEGORIES = [
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-VSPL-Mock-Data': 'true',
+    },
   });
 }
 
@@ -38,66 +41,83 @@ const liveVendors = [...demoData.vendors];
 const liveGrns = [...demoData.grns];
 const liveIssues = [...demoData.issues];
 
-// Ensure an approved Stores Issue exists linked to demo heat H-102603-3801 for instant floor verification
-if (!liveIssues.some(i => i.heat_reference_number === 'H-102603-3801')) {
-  liveIssues.unshift({
-    id: 101,
-    issue_slip_number: 'ISS-20261022-0042',
-    issue_date: '2026-10-22',
-    issuing_department_id: 4,
-    issuing_department_name: 'General/Stores',
-    receiving_department_id: 1,
-    receiving_department_name: 'Foundry',
-    heat_reference_number: 'H-102603-3801',
-    notes: 'Furnace Charge Allocation for Heat 102603-3801 (SG Iron 500/7)',
-    status: 'APPROVED',
-    created_by: 'usr_stores_01',
-    created_at: '2026-10-22T06:30:00Z',
-    lines: [
-      {
-        id: 1,
-        issue_id: 101,
-        line_number: 1,
-        material_item_id: 1,
-        item_code: 'FDY-RM-001',
-        item_name: 'Pig Iron (Foundry Grade 1)',
-        uom_id: 1,
-        uom_code: 'KG',
-        quantity: '4000.0000',
-        remarks: 'Base charge Pig Iron',
-      },
-      {
-        id: 2,
-        issue_id: 101,
-        line_number: 2,
-        material_item_id: 2,
-        item_code: 'FDY-RM-002',
-        item_name: 'CRCA Steel Scrap (Low Manganese)',
-        uom_id: 1,
-        uom_code: 'KG',
-        quantity: '5500.0000',
-        remarks: 'Low Mn scrap charge',
-      },
-      {
-        id: 3,
-        issue_id: 101,
-        line_number: 3,
-        material_item_id: 4,
-        item_code: 'FDY-RM-004',
-        item_name: 'Ferro Silicon 75% (FeSi)',
-        uom_id: 1,
-        uom_code: 'KG',
-        quantity: '85.0000',
-        remarks: 'Inoculation base alloy',
-      },
-    ],
-  } as any);
-}
+// NOTE: Previously lines 44-98 injected phantom issue slip 'ISS-20261022-0042'
+// into liveIssues on startup for demo heat H-102603-3801. This simulated an approved
+// 9,585 kg issue without a matching stock ledger entry (External Review Observation 4).
+// It has been purged so mock fallback strictly reflects genuine database fixtures.
+
 const liveHeats = [...demoData.heats];
 const liveWaste = [...demoData.waste];
 const liveAudits = [...demoData.audits];
 const liveRequests = [...demoData.requests];
 const liveAliases = [...demoData.aliases];
+
+const livePRs: any[] = [
+  {
+    id: 1,
+    pr_number: 'PR-202611-0001',
+    department_id: 1,
+    department_name: 'Foundry',
+    requisitioner_id: 'usr_purchase_01',
+    requisitioner_role: 'SCM / Planning',
+    request_date: '2026-11-10',
+    target_date: '2026-11-20',
+    justification: 'Buffer replenishment for SG Iron induction melting heat campaign (Grade 500/7). Critical ferro-alloys safety stock.',
+    status: 'APPROVED',
+    plant_head_approved_by: 'usr_mgmt_01',
+    plant_head_approved_at: '2026-11-11T10:30:00Z',
+    rejection_reason: null,
+    created_by: 'usr_purchase_01',
+    created_at: '2026-11-10T09:00:00Z',
+    updated_at: '2026-11-11T10:30:00Z',
+    lines: [
+      {
+        id: 1,
+        line_number: 1,
+        material_item_id: 1,
+        item_code: 'RM-PIG-001',
+        item_name: 'Pig Iron Standard Foundry Grade',
+        uom_id: 2,
+        uom_code: 'KG',
+        quantity: 5000,
+        estimated_rate: 45.5,
+        remarks: 'High purity pig iron pigs for melt charges',
+      },
+      {
+        id: 2,
+        line_number: 2,
+        material_item_id: 2,
+        item_code: 'FA-FSI-001',
+        item_name: 'Ferro Silicon 75%',
+        uom_id: 2,
+        uom_code: 'KG',
+        quantity: 1500,
+        estimated_rate: 120.0,
+        remarks: 'FeSi 75% inoculant grade',
+      },
+    ],
+    audit_logs: [
+      {
+        id: 1,
+        action: 'SUBMITTED',
+        from_status: 'DRAFT',
+        to_status: 'SUBMITTED',
+        actor_id: 'usr_purchase_01',
+        comments: 'Submitted for Plant Head Layer-1 review',
+        timestamp: '2026-11-10T09:00:00Z',
+      },
+      {
+        id: 2,
+        action: 'PLANT_HEAD_APPROVED',
+        from_status: 'SUBMITTED',
+        to_status: 'APPROVED',
+        actor_id: 'usr_mgmt_01',
+        comments: 'Plant Head approved for procurement under monthly budget allocation.',
+        timestamp: '2026-11-11T10:30:00Z',
+      },
+    ],
+  },
+];
 
 const livePOs: any[] = [
   {
@@ -118,11 +138,11 @@ const livePOs: any[] = [
     grand_total: '159300.00',
     status: 'APPROVED',
     current_approval_level: 'COMPLETED',
-    dept_approved_by: 'usr_foundry_hod',
+    dept_approved_by: 'demo_dept_approver',
     dept_approved_at: '2026-10-15T10:30:00Z',
-    scm_approved_by: 'usr_purchase_head',
+    scm_approved_by: 'demo_scm_approver',
     scm_approved_at: '2026-10-15T14:15:00Z',
-    mgmt_approved_by: 'usr_managing_director',
+    mgmt_approved_by: 'demo_mgmt_approver',
     mgmt_approved_at: '2026-10-16T09:00:00Z',
     rejection_reason: null,
     grn_count: 1,
@@ -148,9 +168,9 @@ const livePOs: any[] = [
     ],
     audit_logs: [
       { id: 1, action: 'CREATED', from_status: 'DRAFT', to_status: 'DRAFT', actor_id: 'usr_stores_01', timestamp: '2026-10-15T09:00:00Z' },
-      { id: 2, action: 'DEPT_APPROVED', from_status: 'SUBMITTED', to_status: 'DEPT_APPROVED', actor_id: 'usr_foundry_hod', timestamp: '2026-10-15T10:30:00Z' },
-      { id: 3, action: 'SCM_APPROVED', from_status: 'DEPT_APPROVED', to_status: 'SCM_APPROVED', actor_id: 'usr_purchase_head', timestamp: '2026-10-15T14:15:00Z' },
-      { id: 4, action: 'APPROVED', from_status: 'SCM_APPROVED', to_status: 'APPROVED', actor_id: 'usr_managing_director', timestamp: '2026-10-16T09:00:00Z' },
+      { id: 2, action: 'DEPT_APPROVED', from_status: 'SUBMITTED', to_status: 'DEPT_APPROVED', actor_id: 'demo_dept_approver', timestamp: '2026-10-15T10:30:00Z' },
+      { id: 3, action: 'SCM_APPROVED', from_status: 'DEPT_APPROVED', to_status: 'SCM_APPROVED', actor_id: 'demo_scm_approver', timestamp: '2026-10-15T14:15:00Z' },
+      { id: 4, action: 'APPROVED', from_status: 'SCM_APPROVED', to_status: 'APPROVED', actor_id: 'demo_mgmt_approver', timestamp: '2026-10-16T09:00:00Z' },
     ],
   },
   {
@@ -171,9 +191,9 @@ const livePOs: any[] = [
     grand_total: '94400.00',
     status: 'SCM_APPROVED',
     current_approval_level: 'MANAGEMENT',
-    dept_approved_by: 'usr_foundry_hod',
+    dept_approved_by: 'demo_dept_approver',
     dept_approved_at: '2026-10-22T11:00:00Z',
-    scm_approved_by: 'usr_purchase_head',
+    scm_approved_by: 'demo_scm_approver',
     scm_approved_at: '2026-10-22T16:00:00Z',
     mgmt_approved_by: null,
     mgmt_approved_at: null,
@@ -201,8 +221,8 @@ const livePOs: any[] = [
     ],
     audit_logs: [
       { id: 1, action: 'CREATED', from_status: 'DRAFT', to_status: 'SUBMITTED', actor_id: 'usr_purchase_01', timestamp: '2026-10-22T10:00:00Z' },
-      { id: 2, action: 'DEPT_APPROVED', from_status: 'SUBMITTED', to_status: 'DEPT_APPROVED', actor_id: 'usr_foundry_hod', timestamp: '2026-10-22T11:00:00Z' },
-      { id: 3, action: 'SCM_APPROVED', from_status: 'DEPT_APPROVED', to_status: 'SCM_APPROVED', actor_id: 'usr_purchase_head', timestamp: '2026-10-22T16:00:00Z' },
+      { id: 2, action: 'DEPT_APPROVED', from_status: 'SUBMITTED', to_status: 'DEPT_APPROVED', actor_id: 'demo_dept_approver', timestamp: '2026-10-22T11:00:00Z' },
+      { id: 3, action: 'SCM_APPROVED', from_status: 'DEPT_APPROVED', to_status: 'SCM_APPROVED', actor_id: 'demo_scm_approver', timestamp: '2026-10-22T16:00:00Z' },
     ],
   },
   {
@@ -352,6 +372,9 @@ const liveReconciliationRuns: any[] = [
 ];
 
 export function handleMockRequest(urlStr: string, init?: RequestInit): Response | null {
+  if (import.meta.env.PROD) {
+    return null;
+  }
   const method = (init?.method || 'GET').toUpperCase();
   const url = new URL(urlStr, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   const rawPath = url.pathname;
@@ -386,28 +409,9 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
     });
   }
 
-  // 2. Auth routes
-  if (path === '/api/v1/auth/status') {
-    return jsonResponse({ provider: 'dev', login_available: true });
-  }
-
-  if (path === '/api/v1/auth/me') {
-    return jsonResponse({ user_id: 'usr_admin_01', role: 'Admin', department: 'Admin' });
-  }
-
-  if (path === '/api/v1/auth/dev-login') {
-    let role = 'Admin';
-    try {
-      if (init?.body) {
-        const parsed = JSON.parse(String(init.body));
-        role = parsed.role || 'Admin';
-      }
-    } catch {}
-    return jsonResponse({
-      access_token: 'mock_demo_token_' + Date.now(),
-      token_type: 'bearer',
-      user: { user_id: `usr_${role.toLowerCase()}_01`, role, department: role },
-    });
+  // 2. Auth routes must never be mocked or synthesize identities client-side.
+  if (path.startsWith('/api/v1/auth/')) {
+    return null;
   }
 
   // 3. Departments & UOMs
@@ -604,6 +608,40 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
       res = res.filter(b => b.item_code.toLowerCase().includes(q) || b.item_name.toLowerCase().includes(q));
     }
     return jsonResponse(res);
+  }
+
+  if (path === '/api/v1/ledger/summary-by-uom') {
+    const uomMap: Record<string, any> = {};
+    for (const b of demoData.balances) {
+      const uom = b.uom_code || 'UOM';
+      if (!uomMap[uom]) {
+        uomMap[uom] = {
+          uom_id: b.base_uom_id || 1,
+          uom_code: uom,
+          uom_name: uom === 'KG' ? 'Kilogram' : uom === 'LTR' ? 'Liter' : uom === 'NOS' ? 'Numbers / Pieces' : uom === 'SET' ? 'Set' : uom,
+          decimal_precision: uom === 'KG' ? 4 : uom === 'LTR' ? 3 : 0,
+          total_quantity: 0,
+          item_count: 0,
+          in_stock_items_count: 0,
+          zero_stock_items_count: 0,
+          negative_stock_items_count: 0,
+          movement_count: 0,
+        };
+      }
+      const s = uomMap[uom];
+      s.item_count += 1;
+      const balNum = Number(b.current_balance) || 0;
+      s.total_quantity = Number((s.total_quantity + balNum).toFixed(4));
+      s.movement_count += (b.movement_count || 1);
+      if (balNum > 0) s.in_stock_items_count += 1;
+      else if (balNum === 0) s.zero_stock_items_count += 1;
+      else s.negative_stock_items_count += 1;
+    }
+    const sorted = Object.keys(uomMap).sort().map(k => ({
+      ...uomMap[k],
+      total_quantity: String(uomMap[k].total_quantity.toFixed(uomMap[k].decimal_precision)),
+    }));
+    return jsonResponse(sorted);
   }
 
   if (path === '/api/v1/ledger/entries') {
@@ -1102,6 +1140,117 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
     });
   }
 
+  // 15b. Purchase Requests (PR)
+  if (matchPath('/api/v1/purchase-requests/')) {
+    if (method === 'POST') {
+      try {
+        const body = JSON.parse(String(init?.body || '{}'));
+        const newId = livePRs.length + 1;
+        const now = new Date();
+        const dept = demoData.departments.find(d => d.id === body.department_id);
+        const prLines = (body.lines || []).map((l: any, idx: number) => {
+          const item = liveItems.find(i => i.id === l.material_item_id);
+          const uom = demoData.uoms.find(u => u.id === l.uom_id);
+          return {
+            id: idx + 1,
+            line_number: idx + 1,
+            material_item_id: l.material_item_id,
+            item_code: item?.item_code || '',
+            item_name: item?.name || '',
+            uom_id: l.uom_id || 1,
+            uom_code: uom?.code || 'KG',
+            quantity: Number(l.quantity) || 1,
+            estimated_rate: l.estimated_rate ? Number(l.estimated_rate) : null,
+            remarks: l.remarks,
+          };
+        });
+
+        const newPR = {
+          id: newId,
+          pr_number: `PR-${now.toISOString().slice(0, 7).replace('-', '')}-${String(newId).padStart(4, '0')}`,
+          department_id: body.department_id || 1,
+          department_name: dept?.name || 'Foundry',
+          requisitioner_id: 'usr_purchase_01',
+          requisitioner_role: 'SCM / Planning',
+          request_date: now.toISOString().slice(0, 10),
+          target_date: body.target_date || now.toISOString().slice(0, 10),
+          justification: body.justification || 'Operational buffer requirement',
+          status: 'SUBMITTED',
+          plant_head_approved_by: null,
+          plant_head_approved_at: null,
+          rejection_reason: null,
+          created_by: 'usr_purchase_01',
+          created_at: now.toISOString(),
+          updated_at: now.toISOString(),
+          lines: prLines,
+          audit_logs: [
+            {
+              id: 1,
+              action: 'SUBMITTED',
+              from_status: 'DRAFT',
+              to_status: 'SUBMITTED',
+              actor_id: 'usr_purchase_01',
+              comments: 'Submitted for Plant Head Layer-1 review',
+              timestamp: now.toISOString(),
+            },
+          ],
+        };
+        livePRs.unshift(newPR);
+        return jsonResponse(newPR, 201);
+      } catch {
+        return jsonResponse({ detail: 'Failed to create PR' }, 400);
+      }
+    }
+    const statusParam = new URL(url).searchParams.get('status');
+    if (statusParam && statusParam.toUpperCase() !== 'ALL') {
+      return jsonResponse(livePRs.filter(p => p.status === statusParam.toUpperCase()));
+    }
+    return jsonResponse(livePRs);
+  }
+
+  if (path.startsWith('/api/v1/purchase-requests/')) {
+    const parts = path.split('/');
+    const prId = parseInt(parts[4], 10);
+    const action = parts[5];
+    const pr = livePRs.find(p => p.id === prId);
+    if (!pr) return jsonResponse({ detail: 'Purchase request not found' }, 404);
+
+    if (action === 'approve') {
+      let body: any = {};
+      try { body = JSON.parse(String(init?.body || '{}')); } catch {}
+      pr.status = 'APPROVED';
+      pr.plant_head_approved_by = 'usr_mgmt_01';
+      pr.plant_head_approved_at = new Date().toISOString();
+      pr.audit_logs.push({
+        id: pr.audit_logs.length + 1,
+        action: 'PLANT_HEAD_APPROVED',
+        from_status: 'SUBMITTED',
+        to_status: 'APPROVED',
+        actor_id: 'usr_mgmt_01',
+        comments: body.comments || 'Approved by Plant Head',
+        timestamp: pr.plant_head_approved_at,
+      });
+      return jsonResponse(pr);
+    }
+    if (action === 'reject') {
+      let body: any = {};
+      try { body = JSON.parse(String(init?.body || '{}')); } catch {}
+      pr.status = 'REJECTED';
+      pr.rejection_reason = body.comments || 'Rejected by Plant Head';
+      pr.audit_logs.push({
+        id: pr.audit_logs.length + 1,
+        action: 'PLANT_HEAD_REJECTED',
+        from_status: 'SUBMITTED',
+        to_status: 'REJECTED',
+        actor_id: 'usr_mgmt_01',
+        comments: pr.rejection_reason,
+        timestamp: new Date().toISOString(),
+      });
+      return jsonResponse(pr);
+    }
+    return jsonResponse(pr);
+  }
+
   // 16. Purchase Orders (P2P Procurement)
   if (matchPath('/api/v1/purchase-orders/')) {
     if (method === 'POST') {
@@ -1183,31 +1332,47 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
     if (action === 'submit') {
       po.status = 'SUBMITTED';
       po.current_approval_level = 'DEPARTMENT';
-      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'SUBMITTED', from_status: 'DRAFT', to_status: 'SUBMITTED', actor_id: 'usr_purchase_01', timestamp: new Date().toISOString() });
+      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'SUBMITTED', from_status: 'DRAFT', to_status: 'SUBMITTED', actor_id: 'usr_purchase_01', timestamp: '2026-10-22T10:15:00Z' });
       return jsonResponse(po);
     }
     if (action === 'approve-dept') {
       po.status = 'DEPT_APPROVED';
       po.current_approval_level = 'SUPPLY_CHAIN';
-      po.dept_approved_by = 'usr_foundry_hod';
-      po.dept_approved_at = new Date().toISOString();
-      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'DEPT_APPROVED', from_status: 'SUBMITTED', to_status: 'DEPT_APPROVED', actor_id: 'usr_foundry_hod', timestamp: new Date().toISOString() });
+      po.dept_approved_by = 'demo_dept_approver';
+      po.dept_approved_at = '2026-10-22T11:00:00Z';
+      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'DEPT_APPROVED', from_status: 'SUBMITTED', to_status: 'DEPT_APPROVED', actor_id: 'demo_dept_approver', timestamp: '2026-10-22T11:00:00Z' });
       return jsonResponse(po);
     }
     if (action === 'approve-scm') {
       po.status = 'SCM_APPROVED';
       po.current_approval_level = 'MANAGEMENT';
-      po.scm_approved_by = 'usr_purchase_head';
-      po.scm_approved_at = new Date().toISOString();
-      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'SCM_APPROVED', from_status: 'DEPT_APPROVED', to_status: 'SCM_APPROVED', actor_id: 'usr_purchase_head', timestamp: new Date().toISOString() });
+      po.scm_approved_by = 'demo_scm_approver';
+      po.scm_approved_at = '2026-10-22T14:00:00Z';
+      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'SCM_APPROVED', from_status: 'DEPT_APPROVED', to_status: 'SCM_APPROVED', actor_id: 'demo_scm_approver', timestamp: '2026-10-22T14:00:00Z' });
       return jsonResponse(po);
     }
     if (action === 'approve-mgmt') {
       po.status = 'APPROVED';
       po.current_approval_level = 'COMPLETED';
-      po.mgmt_approved_by = 'usr_managing_director';
-      po.mgmt_approved_at = new Date().toISOString();
-      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'APPROVED', from_status: 'SCM_APPROVED', to_status: 'APPROVED', actor_id: 'usr_managing_director', timestamp: new Date().toISOString() });
+      po.mgmt_approved_by = 'demo_mgmt_approver';
+      po.mgmt_approved_at = '2026-10-22T16:00:00Z';
+      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'APPROVED', from_status: 'SCM_APPROVED', to_status: 'APPROVED', actor_id: 'demo_mgmt_approver', timestamp: '2026-10-22T16:00:00Z' });
+      return jsonResponse(po);
+    }
+    if (action === 'order-placed') {
+      let body: any = {};
+      try { body = JSON.parse(String(init?.body || '{}')); } catch {}
+      po.status = 'ORDER_PLACED';
+      po.order_placed_at = body.order_placed_at || new Date().toISOString();
+      po.order_placed_by = 'usr_purchase_01';
+      po.vendor_order_ref = body.vendor_order_ref || null;
+      po.audit_logs.push({
+        id: po.audit_logs.length + 1,
+        action: 'ORDER_PLACED',
+        comments: `Order placed with vendor. Ref: ${body.vendor_order_ref || 'N/A'}. ${body.notes || ''}`.trim(),
+        actor_id: 'usr_purchase_01',
+        timestamp: po.order_placed_at,
+      });
       return jsonResponse(po);
     }
     if (action === 'reject') {
@@ -1215,7 +1380,7 @@ export function handleMockRequest(urlStr: string, init?: RequestInit): Response 
       try { body = JSON.parse(String(init?.body || '{}')); } catch {}
       po.status = 'REJECTED';
       po.rejection_reason = body.comments || 'Rejected by approver';
-      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'REJECTED', comments: po.rejection_reason, actor_id: 'usr_reviewer', timestamp: new Date().toISOString() });
+      po.audit_logs.push({ id: po.audit_logs.length + 1, action: 'REJECTED', comments: po.rejection_reason, actor_id: 'demo_reviewer', timestamp: '2026-10-22T16:30:00Z' });
       return jsonResponse(po);
     }
     if (action === 'cancel') {

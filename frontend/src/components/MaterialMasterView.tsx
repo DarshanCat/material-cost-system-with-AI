@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import type { MaterialItem, Department, ItemHistory, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
+import { hasPermission } from '../auth/permissions';
 
 interface ItemCategoryOption {
   category: string;
@@ -55,8 +56,9 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
   const [statusError, setStatusError] = useState<string | null>(null);
   const [statusSaving, setStatusSaving] = useState<boolean>(false);
 
-  // Retire / reactivate is limited to the approving roles (ITEM_UPDATE: Management, Admin); the server enforces it.
-  const canChangeStatus = currentRole === 'Management' || currentRole === 'Admin';
+  // Retire / reactivate is limited to roles with item:update; requesting new items requires item_request:create.
+  const canChangeStatus = hasPermission(currentRole, 'item:update');
+  const canRequestNewItem = hasPermission(currentRole, 'item_request:create');
 
   // Load departments and the Nomenclature Standard v1.0 categories for the filter dropdowns
   useEffect(() => {
@@ -169,12 +171,14 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
             Existing codes outside v1.0 are kept unchanged. Codes are permanent and never reused.
           </p>
         </div>
-        <div>
-          <button className="primary-btn" onClick={onRequestNewItem}>
-            <PlusCircle size={16} />
-            <span>Request New Material Item</span>
-          </button>
-        </div>
+        {canRequestNewItem && (
+          <div>
+            <button className="primary-btn" onClick={onRequestNewItem}>
+              <PlusCircle size={16} />
+              <span>Request New Material Item</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter Toolbar */}
@@ -256,10 +260,12 @@ export const MaterialMasterView: React.FC<MaterialMasterViewProps> = ({
                 ? 'No items match the selected search filters.'
                 : 'Zero synthetic data policy active: ~741 catalog items will be loaded via approved Item Requests or Phase 7 historical spreadsheet migration.'}
             </p>
-            <button className="secondary-btn mt-3" onClick={onRequestNewItem}>
-              <PlusCircle size={15} />
-              <span>Initiate First Item Creation Request</span>
-            </button>
+            {canRequestNewItem && (
+              <button className="secondary-btn mt-3" onClick={onRequestNewItem}>
+                <PlusCircle size={15} />
+                <span>Initiate First Item Creation Request</span>
+              </button>
+            )}
           </div>
         ) : (
           <>

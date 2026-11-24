@@ -103,6 +103,34 @@ class HeatCostResponse(BaseModel):
     unvalued_lines: int
     lines: List[HeatCostLineResponse] = []
 
+    # Three Authoritative Costing Measures (Phase 2B-2B & Phase 2B-2C)
+    measure_a_cost_per_kg: Optional[Decimal] = None
+    measure_a_status: Optional[str] = None
+    measure_b_cost_per_kg: Optional[Decimal] = None
+    measure_b_status: Optional[str] = None
+    measure_c_cost_per_kg: Optional[Decimal] = None
+    measure_c_status: Optional[str] = None
+
+    # Liquid Heel & Continuity
+    opening_liquid_heel_kg: Optional[Decimal] = None
+    opening_liquid_heel_value: Optional[Decimal] = None
+    closing_liquid_heel_kg: Optional[Decimal] = None
+    closing_liquid_heel_value: Optional[Decimal] = None
+
+    # Scrap Credit (FIN-DEC-03)
+    approved_scrap_credit: Optional[Decimal] = None
+
+    # Mass Balance & Melting Loss (FIN-DEC-04)
+    true_melt_loss_kg: Optional[Decimal] = None
+    true_melt_loss_pct: Optional[Decimal] = None
+    melting_recovery_pct: Optional[Decimal] = None
+    casting_yield_pct: Optional[Decimal] = None
+
+    # Governance & Conversion Cost Separation (FIN-DEC-05 & FIN-DEC-06)
+    conversion_cost_status: str = "NOT_AVAILABLE"
+    is_historical_exception: bool = False
+    anomalies: List[str] = []
+
 
 # --- Part Costing Schemas ---
 

@@ -183,3 +183,10 @@ def test_opening_balance_rejects_invalid_baseline_date(client: TestClient, db_se
     post_resp = client.post("/api/v1/opening-balances/post", json=post_payload)
     assert post_resp.status_code == 422
     assert "violates rule l7" in post_resp.json()["detail"].lower()
+
+
+@pytest.fixture(autouse=True)
+def _authenticate_as_management(client: TestClient, management_headers: dict):
+    """Opening balance operations require Management permission OPENING_BALANCE_POST."""
+    client.headers.update(management_headers)
+

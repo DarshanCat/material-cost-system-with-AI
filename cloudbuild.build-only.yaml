@@ -1,0 +1,5 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build','-f','deploy/google-cloud/Dockerfile','-t','asia-south1-docker.pkg.dev/vspl-mms-prod/vspl-mms/app:items-${BUILD_ID}','.']
+images:
+  - 'asia-south1-docker.pkg.dev/vspl-mms-prod/vspl-mms/app:items-${BUILD_ID}'

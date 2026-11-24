@@ -13,6 +13,7 @@ import type { MaterialAlias, UserRole } from '../types';
 import { apiFetch } from '../api/client';
 import { useReferenceData } from '../hooks/useReferenceData';
 import { ReferenceDataNotice } from './ReferenceDataNotice';
+import { hasPermission } from '../auth/permissions';
 
 interface MaterialAliasViewProps {
   currentRole: UserRole;
@@ -20,6 +21,9 @@ interface MaterialAliasViewProps {
 }
 
 export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRole }) => {
+  const canCreateAlias = hasPermission(currentRole, 'alias:create');
+  const canApproveAlias = hasPermission(currentRole, 'alias:approve');
+  const canDeactivateAlias = hasPermission(currentRole, 'alias:deactivate');
   const [aliases, setAliases] = useState<MaterialAlias[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -174,7 +178,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
           </p>
         </div>
         <div className="header-actions">
-          {['Stores', 'Foundry', 'Management', 'Admin'].includes(currentRole) && (
+          {canCreateAlias && (
             <button className="erp-btn btn-primary" onClick={() => setShowCreateModal(true)}>
               <Plus size={16} className="btn-icon" /> Map New Alias
             </button>
@@ -267,7 +271,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
                     <td>{a.created_by}</td>
                     <td>
                       <div className="action-button-group">
-                        {a.status === 'PENDING' && ['Management', 'Admin'].includes(currentRole) && (
+                        {a.status === 'PENDING' && canApproveAlias && (
                           <>
                             <button className="erp-btn btn-sm btn-success" onClick={() => handleApprove(a.id)}>
                               Approve
@@ -280,7 +284,7 @@ export const MaterialAliasView: React.FC<MaterialAliasViewProps> = ({ currentRol
                             </button>
                           </>
                         )}
-                        {a.is_active && (
+                        {a.is_active && canDeactivateAlias && (
                           <button className="erp-btn btn-sm btn-secondary" onClick={() => handleDeactivate(a.id)}>
                             Deactivate
                           </button>

@@ -7,12 +7,14 @@ interface DiagnosticsViewProps {
   health: SystemHealthData | null;
   loadingHealth: boolean;
   onRefreshHealth: () => void;
+  canRunStrictDbCheck?: boolean;
 }
 
 export const DiagnosticsView: React.FC<DiagnosticsViewProps> = ({
   health,
   loadingHealth,
   onRefreshHealth,
+  canRunStrictDbCheck = false,
 }) => {
   const [strictCheckResult, setStrictCheckResult] = useState<string | null>(null);
   const [checkingStrict, setCheckingStrict] = useState(false);
@@ -121,15 +123,21 @@ export const DiagnosticsView: React.FC<DiagnosticsViewProps> = ({
             </div>
           </div>
 
-          <div style={{ marginTop: '1rem' }}>
-            <button 
-              className="action-btn"
-              onClick={runStrictDbCheck}
-              disabled={checkingStrict}
-            >
-              {checkingStrict ? 'Running Connectivity Gate...' : 'Execute Strict DB Connectivity Gate'}
-            </button>
-          </div>
+          {canRunStrictDbCheck ? (
+            <div style={{ marginTop: '1rem' }}>
+              <button
+                className="action-btn"
+                onClick={runStrictDbCheck}
+                disabled={checkingStrict}
+              >
+                {checkingStrict ? 'Running Connectivity Gate...' : 'Execute Strict DB Connectivity Gate'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted" style={{ marginTop: '1rem' }}>
+              Strict DB connectivity gate verification requires <code>audit:read</code> authorization (Management or Admin).
+            </p>
+          )}
 
           {strictCheckResult && (
             <div className="strict-result-box">

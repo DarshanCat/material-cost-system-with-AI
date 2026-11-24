@@ -1,12 +1,16 @@
 export type ModuleId = 
   | 'dashboard'
+  | 'heat-master'
   | 'material-master'
   | 'vendor-master'
+  | 'p2p-cycle'
+  | 'purchase-requests'
   | 'purchase-orders'
   | 'item-requests'
   | 'references'
   | 'grn-management'
   | 'material-issue'
+  | 'return-to-store'
   | 'waste-disposition'
   | 'inventory-ledger'
   | 'opening-balances'
@@ -17,14 +21,18 @@ export type ModuleId =
   | 'heat-import'
   | 'excel-import'
   | 'costing'
-  | 'system-health';
+  | 'system-health'
+  | 'roles-responsibilities'
+  | 'users';
 
 export type UserRole = 
   | 'Stores'
   | 'Foundry'
   | 'Purchase'
   | 'Management'
-  | 'Admin';
+  | 'Admin'
+  | 'Quality'
+  | 'Accounts';
 
 export interface DatabaseHealth {
   connected: boolean;
@@ -282,14 +290,15 @@ export interface GRN {
   validation_warnings?: string[];
   // Quality Inspection & Certification
   quality_document_number?: string | null;
-  quality_inspection_status?: 'PENDING' | 'PASSED' | 'REJECTED' | 'CONDITIONAL' | null;
+  quality_inspection_status?: 'PENDING' | 'PASSED' | 'REJECTED' | 'CONDITIONALLY_ACCEPTED' | null;
   quality_inspection_notes?: string | null;
   quality_inspected_by?: string | null;
   quality_inspected_at?: string | null;
   // P2P Purchase Order & Payment Settlement Tracking
   po_id?: number | null;
   po_number?: string | null;
-  payment_status?: 'PENDING' | 'PARTIALLY_PAID' | 'PAID';
+  payment_status?: 'UNPAID' | 'PENDING' | 'PARTIALLY_PAID' | 'PAID' | null;
+  payable_total?: string | number | null;
   amount_paid?: string | number | null;
   payment_reference?: string | null;
   payment_date?: string | null;
@@ -312,9 +321,45 @@ export interface POLineItem {
   remarks?: string;
 }
 
+export interface PRLineItem {
+  id?: number;
+  line_number: number;
+  material_item_id: number;
+  item_code?: string;
+  item_name?: string;
+  uom_id: number;
+  uom_code?: string;
+  quantity: string | number;
+  estimated_rate?: string | number | null;
+  remarks?: string;
+}
+
+export interface PurchaseRequest {
+  id: number;
+  pr_number: string;
+  department_id: number;
+  department_name: string;
+  requisitioner_id: string;
+  requisitioner_role: string;
+  request_date: string;
+  target_date: string;
+  justification: string;
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CONVERTED_TO_PO' | 'CANCELLED';
+  plant_head_approved_by?: string | null;
+  plant_head_approved_at?: string | null;
+  rejection_reason?: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  lines: PRLineItem[];
+  audit_logs: AuditLog[];
+}
+
 export interface PurchaseOrder {
   id: number;
   po_number: string;
+  pr_id?: number | null;
+  pr_number?: string | null;
   po_date: string;
   expected_delivery_date: string;
   vendor_id: number;
@@ -328,7 +373,7 @@ export interface PurchaseOrder {
   total_amount_ex_gst: string | number;
   total_gst_amount: string | number;
   grand_total: string | number;
-  status: 'DRAFT' | 'SUBMITTED' | 'DEPT_APPROVED' | 'SCM_APPROVED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  status: 'DRAFT' | 'SUBMITTED' | 'DEPT_APPROVED' | 'SCM_APPROVED' | 'APPROVED' | 'ORDER_PLACED' | 'CLOSED' | 'REJECTED' | 'CANCELLED';
   current_approval_level: 'DEPARTMENT' | 'SUPPLY_CHAIN' | 'MANAGEMENT' | 'COMPLETED';
   dept_approved_by?: string | null;
   dept_approved_at?: string | null;
@@ -336,6 +381,9 @@ export interface PurchaseOrder {
   scm_approved_at?: string | null;
   mgmt_approved_by?: string | null;
   mgmt_approved_at?: string | null;
+  order_placed_by?: string | null;
+  order_placed_at?: string | null;
+  vendor_order_ref?: string | null;
   rejection_reason?: string | null;
   grn_count?: number;
   fulfilled_percentage?: number;
@@ -375,6 +423,52 @@ export interface MaterialIssue {
   lines: MaterialIssueLineItem[];
   audit_logs: AuditLog[];
   validation_warnings?: string[];
+}
+
+export type ReturnCondition =
+  | 'UNUSED_GOOD'
+  | 'MACHINE_SHOP_BORINGS'
+  | 'FOUNDRY_RETURNS'
+  | 'REJECTED_CASTINGS'
+  | 'DAMAGED_CONTAMINATED';
+
+export type ReturnStatus = 'DRAFT' | 'SUBMITTED' | 'ACCEPTED' | 'REJECTED';
+
+export interface MaterialReturnLineItem {
+  id?: number;
+  return_id?: number;
+  line_number: number;
+  material_item_id: number;
+  uom_id: number;
+  quantity: string | number;
+  condition: ReturnCondition;
+  remarks?: string;
+  item_code?: string;
+  item_name?: string;
+  uom_code?: string;
+}
+
+export interface MaterialReturn {
+  id: number;
+  return_number: string;
+  return_date: string;
+  returning_department_id: number;
+  returning_department_name?: string;
+  receiving_department_id: number;
+  receiving_department_name?: string;
+  reference_issue_id?: number | null;
+  heat_reference_number?: string | null;
+  condition: ReturnCondition;
+  status: ReturnStatus;
+  notes?: string | null;
+  rejection_reason?: string | null;
+  created_by: string;
+  accepted_by?: string | null;
+  accepted_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  lines: MaterialReturnLineItem[];
+  audit_logs: AuditLog[];
 }
 
 export interface WasteDispositionLineItem {
@@ -466,6 +560,19 @@ export interface StockBalance {
   movement_count: number;
 }
 
+export interface UOMStockSummary {
+  uom_id: number;
+  uom_code: string;
+  uom_name: string;
+  decimal_precision: number;
+  total_quantity: string | number;
+  item_count: number;
+  in_stock_items_count: number;
+  zero_stock_items_count: number;
+  negative_stock_items_count: number;
+  movement_count: number;
+}
+
 export interface PhysicalAuditLine {
   id?: number;
   audit_id?: number;
@@ -539,6 +646,16 @@ export interface HeatHeader {
   production_status: string;
   source_document_reference?: string | null;
   notes?: string | null;
+  opening_liquid_heel_kg?: string | number | null;
+  closing_liquid_heel_kg?: string | number | null;
+  heel_measurement_method?: string | null;
+  heel_recorded_by?: string | null;
+  heel_verified_by?: string | null;
+  heel_verified_at?: string | null;
+  heel_verification_status?: string | null;
+  is_cold_start?: boolean;
+  is_furnace_empty?: boolean;
+  opening_heel_source_heat_id?: number | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -581,6 +698,7 @@ export interface ReconciliationResult {
   contributing_charge_line_ids?: string | null;
   notes?: string | null;
   status: string;
+  uom_code?: string | null;
   material_item?: MaterialItem;
   heat?: HeatHeader;
 }
@@ -628,6 +746,8 @@ export interface ReconciliationRun {
   batch_matches_count: number;
   fuzzy_candidates_count: number;
   discrepancies_count: number;
+  segregated_consumables_count?: number;
+  segregated_consumables_quantity?: string | number;
   notes?: string | null;
   created_by: string;
   created_at: string;
@@ -729,6 +849,34 @@ export interface HeatCostSummary {
   valued_lines: number;
   unvalued_lines: number;
   lines: HeatCostLineSummary[];
+
+  // Three Authoritative Costing Measures (Phase 2B-2B & Phase 2B-2C)
+  measure_a_cost_per_kg?: string | null;
+  measure_a_status?: string | null;
+  measure_b_cost_per_kg?: string | null;
+  measure_b_status?: string | null;
+  measure_c_cost_per_kg?: string | null;
+  measure_c_status?: string | null;
+
+  // Liquid Heel & Continuity
+  opening_liquid_heel_kg?: string | null;
+  opening_liquid_heel_value?: string | null;
+  closing_liquid_heel_kg?: string | null;
+  closing_liquid_heel_value?: string | null;
+
+  // Scrap Credit (FIN-DEC-03)
+  approved_scrap_credit?: string | null;
+
+  // Mass Balance & Melting Loss (FIN-DEC-04)
+  true_melt_loss_kg?: string | null;
+  true_melt_loss_pct?: string | null;
+  melting_recovery_pct?: string | null;
+  casting_yield_pct?: string | null;
+
+  // Governance & Status (FIN-DEC-05 & FIN-DEC-06)
+  conversion_cost_status?: string;
+  is_historical_exception?: boolean;
+  anomalies?: string[];
 }
 
 export interface PartCostSummary {

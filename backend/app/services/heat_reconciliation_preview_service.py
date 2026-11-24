@@ -25,6 +25,10 @@ from app.services.reconciliation_service import (
     DEFAULT_ABSOLUTE_TOLERANCE_KG,
 )
 from app.services.validators import normalize_heat_number
+from app.services.item_nomenclature import (
+    RECON_NON_HEAT_SPECIFIC,
+    resolve_effective_reconciliation_category,
+)
 
 
 HEAT_NUMBER_PATTERN = re.compile(r"^(?:H-)?(\d{6}-\d{4})$", re.IGNORECASE)
@@ -147,8 +151,17 @@ class HeatReconciliationPreviewEngine:
             except (InvalidOperation, ValueError):
                 qty_dec = Decimal("0.0000")
 
-            # Check floor consumable keywords
-            is_floor_cons = any(k in desc for k in FLOOR_CONSUMABLE_KEYWORDS) or not raw_slip
+            # Check floor consumable via two-tier classification (override or category rule)
+            recon_class = resolve_effective_reconciliation_category(
+                item_code=code,
+                category_text=desc,
+                explicit_category=None,
+            )
+            # Support known uncatalogued floor consumable terms, but NEVER treat blank raw_slip as consumable
+            is_floor_cons = (
+                recon_class == RECON_NON_HEAT_SPECIFIC
+                or any(k in desc for k in FLOOR_CONSUMABLE_KEYWORDS)
+            )
             if is_floor_cons:
                 floor_consumables.append(row)
                 continue

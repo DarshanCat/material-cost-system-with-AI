@@ -11,18 +11,33 @@ import {
   Check,
   XCircle,
   Printer,
+  Truck,
 } from 'lucide-react';
-import type { PurchaseOrder, UserRole } from '../types';
+import type { PurchaseOrder, PurchaseRequest, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
 import { useReferenceData } from '../hooks/useReferenceData';
 import { ReferenceDataNotice } from './ReferenceDataNotice';
+import { hasPermission } from '../auth/permissions';
 
 interface PurchaseOrdersViewProps {
   currentRole: UserRole;
   currentUserId: string;
+  preselectedPR?: PurchaseRequest | null;
+  onNavigateToPR?: () => void;
 }
 
-export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentRole }) => {
+export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({
+  currentRole,
+  preselectedPR,
+  onNavigateToPR,
+}) => {
+  // Mirrors the role allow-list in backend purchase_orders.py (Purchase, Management, Stores, Admin).
+  const canCreatePO =
+    currentRole === 'Purchase' ||
+    currentRole === 'Management' ||
+    currentRole === 'Stores' ||
+    currentRole === 'Admin';
+  const canApprovePO = hasPermission(currentRole, 'receipt:approve');
   const [pos, setPos] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrder | null>(null);
@@ -33,6 +48,18 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
 
   const refs = useReferenceData(['items', 'uoms', 'vendors']);
   const { items, vendors } = refs;
+
+  // Approved PR linkage state
+  const [approvedPRs, setApprovedPRs] = useState<PurchaseRequest[]>([]);
+  const [selectedPRId, setSelectedPRId] = useState<number | ''>('');
+
+  // Order Placed modal state
+  const [showOrderPlacedModal, setShowOrderPlacedModal] = useState<boolean>(false);
+  const [orderPlacedDate, setOrderPlacedDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [orderPlacedTime, setOrderPlacedTime] = useState<string>(new Date().toTimeString().slice(0, 5));
+  const [vendorOrderRef, setVendorOrderRef] = useState<string>('');
+  const [orderPlacedNotes, setOrderPlacedNotes] = useState<string>('');
+  const [orderPlacedSubmitting, setOrderPlacedSubmitting] = useState<boolean>(false);
 
   // New PO Modal State
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -62,6 +89,65 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
   const [rejectionComments, setRejectionComments] = useState<string>('');
   const [approving, setApproving] = useState<boolean>(false);
 
+  const fetchApprovedPRs = async () => {
+    try {
+      const res = await apiFetch('/api/v1/purchase-requests/?status=APPROVED');
+      if (res.ok) {
+        const data = await res.json();
+        setApprovedPRs(Array.isArray(data) ? data : data.items || []);
+      }
+    } catch (err) {
+      console.error('Failed to load approved PRs:', err);
+    }
+  };
+
+  const handleSelectPR = (prIdStr: string) => {
+    if (!prIdStr) {
+      setSelectedPRId('');
+      return;
+    }
+    const pid = Number(prIdStr);
+    setSelectedPRId(pid);
+    const pr = approvedPRs.find((p) => p.id === pid);
+    if (pr) {
+      setDepartmentId(pr.department_id);
+      setNotes(`Procured against Plant Head Authorized PR #${pr.pr_number}.\nOperational Justification: ${pr.justification}`);
+      if (pr.lines && pr.lines.length > 0) {
+        setLines(
+          pr.lines.map((l) => ({
+            material_item_id: l.material_item_id,
+            uom_id: l.uom_id,
+            quantity: String(l.quantity),
+            unit_rate_ex_gst: l.estimated_rate ? String(l.estimated_rate) : '45.00',
+            gst_percent: '18',
+            remarks: l.remarks || `Against PR #${pr.pr_number}`,
+          }))
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (preselectedPR) {
+      setShowCreateModal(true);
+      setSelectedPRId(preselectedPR.id);
+      setDepartmentId(preselectedPR.department_id);
+      setNotes(`Procured against Plant Head Authorized PR #${preselectedPR.pr_number}.\nOperational Justification: ${preselectedPR.justification}`);
+      if (preselectedPR.lines && preselectedPR.lines.length > 0) {
+        setLines(
+          preselectedPR.lines.map((l) => ({
+            material_item_id: l.material_item_id,
+            uom_id: l.uom_id,
+            quantity: String(l.quantity),
+            unit_rate_ex_gst: l.estimated_rate ? String(l.estimated_rate) : '45.00',
+            gst_percent: '18',
+            remarks: l.remarks || `Against PR #${preselectedPR.pr_number}`,
+          }))
+        );
+      }
+    }
+  }, [preselectedPR]);
+
   const fetchPOs = async () => {
     setLoading(true);
     setActionError(null);
@@ -85,6 +171,7 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
 
   useEffect(() => {
     fetchPOs();
+    fetchApprovedPRs();
   }, []);
 
   const handleAddLine = () => {
@@ -147,6 +234,7 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
     setActionError(null);
 
     const payload = {
+      pr_id: selectedPRId ? Number(selectedPRId) : undefined,
       vendor_id: Number(vendorId),
       department_id: departmentId,
       po_date: poDate,
@@ -185,6 +273,7 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
         setSuccessToast(`Purchase Order ${created.po_number} created successfully.`);
         setTimeout(() => setSuccessToast(null), 4000);
         fetchPOs();
+        fetchApprovedPRs();
         setSelectedPO(created);
       } else {
         const err = await readApiError(res, 'Failed to create purchase order.');
@@ -194,6 +283,41 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
       setActionError('Network error while creating purchase order.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleOrderPlaced = async () => {
+    if (!selectedPO) return;
+    setOrderPlacedSubmitting(true);
+    setActionError(null);
+    try {
+      const timestampIso = new Date(`${orderPlacedDate}T${orderPlacedTime || '12:00'}:00`).toISOString();
+      const res = await apiFetch(`/api/v1/purchase-orders/${selectedPO.id}/order-placed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_placed_at: timestampIso,
+          order_placed_date: orderPlacedDate,
+          vendor_order_ref: vendorOrderRef.trim() || undefined,
+          notes: orderPlacedNotes.trim() || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        setSelectedPO(updated);
+        setShowOrderPlacedModal(false);
+        setSuccessToast(`PO #${updated.po_number}: Order marked as placed with vendor.`);
+        setTimeout(() => setSuccessToast(null), 4000);
+        fetchPOs();
+      } else {
+        const err = await readApiError(res, 'Failed to record order placement.');
+        setActionError(err);
+      }
+    } catch (err: any) {
+      setActionError(err.message || 'Error recording order placement.');
+    } finally {
+      setOrderPlacedSubmitting(false);
     }
   };
 
@@ -254,7 +378,11 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
       case 'SCM_APPROVED':
         return <span className="badge badge-primary">Pending Mgmt Approval</span>;
       case 'APPROVED':
-        return <span className="badge badge-success">Fully Approved</span>;
+        return <span className="badge badge-success">Approved (CEO/MD)</span>;
+      case 'ORDER_PLACED':
+        return <span className="badge badge-success" style={{ background: '#0284c7', color: '#fff' }}><Truck size={12} className="inline mr-1" /> Order Placed</span>;
+      case 'CLOSED':
+        return <span className="badge badge-secondary">Closed (Paid)</span>;
       case 'REJECTED':
         return <span className="badge badge-danger">Rejected</span>;
       case 'CANCELLED':
@@ -271,18 +399,33 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
       {/* Header Bar */}
       <div className="view-header flex-between">
         <div>
+          <div className="flex-align-center gap-2 mb-1">
+            <span className="badge badge-primary text-xs">P2P Step 2 of 5</span>
+            {onNavigateToPR && (
+              <button
+                type="button"
+                onClick={onNavigateToPR}
+                className="text-xs text-primary font-semibold hover:underline"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                &larr; Switch to Step 1: Purchase Requests (PR)
+              </button>
+            )}
+          </div>
           <h2>Purchase Orders (PO) & P2P Cycle</h2>
           <p className="text-muted">
-            3-Tier Procurement Governance: Department HOD &rarr; Supply Chain Head &rarr; Management Approval.
+            Originates from Plant Head Approved PR &rarr; CEO/MD Authorization &rarr; Order Placed with Vendor &rarr; GRN Inward.
           </p>
         </div>
         <div className="header-actions">
           <button className="erp-btn btn-secondary mr-2" onClick={fetchPOs}>
             <RefreshCw size={14} className="btn-icon" /> Refresh
           </button>
-          <button className="erp-btn btn-primary" onClick={() => setShowCreateModal(true)}>
-            <Plus size={16} className="btn-icon" /> Create Purchase Order
-          </button>
+          {canCreatePO && (
+            <button className="erp-btn btn-primary" onClick={() => setShowCreateModal(true)}>
+              <Plus size={16} className="btn-icon" /> Create Purchase Order
+            </button>
+          )}
         </div>
       </div>
 
@@ -622,25 +765,36 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   {selectedPO.status === 'APPROVED' && (
                     <div className="text-success text-sm flex-align-center gap-1">
                       <CheckCircle size={14} />
-                      <strong>Fully Authorized:</strong> Available in GRN screen for Goods Receipt & Quality Verification.
+                      <strong>Fully Authorized by CEO/MD:</strong> Ready for Order Placement with Vendor.
+                    </div>
+                  )}
+                  {selectedPO.status === 'ORDER_PLACED' && (
+                    <div className="text-success text-sm flex-align-center gap-1">
+                      <Truck size={14} className="text-emerald-600" />
+                      <strong>Order Placed with Vendor:</strong> Intimated on{' '}
+                      {selectedPO.order_placed_at ? new Date(selectedPO.order_placed_at).toLocaleString() : 'Recorded in Ledger'}.
+                      {selectedPO.vendor_order_ref && (
+                        <span> Vendor Ref: <strong>{selectedPO.vendor_order_ref}</strong>.</span>
+                      )}{' '}
+                      Available in GRN screen for Goods Receipt & Quality Verification.
                     </div>
                   )}
                 </div>
 
                 <div className="flex-align-center gap-2">
                   {/* Draft -> Submit */}
-                  {selectedPO.status === 'DRAFT' && (
+                  {selectedPO.status === 'DRAFT' && canCreatePO && (
                     <button
                       className="erp-btn btn-primary"
                       disabled={approving}
                       onClick={() => handleWorkflowAction('submit')}
                     >
-                      <Send size={14} className="btn-icon" /> Submit for Department Approval
+                      <Send size={14} className="btn-icon" /> Submit for Authorization
                     </button>
                   )}
 
-                  {/* Level 1: Department Approval */}
-                  {selectedPO.status === 'SUBMITTED' && (
+                  {/* Level 1 / Fast Track: CEO/MD Approval */}
+                  {selectedPO.status === 'SUBMITTED' && (canApprovePO || currentRole === 'Management' || currentRole === 'Admin') && (
                     <>
                       <button
                         className="erp-btn btn-danger"
@@ -650,17 +804,17 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                         <XCircle size={14} className="btn-icon" /> Reject PO
                       </button>
                       <button
-                        className="erp-btn btn-primary"
+                        className="erp-btn btn-success"
                         disabled={approving}
-                        onClick={() => handleWorkflowAction('approve-dept')}
+                        onClick={() => handleWorkflowAction('approve-mgmt')}
                       >
-                        <Check size={14} className="btn-icon" /> Approve (Department Level)
+                        <CheckCircle size={14} className="btn-icon" /> Authorize PO (CEO / MD Sign-off)
                       </button>
                     </>
                   )}
 
                   {/* Level 2: SCM Approval */}
-                  {selectedPO.status === 'DEPT_APPROVED' && (
+                  {selectedPO.status === 'DEPT_APPROVED' && canApprovePO && (
                     <>
                       <button
                         className="erp-btn btn-danger"
@@ -680,7 +834,7 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   )}
 
                   {/* Level 3: Management Approval */}
-                  {selectedPO.status === 'SCM_APPROVED' && (
+                  {selectedPO.status === 'SCM_APPROVED' && canApprovePO && (
                     <>
                       <button
                         className="erp-btn btn-danger"
@@ -697,6 +851,22 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                         <CheckCircle size={14} className="btn-icon" /> Final Authorization (Management Level)
                       </button>
                     </>
+                  )}
+
+                  {/* Order Placed with Vendor Step */}
+                  {selectedPO.status === 'APPROVED' && canCreatePO && (
+                    <button
+                      className="erp-btn btn-primary"
+                      onClick={() => {
+                        setOrderPlacedDate(new Date().toISOString().slice(0, 10));
+                        setOrderPlacedTime(new Date().toTimeString().slice(0, 5));
+                        setVendorOrderRef('');
+                        setOrderPlacedNotes('');
+                        setShowOrderPlacedModal(true);
+                      }}
+                    >
+                      <Truck size={14} className="btn-icon" /> Mark Order Placed with Vendor
+                    </button>
                   )}
                 </div>
               </div>
@@ -783,20 +953,74 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
 
       {/* Create Purchase Order Modal */}
       {showCreateModal && (
-        <div className="modal-backdrop">
-          <div className="modal-content modal-lg">
+        <div className="modal-backdrop" onClick={() => setShowCreateModal(false)}>
+          <div
+            className="modal-content modal-large"
+            style={{ maxWidth: '960px', width: '95vw', maxHeight: '92vh' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
-              <h3>Create Purchase Order (P2P Procurement)</h3>
-              <button className="close-btn" onClick={() => setShowCreateModal(false)}>
+              <div className="modal-title-group">
+                <h3 className="modal-title">Create Purchase Order (P2P Procurement)</h3>
+                <p>Draft a commercial order with approved vendors, departments, and line items</p>
+              </div>
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => setShowCreateModal(false)}
+                title="Close"
+              >
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleCreatePO}>
               <div className="modal-body">
-                <div className="form-grid grid-2-col gap-3 mb-3">
-                  <div className="form-group">
-                    <label className="required">Vendor (Approved Master)</label>
+                <div
+                  className="form-grid grid-2-col gap-3 mb-3"
+                  style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}
+                >
+                  <div className="form-group" style={{ gridColumn: '1 / -1', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label className="form-label required" style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
+                        Originating Purchase Request (Plant Head Authorized) *
+                      </label>
+                      {onNavigateToPR && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCreateModal(false);
+                            onNavigateToPR();
+                          }}
+                          style={{ fontSize: '0.75rem', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                        >
+                          + Raise New PR in Step 1
+                        </button>
+                      )}
+                    </div>
                     <select
+                      className="form-input"
+                      value={selectedPRId}
+                      onChange={(e) => handleSelectPR(e.target.value)}
+                      style={{ fontWeight: 600, borderColor: selectedPRId ? '#10b981' : '#cbd5e1' }}
+                    >
+                      <option value="">-- Select Plant Head Approved PR (Mandatory P2P Origin) --</option>
+                      {approvedPRs.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.pr_number} - {p.department_name} ({p.lines?.length || 0} items) - Justification: {p.justification.slice(0, 50)}...
+                        </option>
+                      ))}
+                    </select>
+                    {approvedPRs.length === 0 && (
+                      <div style={{ marginTop: '6px', fontSize: '0.75rem', color: '#b45309', background: '#fffbeb', padding: '6px 10px', borderRadius: '4px', border: '1px solid #fef3c7' }}>
+                        ⚠️ No approved Purchase Requests found. Under VSPL Financial Control Audit rules, all Purchase Orders must originate from an Approved PR signed off by the Plant Head.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label required">Vendor (Approved Master)</label>
+                    <select
+                      className="form-input"
                       value={vendorId}
                       onChange={(e) => setVendorId(e.target.value ? Number(e.target.value) : '')}
                       required
@@ -811,8 +1035,9 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   </div>
 
                   <div className="form-group">
-                    <label className="required">Requisitioning Department</label>
+                    <label className="form-label required">Requisitioning Department</label>
                     <select
+                      className="form-input"
                       value={departmentId}
                       onChange={(e) => setDepartmentId(Number(e.target.value))}
                       required
@@ -826,8 +1051,9 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   </div>
 
                   <div className="form-group">
-                    <label className="required">PO Date</label>
+                    <label className="form-label required">PO Date</label>
                     <input
+                      className="form-input"
                       type="date"
                       value={poDate}
                       onChange={(e) => setPoDate(e.target.value)}
@@ -836,8 +1062,9 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   </div>
 
                   <div className="form-group">
-                    <label className="required">Expected Delivery Date</label>
+                    <label className="form-label required">Expected Delivery Date</label>
                     <input
+                      className="form-input"
                       type="date"
                       value={expectedDate}
                       onChange={(e) => setExpectedDate(e.target.value)}
@@ -846,8 +1073,9 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   </div>
 
                   <div className="form-group">
-                    <label className="required">Payment Terms</label>
+                    <label className="form-label required">Payment Terms</label>
                     <input
+                      className="form-input"
                       type="text"
                       value={paymentTerms}
                       onChange={(e) => setPaymentTerms(e.target.value)}
@@ -857,8 +1085,9 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   </div>
 
                   <div className="form-group">
-                    <label>Delivery Terms</label>
+                    <label className="form-label">Delivery Terms</label>
                     <input
+                      className="form-input"
                       type="text"
                       value={deliveryTerms}
                       onChange={(e) => setDeliveryTerms(e.target.value)}
@@ -867,9 +1096,10 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                   </div>
                 </div>
 
-                <div className="form-group mb-3">
-                  <label>Special Instructions / Notes</label>
+                <div className="form-group mb-3" style={{ marginBottom: '1.25rem' }}>
+                  <label className="form-label">Special Instructions / Notes</label>
                   <textarea
+                    className="form-textarea"
                     rows={2}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -878,23 +1108,36 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                 </div>
 
                 {/* Line Items Builder */}
-                <div className="flex-between mb-2">
-                  <h4 className="text-xs font-bold text-uppercase text-muted">Purchase Order Line Items</h4>
-                  <button type="button" className="erp-btn btn-sm btn-secondary" onClick={handleAddLine}>
+                <div
+                  className="flex-between mb-2"
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}
+                >
+                  <h4 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', margin: 0 }}>
+                    Purchase Order Line Items ({lines.length})
+                  </h4>
+                  <button
+                    type="button"
+                    className="erp-btn btn-sm btn-secondary"
+                    onClick={handleAddLine}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
                     <Plus size={14} className="btn-icon" /> Add Line
                   </button>
                 </div>
 
-                <div className="erp-table-container mb-3">
-                  <table className="erp-table">
+                <div
+                  className="erp-table-container mb-3"
+                  style={{ border: '1px solid #e2e8f0', borderRadius: '6px', overflowX: 'auto', marginBottom: '1rem' }}
+                >
+                  <table className="erp-table" style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
                     <thead>
-                      <tr>
-                        <th style={{ width: '40%' }}>Material Item</th>
-                        <th style={{ width: '15%' }}>Quantity</th>
-                        <th style={{ width: '15%' }}>Rate (ex-GST)</th>
-                        <th style={{ width: '12%' }}>GST %</th>
-                        <th style={{ width: '18%' }}>Line Total</th>
-                        <th></th>
+                      <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                        <th style={{ width: '38%', padding: '8px 10px', textAlign: 'left' }}>Material Item</th>
+                        <th style={{ width: '15%', padding: '8px 10px', textAlign: 'right' }}>Quantity</th>
+                        <th style={{ width: '16%', padding: '8px 10px', textAlign: 'right' }}>Rate (ex-GST ₹)</th>
+                        <th style={{ width: '12%', padding: '8px 10px', textAlign: 'center' }}>GST %</th>
+                        <th style={{ width: '15%', padding: '8px 10px', textAlign: 'right' }}>Line Total (₹)</th>
+                        <th style={{ width: '4%', padding: '8px 6px', textAlign: 'center' }}></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -904,9 +1147,11 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                         const gst = parseFloat(line.gst_percent) || 0;
                         const total = qty * rate * (1 + gst / 100);
                         return (
-                          <tr key={idx}>
-                            <td>
+                          <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '6px 8px' }}>
                               <select
+                                className="form-input"
+                                style={{ width: '100%', padding: '6px 8px', fontSize: '0.8rem', height: '34px' }}
                                 value={line.material_item_id}
                                 onChange={(e) =>
                                   handleLineChange(idx, 'material_item_id', e.target.value ? Number(e.target.value) : '')
@@ -921,28 +1166,36 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                                 ))}
                               </select>
                             </td>
-                            <td>
+                            <td style={{ padding: '6px 8px' }}>
                               <input
+                                className="form-input"
+                                style={{ width: '100%', padding: '6px 8px', textAlign: 'right', fontSize: '0.8rem', height: '34px' }}
                                 type="number"
                                 step="any"
                                 min="0.01"
                                 value={line.quantity}
                                 onChange={(e) => handleLineChange(idx, 'quantity', e.target.value)}
+                                placeholder="0.00"
                                 required
                               />
                             </td>
-                            <td>
+                            <td style={{ padding: '6px 8px' }}>
                               <input
+                                className="form-input"
+                                style={{ width: '100%', padding: '6px 8px', textAlign: 'right', fontSize: '0.8rem', height: '34px' }}
                                 type="number"
                                 step="any"
                                 min="0.01"
                                 value={line.unit_rate_ex_gst}
                                 onChange={(e) => handleLineChange(idx, 'unit_rate_ex_gst', e.target.value)}
+                                placeholder="0.00"
                                 required
                               />
                             </td>
-                            <td>
+                            <td style={{ padding: '6px 8px' }}>
                               <select
+                                className="form-input"
+                                style={{ width: '100%', padding: '6px 8px', textAlign: 'center', fontSize: '0.8rem', height: '34px' }}
                                 value={line.gst_percent}
                                 onChange={(e) => handleLineChange(idx, 'gst_percent', e.target.value)}
                               >
@@ -953,17 +1206,30 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                                 <option value="28">28%</option>
                               </select>
                             </td>
-                            <td>
-                              <strong>₹{total.toFixed(2)}</strong>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle' }}>
+                              <span style={{ fontWeight: 700, color: '#0f172a', fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                                ₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
                             </td>
-                            <td>
+                            <td style={{ padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle' }}>
                               {lines.length > 1 && (
                                 <button
                                   type="button"
-                                  className="btn-icon-danger"
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#ef4444',
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    borderRadius: '4px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
                                   onClick={() => handleRemoveLine(idx)}
+                                  title="Remove Line"
                                 >
-                                  <X size={14} />
+                                  <X size={16} />
                                 </button>
                               )}
                             </td>
@@ -975,12 +1241,45 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                 </div>
 
                 {/* Live Modal Summary */}
-                <div className="flex-end mb-3">
-                  <div className="summary-box p-3 bg-light rounded text-right" style={{ minWidth: '240px' }}>
-                    <div className="text-sm">Subtotal: <strong>₹{subtotal.toFixed(2)}</strong></div>
-                    <div className="text-sm">Total GST: <strong>₹{totalGst.toFixed(2)}</strong></div>
-                    <div className="text-base font-bold text-primary mt-1 border-top pt-1">
-                      Grand Total: ₹{grandTotal.toFixed(2)}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', marginBottom: '1.25rem' }}>
+                  <div
+                    style={{
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      padding: '12px 18px',
+                      minWidth: '280px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '6px' }}>
+                      <span>Subtotal (ex-GST):</span>
+                      <strong style={{ color: '#1e293b', fontFamily: 'monospace' }}>
+                        ₹{subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '8px' }}>
+                      <span>Applicable GST:</span>
+                      <strong style={{ color: '#1e293b', fontFamily: 'monospace' }}>
+                        ₹{totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </strong>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '0.95rem',
+                        fontWeight: 700,
+                        color: '#0f172a',
+                        borderTop: '2px solid #e2e8f0',
+                        paddingTop: '8px',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <span>Grand Total:</span>
+                      <span style={{ color: '#0284c7', fontFamily: 'monospace' }}>
+                        ₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1005,11 +1304,23 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
 
       {/* Rejection Modal with Mandatory Reason */}
       {showRejectModal && selectedPO && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
+        <div className="modal-backdrop" onClick={() => setShowRejectModal(false)}>
+          <div
+            className="modal-content"
+            style={{ maxWidth: '520px', width: '95vw' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
-              <h3>Reject Purchase Order {selectedPO.po_number}</h3>
-              <button className="close-btn" onClick={() => setShowRejectModal(false)}>
+              <div className="modal-title-group">
+                <h3 className="modal-title">Reject Purchase Order {selectedPO.po_number}</h3>
+                <p>Mandatory justification required for P2P audit trail</p>
+              </div>
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => setShowRejectModal(false)}
+                title="Close"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -1018,8 +1329,9 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
                 Please provide a mandatory justification for rejecting this Purchase Order. The requisitioning team will receive this feedback.
               </p>
               <div className="form-group">
-                <label className="required">Rejection Comments / Non-conformance Reason</label>
+                <label className="form-label required">Rejection Comments / Non-conformance Reason</label>
                 <textarea
+                  className="form-textarea"
                   rows={3}
                   value={rejectionComments}
                   onChange={(e) => setRejectionComments(e.target.value)}
@@ -1030,17 +1342,115 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ currentR
             </div>
             <div className="modal-footer">
               <button
+                type="button"
                 className="erp-btn btn-secondary"
                 onClick={() => setShowRejectModal(false)}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 className="erp-btn btn-danger"
                 disabled={!rejectionComments.trim() || approving}
                 onClick={() => handleWorkflowAction('reject', rejectionComments.trim())}
               >
                 Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Placed with Vendor Modal */}
+      {showOrderPlacedModal && selectedPO && (
+        <div className="modal-backdrop" onClick={() => setShowOrderPlacedModal(false)}>
+          <div
+            className="modal-content"
+            style={{ maxWidth: '540px', width: '95vw' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div className="modal-title-group">
+                <h3 className="modal-title flex-align-center gap-2">
+                  <Truck size={18} className="text-primary" />
+                  <span>Mark Order Placed with Vendor</span>
+                </h3>
+                <p>Record vendor intimation timestamp and confirmation reference</p>
+              </div>
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => setShowOrderPlacedModal(false)}
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{ padding: '10px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', marginBottom: '14px', fontSize: '0.82rem', color: '#166534' }}>
+                <strong>PO #{selectedPO.po_number}</strong> is authorized by CEO/MD. Confirm placement with <strong>{selectedPO.vendor_name}</strong> to update status to <code>ORDER_PLACED</code> and allow Goods Receipt (GRN) inward.
+              </div>
+
+              <div className="form-grid grid-2-col gap-3 mb-3">
+                <div className="form-group">
+                  <label className="form-label required">Order Placement Date *</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={orderPlacedDate}
+                    onChange={(e) => setOrderPlacedDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label required">Placement Time (Auto-captured)</label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={orderPlacedTime}
+                    onChange={(e) => setOrderPlacedTime(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group mb-3">
+                <label className="form-label">Vendor Order Ref / Acknowledgment #</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={vendorOrderRef}
+                  onChange={(e) => setVendorOrderRef(e.target.value)}
+                  placeholder="e.g. TML/ORD/2026/894, Sales Confirmation # or Email ref"
+                />
+              </div>
+
+              <div className="form-group mb-3">
+                <label className="form-label">Order Notes / Dispatch Commitment</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={orderPlacedNotes}
+                  onChange={(e) => setOrderPlacedNotes(e.target.value)}
+                  placeholder="e.g. PO emailed to sales rep, delivery promised by Friday..."
+                />
+              </div>
+            </div>
+            <div className="modal-footer flex-between">
+              <button
+                type="button"
+                className="erp-btn btn-secondary"
+                onClick={() => setShowOrderPlacedModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="erp-btn btn-success"
+                disabled={orderPlacedSubmitting || !orderPlacedDate}
+                onClick={handleOrderPlaced}
+              >
+                {orderPlacedSubmitting ? 'Recording Placement...' : '✓ Confirm Order Placed'}
               </button>
             </div>
           </div>

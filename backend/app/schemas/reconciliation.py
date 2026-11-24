@@ -14,6 +14,24 @@ class ReconciliationRunRequest(BaseModel):
     notes: Optional[str] = None
 
 
+class MaterialItemSummaryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    item_code: str
+    name: str
+    category: str
+    subcategory: Optional[str] = None
+
+
+class HeatSummaryRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    heat_number: str
+    heat_date: date
+
+
 class ReconciliationResultRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,6 +53,8 @@ class ReconciliationResultRead(BaseModel):
     contributing_charge_line_ids: Optional[str] = None
     notes: Optional[str] = None
     status: str
+    material_item: Optional[MaterialItemSummaryRead] = None
+    heat: Optional[HeatSummaryRead] = None
 
 
 class ReconciliationCandidateMatchRead(BaseModel):
@@ -111,6 +131,8 @@ class ReconciliationRunRead(BaseModel):
     batch_matches_count: int
     fuzzy_candidates_count: int
     discrepancies_count: int
+    segregated_consumables_count: int = 0
+    segregated_consumables_quantity: Decimal = Decimal("0.0000")
     notes: Optional[str] = None
     created_by: str
     created_at: datetime

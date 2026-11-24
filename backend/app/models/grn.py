@@ -35,6 +35,7 @@ class GRNStatus(str, Enum):
     DRAFT = "DRAFT"
     SUBMITTED = "SUBMITTED"
     APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
     CANCELLED = "CANCELLED"
     REVERSED = "REVERSED"
 
@@ -74,7 +75,23 @@ class GRNHeader(Base):
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
-    
+
+    # Quality inspection (recorded by the Quality role while the GRN is SUBMITTED; gates approval)
+    quality_document_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    quality_inspection_status: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    quality_inspection_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    quality_inspected_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    quality_inspected_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Payment (recorded by the Accounts role once the GRN is APPROVED)
+    payment_status: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    amount_paid: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 2), nullable=True)
+    payment_reference: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    payment_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    payment_mode: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
+    payment_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    paid_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     # Relationships
     vendor = relationship("Vendor", backref="grns")
     lines: Mapped[List["GRNLineItem"]] = relationship(
@@ -136,3 +153,25 @@ class GRNAuditLog(Base):
     )
 
     header = relationship("GRNHeader", back_populates="audit_logs")
+
+
+class GRNAttachment(Base):
+    """A supporting document (vendor invoice, delivery challan, test certificate, photo) attached to a GRN.
+
+    The file itself lives in the attachment store (local folder or Cloud Storage); this row is its record. Rows are
+    never edited; a document is removed (DRAFT only) or kept for the life of the GRN. Every add and remove is also
+    written to the GRN audit log."""
+    __tablename__ = "grn_attachments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    grn_id: Mapped[int] = mapped_column(Integer, ForeignKey("grn_headers.id", ondelete="CASCADE"), nullable=False, index=True)
+    original_filename: Mapped[str] = mapped_column(String(200), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    storage_key: Mapped[str] = mapped_column(String(300), nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    uploaded_by: Mapped[str] = mapped_column(String(100), nullable=False)
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+    )

@@ -1,5 +1,5 @@
 from sqlalchemy import String, Boolean, Text, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, deferred
 from app.db.base import Base, TimestampMixin
 
 
@@ -15,6 +15,16 @@ class MaterialItem(Base, TimestampMixin):
     base_uom_id: Mapped[int] = mapped_column(Integer, ForeignKey("uoms.id"), nullable=False, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Reconciliation category is proposed in Migration 010 (unapplied).
+    # Exposed as a property to prevent SQLAlchemy selecting an unmigrated database column.
+    @property
+    def reconciliation_category(self) -> str | None:
+        return getattr(self, "_reconciliation_category", None)
+
+    @reconciliation_category.setter
+    def reconciliation_category(self, val: str | None) -> None:
+        self._reconciliation_category = val
 
     # Relationships
     department = relationship("Department", back_populates="items")

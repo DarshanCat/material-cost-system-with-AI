@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { UserRole } from '../types';
 import { apiFetch } from '../api/client';
+import { hasPermission } from '../auth/permissions';
 
 interface OpeningBalanceViewProps {
   currentRole: UserRole;
@@ -36,6 +37,7 @@ interface PreviewSummary {
 }
 
 export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentRole, currentUserId }) => {
+  const canPostOpeningBalances = hasPermission(currentRole, 'opening_balance:post');
   const [baselineDate, setBaselineDate] = useState<string>('2026-10-12');
   const [auditRef, setAuditRef] = useState<string>('');
   const [approverComments, setApproverComments] = useState<string>('');
@@ -145,9 +147,11 @@ export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentR
           </p>
         </div>
         <div className="header-actions">
-          <button className="erp-btn btn-secondary" onClick={handleDownloadTemplate}>
-            <Download size={14} className="btn-icon" /> Download Template (.xlsx)
-          </button>
+          {canPostOpeningBalances && (
+            <button className="erp-btn btn-secondary" onClick={handleDownloadTemplate}>
+              <Download size={14} className="btn-icon" /> Download Template (.xlsx)
+            </button>
+          )}
         </div>
       </div>
 
@@ -219,14 +223,16 @@ export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentR
         </div>
 
         <div>
-          <button
-            className="erp-btn btn-primary"
-            onClick={handlePreview}
-            disabled={validating}
-          >
-            <Upload size={14} className="btn-icon" />
-            {validating ? 'Verifying References...' : 'Validate & Preview Baseline'}
-          </button>
+          {canPostOpeningBalances && (
+            <button
+              className="erp-btn btn-primary"
+              onClick={handlePreview}
+              disabled={validating}
+            >
+              <Upload size={14} className="btn-icon" />
+              {validating ? 'Verifying References...' : 'Validate & Preview Baseline'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -240,7 +246,7 @@ export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentR
                 Checking master data existence, precision rules, and preventing duplicate initialization.
               </p>
             </div>
-            {preview.can_commit ? (
+            {preview.can_commit && canPostOpeningBalances ? (
               <button
                 className="erp-btn btn-success"
                 onClick={handlePost}
@@ -249,11 +255,11 @@ export const OpeningBalanceView: React.FC<OpeningBalanceViewProps> = ({ currentR
                 <Database size={14} className="btn-icon" />
                 {posting ? 'Posting to Ledger...' : 'Post Approved Baseline'}
               </button>
-            ) : (
+            ) : !preview.can_commit ? (
               <div className="text-xs font-semibold text-red-600 bg-red-50 p-2 rounded border border-red-200">
                 Errors Detected: Resolve item conflicts before posting
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="grid grid-cols-3 gap-3 mb-4">

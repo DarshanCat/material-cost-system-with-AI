@@ -10,19 +10,35 @@ import {
   ShieldCheck,
   XCircle,
   CreditCard,
-  FileCheck
+  FileCheck,
+  Paperclip
 } from 'lucide-react';
 import type { GRN, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
 import { useReferenceData } from '../hooks/useReferenceData';
 import { ReferenceDataNotice } from './ReferenceDataNotice';
+import { hasPermission } from '../auth/permissions';
+import { GRNAttachments } from './GRNAttachments';
+import {
+  ATTACHMENT_ACCEPT,
+  ATTACHMENT_MAX_MB,
+  ATTACHMENT_MAX_PER_GRN,
+  formatFileSize,
+  uploadManyGrnAttachments,
+  validateAttachmentFile,
+} from '../api/grnAttachments';
 
 interface GRNManagementViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
+export const GRNManagementView: React.FC<GRNManagementViewProps> = ({ currentRole }) => {
+  const canCreateGRN = hasPermission(currentRole, 'receipt:create');
+  const canApproveGRN = hasPermission(currentRole, 'receipt:approve');
+  const canQualityGRN = hasPermission(currentRole, 'receipt:quality');
+  const canPayGRN = hasPermission(currentRole, 'payment:record');
+  const qaAccepted = (g: GRN) => g.quality_inspection_status === 'PASSED' || g.quality_inspection_status === 'CONDITIONALLY_ACCEPTED';
   const [actionError, setActionError] = useState<string | null>(null);
   const [grns, setGrns] = useState<GRN[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -37,7 +53,6 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
   // Quality Inspection Modal State (Approve / Reject with Quality Certificate)
   const [showQualityModal, setShowQualityModal] = useState<boolean>(false);
   const [qualityGrn, setQualityGrn] = useState<GRN | null>(null);
-  const [qualityAction, setQualityAction] = useState<'approve' | 'reject'>('approve');
   const [qualityDocNo, setQualityDocNo] = useState<string>('');
   const [qualityStatus, setQualityStatus] = useState<'PASSED' | 'CONDITIONALLY_ACCEPTED' | 'REJECTED'>('PASSED');
   const [qualityNotes, setQualityNotes] = useState<string>('');
@@ -61,6 +76,8 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
   const [invoiceNo, setInvoiceNo] = useState<string>('');
   const [invoiceDate, setInvoiceDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState<string>('');
+  // Documents chosen while creating the GRN; they are uploaded right after the GRN is saved.
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [lines, setLines] = useState<Array<{
     material_item_id: number | '';
     uom_id: number | '';
@@ -83,7 +100,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : (data.items || []);
-        setApprovedPOs(list.filter((p: any) => p.status === 'APPROVED'));
+        setApprovedPOs(list.filter((p: any) => p.status === 'APPROVED' || p.status === 'ORDER_PLACED'));
       }
     } catch {}
   };
@@ -198,6 +215,16 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
         if (data.validation_warnings && data.validation_warnings.length > 0) {
           setFormWarnings(data.validation_warnings);
         }
+        if (pendingFiles.length > 0) {
+          const { uploaded, failures } = await uploadManyGrnAttachments(data.id, pendingFiles);
+          if (failures.length > 0) {
+            setActionError(`${data.grn_number} was created, but ${failures.length} document(s) could not be attached: ${failures.join(' ')} Open the GRN to add them again.`);
+          } else {
+            setSuccessToast(`${data.grn_number} created with ${uploaded} document${uploaded === 1 ? '' : 's'} attached.`);
+            setTimeout(() => setSuccessToast(null), 5000);
+          }
+        }
+        setPendingFiles([]);
         fetchGRNs();
         setShowModal(false);
         // Reset form
@@ -210,11 +237,11 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
     }
   };
 
-  const openQualityDecision = (grn: GRN, action: 'approve' | 'reject') => {
+  // Quality role only: records the inspection result. It does NOT approve the GRN or add stock.
+  const openQualityDecision = (grn: GRN) => {
     setQualityGrn(grn);
-    setQualityAction(action);
-    setQualityDocNo(grn.quality_document_number || `TC-${new Date().getFullYear()}-${String(grn.id).padStart(4, '0')}`);
-    setQualityStatus(action === 'approve' ? 'PASSED' : 'REJECTED');
+    setQualityDocNo(grn.quality_document_number || '');
+    setQualityStatus('PASSED');
     setQualityNotes('');
     setHeatLotNo('');
     setShowQualityModal(true);
@@ -223,31 +250,29 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
   const submitQualityDecision = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!qualityGrn) return;
-    if (qualityAction === 'reject' && !qualityNotes.trim()) {
-      setActionError('Quality rejection comments are mandatory.');
+    if (qualityStatus !== 'PASSED' && !qualityNotes.trim()) {
+      setActionError('Notes are mandatory when the material is rejected or accepted with conditions.');
       return;
     }
     setQualitySubmitting(true);
     setActionError(null);
     try {
-      const res = await apiFetch(`/api/v1/grn/${qualityGrn.id}/${qualityAction}`, {
+      const res = await apiFetch(`/api/v1/grn/${qualityGrn.id}/quality`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          comments: qualityNotes,
           quality_document_number: qualityDocNo.trim() || null,
           quality_inspection_status: qualityStatus,
-          quality_inspection_notes: qualityNotes.trim() || null,
-          heat_lot_verified: heatLotNo.trim() || null,
+          quality_inspection_notes: [qualityNotes.trim(), heatLotNo.trim() ? `Heat/lot verified: ${heatLotNo.trim()}` : ''].filter(Boolean).join(' | ') || null,
         }),
       });
       if (res.ok) {
         setShowQualityModal(false);
         fetchGRNs();
-        setSuccessToast(`GRN ${qualityGrn.grn_number} successfully ${qualityAction === 'approve' ? 'approved with Quality Certificate attached' : 'rejected and quarantined'}.`);
-        setTimeout(() => setSuccessToast(null), 4000);
+        setSuccessToast(`QA result recorded for GRN ${qualityGrn.grn_number}: ${qualityStatus.replace('_', ' ')}. Management can now ${qualityStatus === 'REJECTED' ? 'reject' : 'approve'} it.`);
+        setTimeout(() => setSuccessToast(null), 5000);
       } else {
-        setActionError(await readApiError(res, `Could not ${qualityAction} the GRN`));
+        setActionError(await readApiError(res, 'Could not record the QA result'));
       }
     } catch (err: any) {
       setActionError(`Network error: ${err.message}`);
@@ -258,16 +283,13 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
 
   const openPaymentModal = (grn: GRN) => {
     setPaymentGrn(grn);
-    const totalWithGst = (grn.lines || []).reduce((sum, l) => {
-      const lineEx = Number(l.quantity || 0) * Number(l.rate_ex_gst || 0);
-      const gst = lineEx * (Number(l.gst_percent || 0) / 100);
-      return sum + lineEx + gst;
-    }, 0);
-    setAmountPaid(totalWithGst > 0 ? totalWithGst.toFixed(2) : '54000.00');
-    setPaymentRef(`UTR-${Date.now().toString().slice(-8)}`);
+    // Suggest the amount still unpaid (the server works out the GRN value and checks the amount).
+    const outstanding = Number(grn.payable_total || 0) - Number(grn.amount_paid || 0);
+    setAmountPaid(outstanding > 0 ? outstanding.toFixed(2) : '');
+    setPaymentRef('');
     setPaymentDate(new Date().toISOString().slice(0, 10));
     setPaymentMode('NEFT_RTGS');
-    setPaymentNotes('Settled via HDFC Bank Corporate NetBanking');
+    setPaymentNotes('');
     setShowPaymentModal(true);
   };
 
@@ -281,7 +303,6 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          payment_status: 'PAID',
           amount_paid: amountPaid,
           payment_reference: paymentRef,
           payment_date: paymentDate,
@@ -306,11 +327,17 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
 
   const handleAction = async (grnId: number, action: 'submit' | 'approve' | 'reject' | 'cancel') => {
     setActionError(null);
+    let comments = `Action ${action}`;
+    if (action === 'reject') {
+      const reason = window.prompt('Why is this GRN being rejected? (required)');
+      if (!reason || !reason.trim()) return;
+      comments = reason.trim();
+    }
     try {
       const res = await apiFetch(`/api/v1/grn/${grnId}/${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comments: `Action ${action}` }),
+        body: JSON.stringify({ comments }),
       });
       if (res.ok) {
         fetchGRNs();
@@ -360,9 +387,11 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
           <button className="erp-btn btn-secondary" onClick={fetchGRNs}>
             <RefreshCw size={14} className="btn-icon" /> Refresh
           </button>
-          <button className="erp-btn btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={14} className="btn-icon" /> New GRN Entry
-          </button>
+          {canCreateGRN && (
+            <button className="erp-btn btn-primary" onClick={() => { setPendingFiles([]); setFormError(null); setShowModal(true); }}>
+              <Plus size={14} className="btn-icon" /> New GRN Entry
+            </button>
+          )}
         </div>
       </div>
 
@@ -464,7 +493,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1 flex-wrap">
-                      {grn.status === 'DRAFT' && (
+                      {grn.status === 'DRAFT' && canCreateGRN && (
                         <button
                           className="erp-btn btn-sm btn-outline"
                           onClick={() => handleAction(grn.id, 'submit')}
@@ -472,25 +501,35 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                           <Send size={12} /> Submit
                         </button>
                       )}
-                      {grn.status === 'SUBMITTED' && (
+                      {grn.status === 'SUBMITTED' && canQualityGRN && (
+                        <button
+                          className="erp-btn btn-sm btn-primary flex items-center gap-1"
+                          onClick={() => openQualityDecision(grn)}
+                          title="Record the quality inspection result (Mill Test Certificate)"
+                        >
+                          <ShieldCheck size={12} /> QA Inspect
+                        </button>
+                      )}
+                      {grn.status === 'SUBMITTED' && canApproveGRN && (
                         <>
                           <button
                             className="erp-btn btn-sm btn-success flex items-center gap-1"
-                            onClick={() => openQualityDecision(grn, 'approve')}
-                            title="Approve GRN with Mill Test Certificate / Quality Document"
+                            onClick={() => handleAction(grn.id, 'approve')}
+                            disabled={!qaAccepted(grn)}
+                            title={qaAccepted(grn) ? 'Approve and add the material to stock' : 'Waiting for the Quality team to pass this GRN'}
                           >
-                            <ShieldCheck size={12} /> Approve (QA)
+                            <ShieldCheck size={12} /> Approve
                           </button>
                           <button
                             className="erp-btn btn-sm btn-danger flex items-center gap-1"
-                            onClick={() => openQualityDecision(grn, 'reject')}
-                            title="Reject GRN on quality failure"
+                            onClick={() => handleAction(grn.id, 'reject')}
+                            title="Reject this GRN (no stock is added)"
                           >
                             <XCircle size={12} /> Reject
                           </button>
                         </>
                       )}
-                      {grn.status === 'APPROVED' && grn.payment_status !== 'PAID' && (
+                      {grn.status === 'APPROVED' && grn.payment_status !== 'PAID' && canPayGRN && (
                         <button
                           className="erp-btn btn-sm btn-secondary flex items-center gap-1 text-xs py-1 px-2"
                           onClick={() => openPaymentModal(grn)}
@@ -615,7 +654,7 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                 ) : (
                   <div className="flex justify-between items-center text-xs text-slate-500">
                     <span>Payment pending commercial invoice verification and credit terms clearance.</span>
-                    {selectedGRN.status === 'APPROVED' && (
+                    {selectedGRN.status === 'APPROVED' && canPayGRN && (
                       <button
                         className="erp-btn btn-sm btn-primary text-xs"
                         onClick={() => {
@@ -630,6 +669,8 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                   </div>
                 )}
               </div>
+
+              <GRNAttachments grnId={selectedGRN.id} grnStatus={selectedGRN.status} canEdit={canCreateGRN} />
 
               <h4 className="font-semibold mb-2">Audit History</h4>
               <div className="audit-timeline">
@@ -854,6 +895,51 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                     placeholder="Reference gate pass, vehicle number, or inward conditions..."
                   />
                 </div>
+
+                <div className="mb-2">
+                  <label className="form-label flex items-center gap-1">
+                    <Paperclip size={14} /> Attach documents (vendor invoice, delivery challan, test certificate)
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    accept={ATTACHMENT_ACCEPT}
+                    className="form-control"
+                    aria-label="Attach documents"
+                    onChange={(e) => {
+                      const chosen = Array.from(e.target.files ?? []);
+                      e.target.value = '';
+                      // Accept the valid files; say why the others were left out.
+                      const problems = chosen.map(validateAttachmentFile).filter((p): p is string => p !== null);
+                      const valid = chosen.filter((f) => validateAttachmentFile(f) === null);
+                      const combined = [...pendingFiles, ...valid];
+                      if (combined.length > ATTACHMENT_MAX_PER_GRN) {
+                        setFormError(`A GRN can have at most ${ATTACHMENT_MAX_PER_GRN} documents.`);
+                        return;
+                      }
+                      setFormError(problems.length > 0 ? problems.join(' ') : null);
+                      setPendingFiles(combined);
+                    }}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">PDF, PNG, JPG, XLSX or DOCX; up to {ATTACHMENT_MAX_MB} MB each. They are saved with the GRN.</p>
+                  {pendingFiles.length > 0 && (
+                    <ul className="text-xs mt-1">
+                      {pendingFiles.map((f, i) => (
+                        <li key={`${f.name}-${i}`} className="flex items-center gap-2">
+                          <span>{f.name} ({formatFileSize(f.size)})</span>
+                          <button
+                            type="button"
+                            className="erp-btn btn-sm btn-secondary p-1"
+                            onClick={() => setPendingFiles(pendingFiles.filter((_, j) => j !== i))}
+                            aria-label={`Remove ${f.name}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowModal(false)}>
@@ -875,8 +961,8 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
             <form onSubmit={submitQualityDecision}>
               <div className="modal-header">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={20} className={qualityAction === 'approve' ? 'text-emerald-600' : 'text-rose-600'} />
-                  <h3>Quality Inspection & {qualityAction === 'approve' ? 'Inward Approval' : 'Rejection'}: {qualityGrn.grn_number}</h3>
+                  <ShieldCheck size={20} className={qualityStatus === 'REJECTED' ? 'text-rose-600' : 'text-emerald-600'} />
+                  <h3>Quality Inspection: {qualityGrn.grn_number}</h3>
                 </div>
                 <button type="button" className="close-btn" onClick={() => setShowQualityModal(false)} disabled={qualitySubmitting}>
                   <X size={18} />
@@ -930,14 +1016,14 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Metallurgical & Inspection Notes {qualityAction === 'reject' ? '*' : ''}</label>
+                  <label className="form-label">Metallurgical & Inspection Notes {qualityStatus !== 'PASSED' ? '*' : ''}</label>
                   <textarea
                     className="form-control"
                     rows={3}
                     value={qualityNotes}
                     onChange={(e) => setQualityNotes(e.target.value)}
-                    placeholder={qualityAction === 'reject' ? 'Mandatory reason for rejection (e.g. Si content low, physical contamination)...' : 'Remarks on hardness, spectrometry readings, or dimensional checks...'}
-                    required={qualityAction === 'reject'}
+                    placeholder={qualityStatus !== 'PASSED' ? 'Mandatory reason (e.g. Si content low, physical contamination)...' : 'Remarks on hardness, spectrometry readings, or dimensional checks...'}
+                    required={qualityStatus !== 'PASSED'}
                   />
                 </div>
               </div>
@@ -948,10 +1034,10 @@ export const GRNManagementView: React.FC<GRNManagementViewProps> = () => {
                 </button>
                 <button
                   type="submit"
-                  className={`erp-btn ${qualityAction === 'approve' ? 'btn-success' : 'btn-danger'}`}
+                  className={`erp-btn ${qualityStatus === 'REJECTED' ? 'btn-danger' : 'btn-success'}`}
                   disabled={qualitySubmitting}
                 >
-                  {qualitySubmitting ? 'Recording Decision...' : qualityAction === 'approve' ? 'Approve & Post to Stock Ledger' : 'Confirm Rejection'}
+                  {qualitySubmitting ? 'Recording Result...' : 'Record QA Result'}
                 </button>
               </div>
             </form>

@@ -5,10 +5,10 @@ Material Issue API Endpoints.
 from typing import List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, Query, status, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy import select, desc
 
-from app.core.security import AuthenticatedUser, Permission, require_permission
+from app.core.security import AuthenticatedUser, Permission, require_permission, UserRole
 from app.db.session import get_db
 from app.schemas.issue import (
     MaterialIssueCreate,
@@ -17,11 +17,12 @@ from app.schemas.issue import (
     IssueAuditLogResponse,
     IssueStatusAction,
 )
-from app.models.issue import MaterialIssueHeader
+from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem
 from app.services.issue_service import (
     create_material_issue,
     submit_material_issue,
     approve_material_issue,
+    direct_issue_slip,
     cancel_material_issue,
     reverse_material_issue,
 )
@@ -84,11 +85,24 @@ def _serialize_issue(header: MaterialIssueHeader, warnings: Optional[List[str]] 
 @router.post("/", response_model=MaterialIssueResponse, status_code=status.HTTP_201_CREATED)
 def create_new_issue(
     payload: MaterialIssueCreate,
+    direct_issue: bool = Query(False, description="When true, directly issues materials and posts to stock ledger"),
     user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_CREATE)),
     db: Session = Depends(get_db),
 ):
-    header, warnings = create_material_issue(db, payload, user.user_id)
+    header, warnings = create_material_issue(db, payload, user.user_id, direct_issue=direct_issue)
     return _serialize_issue(header, warnings)
+
+
+@router.post("/{issue_id}/direct-issue", response_model=MaterialIssueResponse)
+def direct_issue_action(
+    issue_id: int,
+    action: Optional[IssueStatusAction] = None,
+    user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_CREATE)),
+    db: Session = Depends(get_db),
+):
+    comments = action.comments if action else None
+    issue = direct_issue_slip(db, issue_id, user.user_id, comments)
+    return _serialize_issue(issue)
 
 
 @router.get("/", response_model=List[MaterialIssueResponse])
@@ -103,7 +117,17 @@ def list_issues(
     db: Session = Depends(get_db),
     _user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_READ)),
 ):
-    query = select(MaterialIssueHeader).order_by(desc(MaterialIssueHeader.created_at))
+    query = (
+        select(MaterialIssueHeader)
+        .options(
+            joinedload(MaterialIssueHeader.issuing_department),
+            joinedload(MaterialIssueHeader.receiving_department),
+            selectinload(MaterialIssueHeader.lines).joinedload(MaterialIssueLineItem.material_item),
+            selectinload(MaterialIssueHeader.lines).joinedload(MaterialIssueLineItem.uom),
+            selectinload(MaterialIssueHeader.audit_logs),
+        )
+        .order_by(desc(MaterialIssueHeader.created_at))
+    )
     if status:
         query = query.where(MaterialIssueHeader.status == status.upper())
     if heat_reference_number:
@@ -116,7 +140,7 @@ def list_issues(
         query = query.where(MaterialIssueHeader.issue_date <= to_date)
 
     query = query.offset(skip).limit(limit)
-    headers = db.execute(query).scalars().all()
+    headers = db.execute(query).scalars().unique().all()
     return [_serialize_issue(h) for h in headers]
 
 
@@ -126,7 +150,18 @@ def get_issue_by_id(
     db: Session = Depends(get_db),
     _user: AuthenticatedUser = Depends(require_permission(Permission.ISSUE_READ)),
 ):
-    issue = db.get(MaterialIssueHeader, issue_id)
+    query = (
+        select(MaterialIssueHeader)
+        .options(
+            joinedload(MaterialIssueHeader.issuing_department),
+            joinedload(MaterialIssueHeader.receiving_department),
+            selectinload(MaterialIssueHeader.lines).joinedload(MaterialIssueLineItem.material_item),
+            selectinload(MaterialIssueHeader.lines).joinedload(MaterialIssueLineItem.uom),
+            selectinload(MaterialIssueHeader.audit_logs),
+        )
+        .where(MaterialIssueHeader.id == issue_id)
+    )
+    issue = db.execute(query).scalars().unique().first()
     if not issue:
         raise HTTPException(status_code=404, detail="Material issue slip not found")
     return _serialize_issue(issue)

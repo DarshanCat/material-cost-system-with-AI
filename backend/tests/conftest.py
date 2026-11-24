@@ -72,6 +72,18 @@ def _bearer(role: UserRole) -> dict[str, str]:
     return {"Authorization": f"Bearer {issue_dev_token(DEV_USERS[role])}"}
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "qa_gate: run with the GRN quality-inspection gate switched on")
+
+
+@pytest.fixture(autouse=True)
+def _qa_gate_off_by_default(request, monkeypatch):
+    """Older tests approve GRNs without a QA step; the QA gate itself is tested in test_grn_p2p.py (marker qa_gate)."""
+    if request.node.get_closest_marker("qa_gate") is None:
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "GRN_QA_REQUIRED", False)
+
+
 @pytest.fixture
 def anon_client(db_session: Session) -> Generator[TestClient, None, None]:
     """TestClient with no credentials (alias of `client`, named for security tests)."""

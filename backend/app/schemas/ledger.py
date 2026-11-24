@@ -57,6 +57,21 @@ class LedgerReversalRequest(BaseModel):
     reason: str = Field(..., min_length=5, description="Mandatory reason for reversing the ledger entry")
 
 
+class UOMStockSummaryResponse(BaseModel):
+    uom_id: int
+    uom_code: str
+    uom_name: str
+    decimal_precision: int
+    total_quantity: Decimal
+    item_count: int
+    in_stock_items_count: int
+    zero_stock_items_count: int
+    negative_stock_items_count: int
+    movement_count: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class PaginatedLedgerEntriesResponse(BaseModel):
     items: List[StockLedgerEntryResponse]
     total: int

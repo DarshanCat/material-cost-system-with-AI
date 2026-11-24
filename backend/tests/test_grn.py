@@ -452,6 +452,39 @@ def test_grn_gst_rate_separation_and_non_blending(client: TestClient, db_session
 
 
 @pytest.fixture(autouse=True)
-def _authenticate_as_admin(client: TestClient, admin_headers: dict):
-    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
-    client.headers.update(admin_headers)
+def _authenticate_as_stores(client: TestClient, stores_headers: dict):
+    """GRN creation and submission workflow tests run as Stores; approvals pass management_headers."""
+    client.headers.update(stores_headers)
+
+
+def test_admin_cannot_create_grn_without_receipt_create(
+    anon_client: TestClient, db_session: Session, admin_headers: dict
+):
+    """Explicit RBAC guard: Admin lacks receipt:create and is rejected with 403 on GRN creation."""
+    dept = db_session.query(Department).filter_by(code="FDY").first()
+    uom = db_session.query(UOM).filter_by(code="KG").first()
+    item = MaterialItem(
+        item_code="FDY-RM-990",
+        name="Admin Forbidden Test Item",
+        department_id=dept.id,
+        category="RAW_MATERIALS",
+        base_uom_id=uom.id,
+    )
+    db_session.add(item)
+    db_session.commit()
+
+    payload = {
+        "receipt_date": str(date.today()),
+        "source_type": "INTERNAL_VSPL",
+        "lines": [
+            {
+                "line_number": 1,
+                "material_item_id": item.id,
+                "uom_id": uom.id,
+                "quantity": "10.00",
+            }
+        ],
+    }
+    resp = anon_client.post("/api/v1/grn/", json=payload, headers=admin_headers)
+    assert resp.status_code == 403
+    assert "lacks permission 'receipt:create'" in resp.json()["detail"]

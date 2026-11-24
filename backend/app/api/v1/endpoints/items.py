@@ -1,6 +1,6 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -61,31 +61,41 @@ def list_items(
     """
     effective_size = limit if limit is not None else size
     try:
-        stmt = select(MaterialItem)
-
+        filters = []
         if is_active is not None:
-            stmt = stmt.where(MaterialItem.is_active == is_active)
+            filters.append(MaterialItem.is_active == is_active)
 
         if department_id:
-            stmt = stmt.where(MaterialItem.department_id == department_id)
+            filters.append(MaterialItem.department_id == department_id)
 
         if category:
             # Stored category text is kept exactly as approved (e.g. 'Bolts & Nuts'); match case-insensitively.
-            stmt = stmt.where(func.lower(MaterialItem.category) == category.lower())
+            filters.append(func.lower(MaterialItem.category) == category.lower())
 
         if q and q.strip():
             term = f"%{q.strip().lower()}%"
-            stmt = stmt.where(
+            filters.append(
                 (func.lower(MaterialItem.item_code).like(term)) | (func.lower(MaterialItem.name).like(term))
             )
 
         # Count total
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        count_stmt = select(func.count(MaterialItem.id))
+        if filters:
+            count_stmt = count_stmt.where(*filters)
         total = db.scalar(count_stmt) or 0
 
         # Paginate
         offset = (page - 1) * effective_size
-        items = db.scalars(stmt.order_by(MaterialItem.item_code).offset(offset).limit(effective_size)).all()
+        stmt = (
+            select(MaterialItem)
+            .options(
+                joinedload(MaterialItem.department),
+                joinedload(MaterialItem.base_uom),
+            )
+        )
+        if filters:
+            stmt = stmt.where(*filters)
+        items = db.scalars(stmt.order_by(MaterialItem.item_code).offset(offset).limit(effective_size)).unique().all()
 
         results = []
         for it in items:
@@ -103,9 +113,11 @@ def list_items(
             size=effective_size,
         )
     except SQLAlchemyError as exc:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database error while querying items: {str(exc.__class__.__name__)}. Ensure PostgreSQL is online."
+            detail=f"Database error while querying items: {str(exc)}. Ensure PostgreSQL is online."
         )
 
 
@@ -200,19 +212,35 @@ def update_item(
                 changes.append((ItemMasterAction.METADATA_UPDATED, "description", it.description, new_desc))
                 it.description = new_desc
 
+        if payload.reconciliation_category is not None:
+            new_recon = payload.reconciliation_category.strip().upper() if payload.reconciliation_category.strip() else None
+            if new_recon and new_recon not in std.RECONCILIATION_CATEGORIES:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail=f"Invalid reconciliation_category '{new_recon}'. Allowed: {sorted(std.RECONCILIATION_CATEGORIES)}"
+                )
+            curr_recon = getattr(it, "reconciliation_category", None)
+            if new_recon != curr_recon:
+                changes.append((ItemMasterAction.METADATA_UPDATED, "reconciliation_category", curr_recon, new_recon))
+                it.reconciliation_category = new_recon
+
         if payload.is_active is not None and payload.is_active != it.is_active:
             action = ItemMasterAction.REACTIVATED if payload.is_active else ItemMasterAction.RETIRED
             changes.append((action, "is_active", str(it.is_active), str(payload.is_active)))
             it.is_active = payload.is_active
 
-        needs_reason = [c for c in changes if c[0] in (ItemMasterAction.RENAMED, ItemMasterAction.RETIRED, ItemMasterAction.REACTIVATED)]
+        needs_reason = [
+            c for c in changes 
+            if c[0] in (ItemMasterAction.RENAMED, ItemMasterAction.RETIRED, ItemMasterAction.REACTIVATED) 
+            or c[1] == "reconciliation_category"
+        ]
         if needs_reason and (reason is None or len(reason) < MIN_CHANGE_REASON_LENGTH):
             db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
                     f"change_reason (at least {MIN_CHANGE_REASON_LENGTH} characters) is required to "
-                    + " / ".join(sorted({c[0].lower() for c in needs_reason}))
+                    + " / ".join(sorted({(c[1] if c[1] == "reconciliation_category" else c[0]).lower() for c in needs_reason}))
                     + " an item. The change is recorded in the item history."
                 ),
             )

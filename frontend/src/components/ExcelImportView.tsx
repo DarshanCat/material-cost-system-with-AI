@@ -9,10 +9,11 @@ import {
 } from 'lucide-react';
 import type { UserRole } from '../types';
 import { apiFetch } from '../api/client';
+import { hasPermission } from '../auth/permissions';
 
 interface ExcelImportViewProps {
-  currentRole: UserRole;
-  currentUserId: string;
+  currentRole?: UserRole;
+  currentUserId?: string;
 }
 
 interface ValidationFinding {
@@ -33,7 +34,8 @@ interface ValidationSummary {
   findings: ValidationFinding[];
 }
 
-export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, currentUserId }) => {
+export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole }) => {
+  const canImportExcel = hasPermission(currentRole, 'excel:import');
   const [importType, setImportType] = useState<'GRN' | 'ISSUE' | 'WASTE'>('GRN');
   const [file, setFile] = useState<File | null>(null);
   const [validating, setValidating] = useState<boolean>(false);
@@ -93,7 +95,6 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
       const payload = {
         import_type: importType,
         rows: summary.findings.map(f => f.raw_data),
-        created_by: `${currentRole} (${currentUserId})`,
       };
 
       const res = await apiFetch('/api/v1/excel-import/commit', {
@@ -127,9 +128,11 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
           </p>
         </div>
         <div className="header-actions">
-          <button className="erp-btn btn-secondary" onClick={handleDownloadTemplate}>
-            <Download size={14} className="btn-icon" /> Download {importType} Template
-          </button>
+          {canImportExcel && (
+            <button className="erp-btn btn-secondary" onClick={handleDownloadTemplate}>
+              <Download size={14} className="btn-icon" /> Download {importType} Template
+            </button>
+          )}
         </div>
       </div>
 
@@ -189,14 +192,16 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
           </div>
 
           <div>
-            <button
-              className="erp-btn btn-primary w-full"
-              onClick={handleValidate}
-              disabled={!file || validating}
-            >
-              <Upload size={14} className="btn-icon" />
-              {validating ? 'Inspecting Worksheet...' : 'Validate & Preview'}
-            </button>
+            {canImportExcel && (
+              <button
+                className="erp-btn btn-primary w-full"
+                onClick={handleValidate}
+                disabled={!file || validating}
+              >
+                <Upload size={14} className="btn-icon" />
+                {validating ? 'Inspecting Worksheet...' : 'Validate & Preview'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -211,7 +216,7 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
                 Foundry business rule verification: Decimal precision, rate exclusions, and master reference checks.
               </p>
             </div>
-            {summary.can_commit ? (
+            {summary.can_commit && canImportExcel ? (
               <button
                 className="erp-btn btn-success"
                 onClick={handleCommit}
@@ -220,11 +225,11 @@ export const ExcelImportView: React.FC<ExcelImportViewProps> = ({ currentRole, c
                 <Database size={14} className="btn-icon" />
                 {committing ? 'Writing Batch...' : 'Atomic Commit (Commit All)'}
               </button>
-            ) : (
+            ) : !summary.can_commit ? (
               <div className="text-xs font-semibold text-red-600 bg-red-50 p-2 rounded border border-red-200">
                 Commit Blocked: Fix errors below and re-validate
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="grid grid-cols-4 gap-3 mb-4">

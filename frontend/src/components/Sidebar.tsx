@@ -14,13 +14,19 @@ import {
   Layers,
   FileSpreadsheet,
   Lock,
-  ShoppingCart
+  ShoppingCart,
+  ShieldCheck,
+  Workflow,
+  RotateCcw,
+  Users
 } from 'lucide-react';
-import type { ModuleId } from '../types';
+import type { ModuleId, UserRole } from '../types';
+import { canAccessModule } from '../auth/permissions';
 
 interface SidebarProps {
   activeModule: ModuleId;
   onSelectModule: (module: ModuleId) => void;
+  currentRole?: UserRole | null;
 }
 
 interface NavItem {
@@ -31,7 +37,7 @@ interface NavItem {
   phase?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule, currentRole }) => {
   const masterNavItems: NavItem[] = [
     {
       id: 'dashboard',
@@ -43,25 +49,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
       id: 'material-master',
       label: 'Material Master',
       icon: <Package size={18} />,
-      badge: 'Phase 2',
+      badge: 'Active',
+    },
+    {
+      id: 'heat-master',
+      label: 'Furnace Heat Master',
+      icon: <Flame size={18} />,
+      badge: 'Active',
     },
     {
       id: 'vendor-master',
       label: 'Vendor Master',
       icon: <Building size={18} />,
-      badge: 'Phase 2',
+      badge: 'Active',
     },
     {
       id: 'item-requests',
       label: 'Item Approvals',
       icon: <ClipboardList size={18} />,
-      badge: 'Phase 2',
+      badge: 'Active',
     },
     {
       id: 'references',
       label: 'Depts & UOMs',
       icon: <Ruler size={18} />,
-      badge: 'Phase 2',
+      badge: 'Active',
     },
     {
       id: 'material-aliases',
@@ -69,9 +81,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
       icon: <Layers size={18} />,
       badge: 'Active',
     },
+    {
+      id: 'roles-responsibilities',
+      label: 'Roles & Responsibilities',
+      icon: <ShieldCheck size={18} />,
+      badge: 'RBAC',
+    },
+    {
+      id: 'users',
+      label: 'User Management',
+      icon: <Users size={18} />,
+      badge: 'Admin',
+    },
   ];
 
   const operationalNavItems: NavItem[] = [
+    {
+      id: 'p2p-cycle',
+      label: 'Procure-to-Pay (P2P)',
+      icon: <Workflow size={18} />,
+      badge: 'E2E Flow',
+    },
+    {
+      id: 'purchase-requests',
+      label: 'Purchase Requests (PR)',
+      icon: <ClipboardList size={18} />,
+      badge: 'Plant Head',
+    },
     {
       id: 'purchase-orders',
       label: 'Purchase Orders (PO)',
@@ -88,6 +124,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
       id: 'material-issue',
       label: 'Material Issues',
       icon: <Flame size={18} />,
+      badge: 'Active',
+    },
+    {
+      id: 'return-to-store',
+      label: 'Return to Store (RTS)',
+      icon: <RotateCcw size={18} />,
       badge: 'Active',
     },
     {
@@ -152,44 +194,78 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeModule, onSelectModule }
     },
   ];
 
+  const isGuest = !currentRole;
+  const visibleMasterNavItems = isGuest
+    ? masterNavItems.filter((item) => item.id !== 'users')
+    : masterNavItems.filter((item) => canAccessModule(currentRole, item.id));
+  const visibleOperationalNavItems = isGuest
+    ? operationalNavItems
+    : operationalNavItems.filter((item) => canAccessModule(currentRole, item.id));
+
   return (
     <aside className="erp-sidebar">
-      <div className="sidebar-section-title">MASTER DATA & APPROVALS</div>
-      <nav className="sidebar-nav">
-        {masterNavItems.map((item) => {
-          const isActive = activeModule === item.id;
-          return (
-            <button
-              key={item.id}
-              className={`nav-button ${isActive ? 'nav-active' : ''}`}
-              onClick={() => onSelectModule(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-              {item.badge && <span className="nav-badge active-badge">{item.badge}</span>}
-            </button>
-          );
-        })}
-      </nav>
+      {currentRole && (
+        <div style={{ padding: '8px 12px', margin: '8px 8px 12px', background: 'rgba(56, 189, 248, 0.08)', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+          <div style={{ fontSize: '10px', textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.5px', fontWeight: 600 }}>
+            Active Workspace
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#38bdf8' }}>
+            {currentRole} Role Portal
+          </div>
+        </div>
+      )}
 
-      <div className="sidebar-section-title mt-2">OPERATIONAL MODULES</div>
-      <nav className="sidebar-nav">
-        {operationalNavItems.map((item) => {
-          const isActive = activeModule === item.id;
-          return (
-            <button
-              key={item.id}
-              className={`nav-button ${isActive ? 'nav-active' : ''}`}
-              onClick={() => onSelectModule(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-              {item.badge && <span className="nav-badge active-badge">{item.badge}</span>}
-              {item.phase && <span className="nav-badge pending-badge">{item.phase}</span>}
-            </button>
-          );
-        })}
-      </nav>
+      {visibleOperationalNavItems.length > 0 && (
+        <>
+          <div className="sidebar-section-title">OPERATIONAL MODULES</div>
+          <nav className="sidebar-nav">
+            {visibleOperationalNavItems.map((item) => {
+              const isActive = activeModule === item.id;
+              const isLocked = isGuest && item.id !== 'dashboard' && item.id !== 'system-health';
+              return (
+                <button
+                  key={item.id}
+                  className={`nav-button ${isActive ? 'nav-active' : ''}`}
+                  onClick={() => onSelectModule(item.id)}
+                  title={isLocked ? `Sign in to access ${item.label}` : undefined}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  <span className="nav-label">{item.label}</span>
+                  {item.badge && <span className="nav-badge active-badge">{item.badge}</span>}
+                  {item.phase && <span className="nav-badge pending-badge">{item.phase}</span>}
+                  {isLocked && <Lock size={12} className="text-slate-500 ml-auto shrink-0" />}
+                </button>
+              );
+            })}
+          </nav>
+        </>
+      )}
+
+      {visibleMasterNavItems.length > 0 && (
+        <>
+          <div className="sidebar-section-title mt-2">MASTER DATA & APPROVALS</div>
+          <nav className="sidebar-nav">
+            {visibleMasterNavItems.map((item) => {
+              const isActive = activeModule === item.id;
+              const isLocked = isGuest && item.id !== 'dashboard' && item.id !== 'system-health';
+              return (
+                <button
+                  key={item.id}
+                  className={`nav-button ${isActive ? 'nav-active' : ''}`}
+                  onClick={() => onSelectModule(item.id)}
+                  title={isLocked ? `Sign in to access ${item.label}` : undefined}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  <span className="nav-label">{item.label}</span>
+                  {item.badge && <span className="nav-badge active-badge">{item.badge}</span>}
+                  {item.phase && <span className="nav-badge pending-badge">{item.phase}</span>}
+                  {isLocked && <Lock size={12} className="text-slate-500 ml-auto shrink-0" />}
+                </button>
+              );
+            })}
+          </nav>
+        </>
+      )}
 
       <div className="sidebar-footer">
         <div className="sidebar-footer-card">

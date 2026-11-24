@@ -18,6 +18,8 @@ from sqlalchemy import (
     ForeignKey,
     Text,
     Index,
+    Boolean,
+    CheckConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -42,6 +44,21 @@ class CastingClassification(str, Enum):
     REWORK = "REWORK"
 
 
+class HeelMeasurementMethod(str, Enum):
+    DIP_ROD = "DIP_ROD"
+    SCALE_DIFFERENCE = "SCALE_DIFFERENCE"
+    ESTIMATED = "ESTIMATED"
+    COLD_START = "COLD_START"
+    FURNACE_EMPTIED = "FURNACE_EMPTIED"
+
+
+class HeelVerificationStatus(str, Enum):
+    UNRECORDED = "UNRECORDED"
+    PENDING_VERIFICATION = "PENDING_VERIFICATION"
+    VERIFIED = "VERIFIED"
+    REJECTED = "REJECTED"
+
+
 class HeatHeader(Base):
     """
     Induction Furnace Heat Header record.
@@ -60,6 +77,22 @@ class HeatHeader(Base):
     
     metal_tapped_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
     metal_tapped_uom_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("uoms.id"), nullable=True)
+    
+    # Liquid Heel & Furnace Mass-Balance tracking (Phase 2B-2A / Migration 012 proposed)
+    opening_liquid_heel_kg: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
+    closing_liquid_heel_kg: Mapped[Optional[Decimal]] = mapped_column(Numeric(15, 4), nullable=True)
+    heel_measurement_method: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    heel_recorded_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    heel_verified_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    heel_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    heel_verification_status: Mapped[str] = mapped_column(
+        String(30), nullable=False, default=HeelVerificationStatus.UNRECORDED.value
+    )
+    is_cold_start: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_furnace_empty: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    opening_heel_source_heat_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("heat_headers.id"), nullable=True
+    )
     
     production_status: Mapped[str] = mapped_column(
         String(20), nullable=False, default=ProductionStatus.COMPLETED.value, index=True
@@ -81,6 +114,7 @@ class HeatHeader(Base):
     )
 
     metal_tapped_uom = relationship("UOM")
+    opening_heel_source_heat = relationship("HeatHeader", remote_side=[id])
     
     charge_lines: Mapped[List["HeatChargeLine"]] = relationship(
         "HeatChargeLine",
@@ -97,6 +131,14 @@ class HeatHeader(Base):
 
     __table_args__ = (
         Index("ix_heat_date_furnace", "heat_date", "furnace_id"),
+        CheckConstraint(
+            "opening_liquid_heel_kg IS NULL OR opening_liquid_heel_kg >= 0",
+            name="chk_opening_heel_non_negative",
+        ),
+        CheckConstraint(
+            "closing_liquid_heel_kg IS NULL OR closing_liquid_heel_kg >= 0",
+            name="chk_closing_heel_non_negative",
+        ),
     )
 
 

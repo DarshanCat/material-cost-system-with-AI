@@ -21,6 +21,7 @@ import type {
   UserRole
 } from '../types';
 import { apiFetch, readApiError } from '../api/client';
+import { hasPermission } from '../auth/permissions';
 import {
   canSubmitPreview,
   categoriesForDepartment,
@@ -250,7 +251,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
   }, [statusFilter, searchQuery, page, pageSize]);
 
   const fetchPendingQueue = useCallback(async () => {
-    if (currentRole !== 'Management' && currentRole !== 'Admin') return;
+    if (!hasPermission(currentRole, 'item:approve') && currentRole !== 'Admin') return;
     try {
       const res = await apiFetch('/api/v1/item-requests/pending');
       if (res.ok) {
@@ -475,7 +476,10 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
     }
   };
 
-  const canApprove = currentRole === 'Management' || currentRole === 'Admin';
+  const canApprove = hasPermission(currentRole, 'item:approve');
+  const canCreate = hasPermission(currentRole, 'item_request:create');
+  const canSubmit = hasPermission(currentRole, 'item_request:submit');
+  const canCancel = hasPermission(currentRole, 'item_request:cancel');
   const approvalBlocked = decisionAction === 'approve' && decisionPreview !== null && !canSubmitPreview(decisionPreview);
 
   const getStatusBadge = (status: string) => {
@@ -531,12 +535,14 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
               )}
             </button>
           )}
-          <button
-            className={`tab-btn ${activeTab === 'new' ? 'tab-btn-active' : ''}`}
-            onClick={() => setActiveTab('new')}
-          >
-            <PlusCircle size={16} /> New Request
-          </button>
+          {canCreate && (
+            <button
+              className={`tab-btn ${activeTab === 'new' ? 'tab-btn-active' : ''}`}
+              onClick={() => setActiveTab('new')}
+            >
+              <PlusCircle size={16} /> New Request
+            </button>
+          )}
         </div>
       </div>
 
@@ -614,11 +620,13 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
                 <FileText size={48} className="text-muted mb-2" />
                 <h3 className="empty-title">No Item Requests Found</h3>
                 <p className="empty-desc">
-                  No requests match the current filters. Click "New Request" to initiate a material item creation proposal.
+                  No requests match the current filters.{canCreate ? ' Click "New Request" to initiate a material item creation proposal.' : ''}
                 </p>
-                <button className="primary-btn mt-3" onClick={() => setActiveTab('new')}>
-                  <PlusCircle size={16} /> Initiate Item Request
-                </button>
+                {canCreate && (
+                  <button className="primary-btn mt-3" onClick={() => setActiveTab('new')}>
+                    <PlusCircle size={16} /> Initiate Item Request
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -658,7 +666,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
                           >
                             View
                           </button>
-                          {r.status === 'DRAFT' && (
+                          {r.status === 'DRAFT' && canSubmit && (
                             <button
                               className="action-btn-small btn-primary-small"
                               onClick={() => handleSubmitDraft(r.id)}
@@ -666,7 +674,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
                               Submit
                             </button>
                           )}
-                          {(r.status === 'DRAFT' || r.status === 'SUBMITTED') && (
+                          {(r.status === 'DRAFT' || r.status === 'SUBMITTED') && canCancel && (
                             <button
                               className="action-btn-small btn-danger-small"
                               onClick={() => handleCancelRequest(r.id)}
@@ -802,7 +810,7 @@ export const ItemRequestsView: React.FC<ItemRequestsViewProps> = ({
       )}
 
       {/* TAB 3: GUIDED NEW ITEM REGISTRATION */}
-      {activeTab === 'new' && (
+      {activeTab === 'new' && canCreate && (
         <div className="card" style={{ maxWidth: '860px', margin: '0 auto' }}>
           <div className="card-header-row mb-3">
             <h3 className="card-title">

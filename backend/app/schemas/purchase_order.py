@@ -34,6 +34,8 @@ class POLineItemResponse(BaseModel):
 
 
 class POCreate(BaseModel):
+    pr_id: Optional[int] = None
+    pr_number: Optional[str] = None
     vendor_id: int
     department_id: int
     po_date: Optional[date] = None
@@ -48,9 +50,19 @@ class POStatusAction(BaseModel):
     comments: Optional[str] = None
 
 
+class POOrderPlacedAction(BaseModel):
+    order_placed_at: Optional[datetime] = None
+    order_placed_date: Optional[date] = None
+    vendor_order_ref: Optional[str] = None
+    expected_delivery_date: Optional[date] = None
+    notes: Optional[str] = None
+
+
 class POResponse(BaseModel):
     id: int
     po_number: str
+    pr_id: Optional[int] = None
+    pr_number: Optional[str] = None
     po_date: date
     expected_delivery_date: date
     vendor_id: int
@@ -72,6 +84,9 @@ class POResponse(BaseModel):
     scm_approved_at: Optional[datetime] = None
     mgmt_approved_by: Optional[str] = None
     mgmt_approved_at: Optional[datetime] = None
+    order_placed_by: Optional[str] = None
+    order_placed_at: Optional[datetime] = None
+    vendor_order_ref: Optional[str] = None
     rejection_reason: Optional[str] = None
     grn_count: Optional[int] = 0
     fulfilled_percentage: Optional[int] = 0

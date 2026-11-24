@@ -99,11 +99,13 @@ class GRNResponse(BaseModel):
     quality_inspected_by: Optional[str] = None
     quality_inspected_at: Optional[datetime] = None
     payment_status: Optional[str] = None
-    amount_paid: Optional[str] = None
+    amount_paid: Optional[Decimal] = None
     payment_reference: Optional[str] = None
     payment_date: Optional[date] = None
     payment_mode: Optional[str] = None
     payment_notes: Optional[str] = None
+    paid_by: Optional[str] = None
+    payable_total: Optional[Decimal] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -115,10 +117,17 @@ class GRNStatusAction(BaseModel):
     quality_inspection_notes: Optional[str] = None
 
 
+class GRNQualityAction(BaseModel):
+    """Result of the Quality team's inspection of a submitted GRN."""
+    quality_inspection_status: str  # PASSED | CONDITIONALLY_ACCEPTED | REJECTED
+    quality_document_number: Optional[str] = Field(None, max_length=100)
+    quality_inspection_notes: Optional[str] = Field(None, max_length=2000)
+
+
 class GRNPaymentAction(BaseModel):
-    payment_status: str = "PAID"
-    amount_paid: Optional[str] = None
-    payment_reference: Optional[str] = None
+    """One payment against an approved GRN (the server decides PAID / PARTIALLY_PAID from the amounts)."""
+    amount_paid: Decimal = Field(..., gt=0, max_digits=15, decimal_places=2)
+    payment_reference: str = Field(..., min_length=1, max_length=100)
     payment_date: Optional[date] = None
-    payment_mode: Optional[str] = "NEFT_RTGS"
-    payment_notes: Optional[str] = None
+    payment_mode: str = "NEFT_RTGS"
+    payment_notes: Optional[str] = Field(None, max_length=1000)

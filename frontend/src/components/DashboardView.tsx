@@ -9,13 +9,16 @@ import {
   CheckCircle, 
   Clock 
 } from 'lucide-react';
-import type { SystemHealthData } from '../types';
+import type { ModuleId, SystemHealthData, UserRole } from '../types';
+import { IMPLEMENTATION_ROADMAP } from '../config/roadmap';
+import { canAccessModule } from '../auth/permissions';
 
 interface DashboardViewProps {
   health: SystemHealthData | null;
   loadingHealth: boolean;
   onRefreshHealth: () => void;
-  onNavigate: (module: any) => void;
+  currentRole?: UserRole | null;
+  onNavigate: (module: ModuleId) => void;
 }
 
 const DEPARTMENTS = [
@@ -33,6 +36,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   health,
   loadingHealth,
   onRefreshHealth,
+  currentRole,
   onNavigate,
 }) => {
   const isDbConnected = health?.database?.connected ?? false;
@@ -42,7 +46,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Welcome Banner */}
       <div className="welcome-banner">
         <div className="welcome-content">
-          <span className="badge-pill">Phase 1: Foundation Complete</span>
+          <span className="badge-pill">Phases 1–3 Operational • Phases 4–6 Implemented</span>
           <h2 className="welcome-title">VSPL Material Management & Costing System</h2>
           <p className="welcome-subtitle">
             Enterprise SG Iron Foundry ERP foundation engineered for Vijay Spheroidals Pvt. Ltd.
@@ -174,67 +178,48 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <FolderKanban size={18} className="inline-icon text-primary" />
             System Implementation Roadmap
           </h3>
-          <span className="scope-tag">8-Phase Architectural Plan</span>
+          <span className="scope-tag">6-Phase Architectural Plan</span>
         </div>
 
         <div className="phases-grid">
-          <div className="phase-card current-phase">
-            <div className="phase-top">
-              <span className="phase-number">Phase 1</span>
-              <CheckCircle size={16} className="text-success" />
-            </div>
-            <div className="phase-title">Foundation & Shell</div>
-            <div className="phase-desc">FastAPI, PostgreSQL schema base, React ERP shell, Alembic migrations, test suites.</div>
-            <div className="phase-status active">COMPLETED</div>
-          </div>
+          {IMPLEMENTATION_ROADMAP.map((phase) => {
+            const targetModule = phase.moduleId as ModuleId | undefined;
+            const canNav = Boolean(targetModule && canAccessModule(currentRole, targetModule));
+            return (
+              <div
+                key={phase.id}
+                className={`phase-card ${phase.cardClass}`}
+                onClick={() => canNav && targetModule && onNavigate(targetModule)}
+                style={{ cursor: canNav ? 'pointer' : 'default' }}
+              >
+              <div className="phase-top">
+                <span className="phase-number">{phase.number}</span>
+                {phase.icon === 'check' ? (
+                  <CheckCircle size={16} className="text-success" />
+                ) : (
+                  <Clock size={16} className={phase.cardClass === 'completed' ? 'text-success' : 'text-amber'} />
+                )}
+              </div>
+              <div className="phase-title">{phase.title}</div>
+              <div className="phase-desc">{phase.description}</div>
 
-          <div className="phase-card current-phase" onClick={() => onNavigate('material-master')}>
-            <div className="phase-top">
-              <span className="phase-number">Phase 2</span>
-              <CheckCircle size={16} className="text-success" />
+              <div className="phase-status-stack">
+                <div className="phase-status-row">
+                  <span className="phase-gate-label">Build:</span>
+                  <span className={`phase-status ${phase.implementationBadgeClass}`}>
+                    {phase.implementationLabel}
+                  </span>
+                </div>
+                <div className="phase-status-row">
+                  <span className="phase-gate-label">Gate:</span>
+                  <span className={`phase-status ${phase.approvalBadgeClass}`}>
+                    {phase.approvalLabel}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="phase-title">Master Data & Approvals</div>
-            <div className="phase-desc">741 Items master, categories, vendors, UOMs, item approval workflow.</div>
-            <div className="phase-status active">COMPLETED</div>
-          </div>
-
-          <div className="phase-card current-phase" onClick={() => onNavigate('grn-management')}>
-            <div className="phase-top">
-              <span className="phase-number">Phase 3</span>
-              <CheckCircle size={16} className="text-success" />
-            </div>
-            <div className="phase-title">Material Entry</div>
-            <div className="phase-desc">GRNs, receipts with GST-excluded rates, issues, waste logs, duplicate check.</div>
-            <div className="phase-status active">COMPLETED</div>
-          </div>
-
-          <div className="phase-card next-phase" onClick={() => onNavigate('inventory-ledger')}>
-            <div className="phase-top">
-              <span className="phase-number">Phase 4</span>
-              <Clock size={16} className="text-amber" />
-            </div>
-            <div className="phase-title">Live Inventory Ledger</div>
-            <div className="phase-desc">Append-only movements, opening stock, physical audit adjustments.</div>
-            <div className="phase-status pending">NEXT UP</div>
-          </div>
-
-          <div className="phase-card" onClick={() => onNavigate('heat-reconciliation')}>
-            <div className="phase-top">
-              <span className="phase-number">Phase 5</span>
-            </div>
-            <div className="phase-title">Heat Log & Reconciliation</div>
-            <div className="phase-desc">Heat records, charge details, parts produced, issue-slip reconciliation.</div>
-            <div className="phase-status queued">QUEUED</div>
-          </div>
-
-          <div className="phase-card" onClick={() => onNavigate('costing')}>
-            <div className="phase-top">
-              <span className="phase-number">Phase 6</span>
-            </div>
-            <div className="phase-title">Costing Engine</div>
-            <div className="phase-desc">Weighted-average costing, heat cost, cost per kg, part costing (post 12-Oct-2026).</div>
-            <div className="phase-status queued">QUEUED</div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -209,7 +209,89 @@ def test_material_issue_intra_document_duplicate_lines_warning(client: TestClien
     assert "lines 1, 3, 4" in dup_warnings_three[0]
 
 
+
+
+def test_direct_issue_slip_workflow_and_ledger_posting(client: TestClient, db_session: Session):
+    dept_fdy = db_session.query(Department).filter_by(code="FDY").first()
+    dept_ms = db_session.query(Department).filter_by(code="MSP").first()
+    uom_kg = db_session.query(UOM).filter_by(code="KG").first()
+
+    item = MaterialItem(
+        item_code="FDY-DI-001",
+        name="Direct Issue Inoculant",
+        department_id=dept_fdy.id,
+        category="ALLOYS",
+        base_uom_id=uom_kg.id,
+    )
+    db_session.add(item)
+    db_session.commit()
+
+    from app.models.ledger import StockLedgerEntry, MovementType, SourceDocumentType
+    ob_entry = StockLedgerEntry(
+        entry_number="STK-TEST-OB-DI",
+        posting_group_id="POST-OB-DI",
+        material_item_id=item.id,
+        uom_id=uom_kg.id,
+        transaction_date=date(2026, 10, 12),
+        movement_type=MovementType.OPENING_BALANCE.value,
+        quantity_delta=Decimal("200.0000"),
+        source_document_type=SourceDocumentType.OPENING_BALANCE.value,
+        source_document_id=0,
+        source_line_id=item.id,
+        source_document_number="OB-DI-TEST",
+        posted_by="Admin",
+    )
+    db_session.add(ob_entry)
+    db_session.commit()
+
+    # 1. Create a draft issue slip
+    payload = {
+        "issue_date": str(date.today()),
+        "issuing_department_id": dept_fdy.id,
+        "receiving_department_id": dept_ms.id,
+        "heat_reference_number": "H-102603-4555",
+        "notes": "Direct issue test slip",
+        "lines": [
+            {
+                "line_number": 1,
+                "material_item_id": item.id,
+                "uom_id": uom_kg.id,
+                "quantity": "15.000",
+                "remarks": "Inoculation charge",
+            }
+        ],
+    }
+    resp = client.post("/api/v1/issues/", json=payload)
+    assert resp.status_code == 201
+    draft_id = resp.json()["id"]
+    assert resp.json()["status"] == "DRAFT"
+
+    # 2. Stores directly issues it to the stock ledger via direct-issue endpoint
+    resp_di = client.post(f"/api/v1/issues/{draft_id}/direct-issue", json={"comments": "Shop floor direct issue"})
+    assert resp_di.status_code == 200
+    issued_data = resp_di.json()
+    assert issued_data["status"] == "APPROVED"
+
+    # 3. Verify stock ledger entry was posted
+    ledger_entries = db_session.query(StockLedgerEntry).filter_by(
+        source_document_type=SourceDocumentType.ISSUE.value,
+        source_document_id=draft_id,
+    ).all()
+    assert len(ledger_entries) == 1
+    assert ledger_entries[0].quantity_delta == Decimal("-15.0000")
+
+
+def test_issues_list_trailing_slash_contract_and_heat_filter(client: TestClient, db_session: Session):
+    """
+    Verifies that GET /api/v1/issues/ answers without 307 redirect,
+    and supports status and heat_reference_number query filters used by HeatLogManagementView.
+    """
+    resp = client.get("/api/v1/issues/?status=APPROVED&heat_reference_number=H-102603-3801", follow_redirects=False)
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
+
+
 @pytest.fixture(autouse=True)
-def _authenticate_as_admin(client: TestClient, admin_headers: dict):
-    """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
-    client.headers.update(admin_headers)
+def _authenticate_as_stores(client: TestClient, stores_headers: dict):
+    """Workflow tests exercise domain rules as Stores (which has issue:create/view); RBAC itself is covered by test_security_routes.py."""
+    client.headers.update(stores_headers)

@@ -3,23 +3,26 @@ import {
   Plus, 
   CheckCircle, 
   AlertTriangle, 
-  Send, 
   X, 
   Search,
   Flame,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 import type { MaterialIssue, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
 import { useReferenceData } from '../hooks/useReferenceData';
 import { ReferenceDataNotice } from './ReferenceDataNotice';
+import { hasPermission } from '../auth/permissions';
 
 interface MaterialIssueViewProps {
   currentRole: UserRole;
   currentUserId: string;
+  onNavigate?: (module: string) => void;
 }
 
-export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
+export const MaterialIssueView: React.FC<MaterialIssueViewProps> = ({ currentRole, onNavigate }) => {
+  const canCreateIssue = hasPermission(currentRole, 'issue:create');
   const [actionError, setActionError] = useState<string | null>(null);
   const [issues, setIssues] = useState<MaterialIssue[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -30,12 +33,15 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
+  const storesDept = departments.find(d => d.code === 'STR' || d.code === 'GNS' || d.name.toLowerCase().includes('stores'));
+
   // Form State
-  const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [issueDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [issuingDeptId, setIssuingDeptId] = useState<number | ''>('');
   const [receivingDeptId, setReceivingDeptId] = useState<number | ''>('');
   const [heatRefNo, setHeatRefNo] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [itemSearchFilter, setItemSearchFilter] = useState<string>('');
   const [lines, setLines] = useState<Array<{
     material_item_id: number | '';
     uom_id: number | '';
@@ -48,6 +54,34 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
   const [formWarnings, setFormWarnings] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [availableHeats, setAvailableHeats] = useState<any[]>([]);
+  const [heatSearchFilter, setHeatSearchFilter] = useState<string>('');
+
+  useEffect(() => {
+    if (storesDept && !issuingDeptId) {
+      setIssuingDeptId(storesDept.id);
+    }
+  }, [storesDept, issuingDeptId]);
+
+  const isFoundrySelected = Boolean(
+    departments.find(d => d.id === Number(receivingDeptId))?.code === 'FDY' ||
+    departments.find(d => d.id === Number(receivingDeptId))?.name?.toLowerCase().includes('foundry')
+  );
+
+  const filteredItems = itemSearchFilter.trim()
+    ? items.filter(it => 
+        (it.name && it.name.toLowerCase().includes(itemSearchFilter.toLowerCase())) ||
+        (it.item_code && it.item_code.toLowerCase().includes(itemSearchFilter.toLowerCase()))
+      )
+    : items;
+
+  const filteredHeats = availableHeats.filter((h: any) => {
+    if (!heatSearchFilter.trim()) return true;
+    const term = heatSearchFilter.toLowerCase();
+    const hNum = String(h.heat_number || '').toLowerCase();
+    const fId = String(h.furnace_id || '').toLowerCase();
+    const hDate = String(h.heat_date || '').toLowerCase();
+    return hNum.includes(term) || fId.includes(term) || hDate.includes(term);
+  });
 
   const fetchIssues = async () => {
     setLoading(true);
@@ -64,18 +98,31 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
     }
   };
 
+  const fetchActiveHeats = async () => {
+    try {
+      const res = await apiFetch('/api/v1/heats/active');
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data?.items || []);
+        // Strictly filter to active/in-progress heats
+        const active = list.filter((h: any) => h.production_status === 'IN_PROGRESS' || !h.production_status || h.production_status === 'ACTIVE');
+        setAvailableHeats(active);
+      } else {
+        // Fallback to query with status_filter
+        const fallback = await apiFetch('/api/v1/heats?status_filter=IN_PROGRESS&limit=50');
+        if (fallback.ok) {
+          const fbData = await fallback.json();
+          setAvailableHeats(Array.isArray(fbData) ? fbData : (fbData?.items || []));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching active heats:', err);
+    }
+  };
+
   useEffect(() => {
     fetchIssues();
-    // Load existing heats so stores operators can select active furnace heats
-    (async () => {
-      try {
-        const res = await apiFetch('/api/v1/heats?limit=100');
-        if (res.ok) {
-          const data = await res.json();
-          setAvailableHeats(Array.isArray(data) ? data : (data?.items || []));
-        }
-      } catch {}
-    })();
+    fetchActiveHeats();
   }, []);
 
   const handleAddLine = () => {
@@ -104,6 +151,12 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
     e.preventDefault();
     setFormError(null);
     setFormWarnings([]);
+
+    if (isFoundrySelected && !heatRefNo.trim()) {
+      setFormError('Furnace Heat Reference is mandatory when issuing raw material to the Foundry. Please select or enter a heat number.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -124,7 +177,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
         lines: payloadLines,
       };
 
-      const res = await apiFetch(`/api/v1/issues/`, {
+      const res = await apiFetch(`/api/v1/issues/?direct_issue=true`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -148,7 +201,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
     }
   };
 
-  const handleAction = async (issueId: number, action: 'submit' | 'approve' | 'cancel') => {
+  const handleAction = async (issueId: number, action: 'direct-issue' | 'submit' | 'approve' | 'cancel') => {
     setActionError(null);
     try {
       const res = await apiFetch(`/api/v1/issues/${issueId}/${action}`, {
@@ -198,9 +251,21 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
           <button className="erp-btn btn-secondary" onClick={fetchIssues}>
             <RefreshCw size={14} className="btn-icon" /> Refresh
           </button>
-          <button className="erp-btn btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={14} className="btn-icon" /> Create Issue Slip
-          </button>
+          {canCreateIssue ? (
+            <button
+              className="erp-btn btn-primary"
+              onClick={() => {
+                if (storesDept) setIssuingDeptId(storesDept.id);
+                setShowModal(true);
+              }}
+            >
+              <Plus size={14} className="btn-icon" /> Create Issue Slip
+            </button>
+          ) : (
+            <div className="text-xs text-muted font-medium bg-slate-100 px-3 py-1.5 rounded flex items-center gap-1.5 border border-slate-200">
+              <Lock size={12} className="text-slate-500" /> Issue creation restricted to Stores
+            </div>
+          )}
         </div>
       </div>
 
@@ -279,25 +344,32 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                   <td>{issue.lines?.length || 0} item(s)</td>
                   <td>
                     <span className={`status-pill status-${issue.status.toLowerCase()}`}>
-                      {issue.status}
+                      {issue.status === 'APPROVED' ? '🟢 ISSUED (APPROVED)' : issue.status}
                     </span>
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-1">
-                      {issue.status === 'DRAFT' && (
+                    <div className="flex items-center gap-1.5">
+                      {(issue.status === 'DRAFT' || issue.status === 'SUBMITTED') && canCreateIssue && (
                         <button
-                          className="erp-btn btn-sm btn-outline"
-                          onClick={() => handleAction(issue.id, 'submit')}
+                          className="erp-btn btn-sm btn-primary flex items-center gap-1 font-semibold text-xs shadow-sm"
+                          title="Stores direct issue directly to stock ledger"
+                          onClick={() => handleAction(issue.id, 'direct-issue')}
                         >
-                          <Send size={12} /> Submit
+                          <CheckCircle size={12} /> Issue Now
                         </button>
                       )}
-                      {issue.status === 'SUBMITTED' && (
+                      {issue.status === 'APPROVED' && (
+                        <span className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                          <CheckCircle size={12} className="text-emerald-600" /> Issued
+                        </span>
+                      )}
+                      {(issue.status === 'DRAFT' || issue.status === 'SUBMITTED') && canCreateIssue && (
                         <button
-                          className="erp-btn btn-sm btn-success"
-                          onClick={() => handleAction(issue.id, 'approve')}
+                          className="erp-btn btn-sm btn-danger text-xs p-1"
+                          title="Cancel Slip"
+                          onClick={() => handleAction(issue.id, 'cancel')}
                         >
-                          <CheckCircle size={12} /> Approve
+                          <X size={12} />
                         </button>
                       )}
                     </div>
@@ -388,98 +460,197 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
 
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div>
-                    <label className="form-label">Issue Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={issueDate}
-                      onChange={(e) => setIssueDate(e.target.value)}
-                      required
-                    />
+                    <label className="form-label">Issuing Department (Fixed)</label>
+                    <div className="form-control bg-slate-100 flex items-center gap-1.5 text-slate-700 font-semibold text-xs py-2 cursor-not-allowed">
+                      <Lock size={12} className="text-slate-500" />
+                      {storesDept ? `${storesDept.name} (${storesDept.code})` : 'General/Stores (GNS)'}
+                    </div>
+                    <span className="text-xs text-muted mt-1 block">Material issue strictly originates from Stores</span>
                   </div>
                   <div>
-                    <label className="form-label">Issuing Department *</label>
-                    <select
-                      className="form-control"
-                      value={issuingDeptId}
-                      onChange={(e) => setIssuingDeptId(e.target.value ? Number(e.target.value) : '')}
-                      required
-                    >
-                      <option value="">{refs.placeholder('departments', '-- Select Issuing Dept --')}</option>
-                      {departments.map((d) => (
-                        <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
-                      ))}
-                    </select>
+                    <label className="form-label">Issue Timestamp</label>
+                    <div className="form-control bg-slate-100 text-slate-700 font-medium text-xs py-2">
+                      Auto-Captured Today ({new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })})
+                    </div>
+                    <span className="text-xs text-muted mt-1 block">System records current creation timestamp</span>
                   </div>
                   <div>
-                    <label className="form-label">Receiving Department *</label>
+                    <label className="form-label required">Receiving Department *</label>
                     <select
                       className="form-control"
                       value={receivingDeptId}
-                      onChange={(e) => setReceivingDeptId(e.target.value ? Number(e.target.value) : '')}
+                      onChange={(e) => {
+                        const val = e.target.value ? Number(e.target.value) : '';
+                        setReceivingDeptId(val);
+                        const dept = departments.find(d => d.id === val);
+                        const isFdy = dept?.code === 'FDY' || dept?.name?.toLowerCase().includes('foundry');
+                        if (!isFdy) setHeatRefNo('');
+                      }}
                       required
                     >
                       <option value="">{refs.placeholder('departments', '-- Select Receiving Dept --')}</option>
-                      {departments.map((d) => (
+                      {departments.filter(d => d.id !== (storesDept?.id || 4)).map((d) => (
                         <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
                       ))}
                     </select>
+                    <span className="text-xs text-muted mt-1 block">Plant unit consuming the materials</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="form-label mb-0">Heat Reference Number</label>
-                      <span className="text-xs text-muted">Links to Heat Log</span>
+                {/* Conditional Heat Reference Number: Only visible when Receiving Department is Foundry */}
+                {isFoundrySelected ? (
+                  <div className="mb-4 p-3.5 bg-amber-50/70 border border-amber-300 rounded-lg shadow-sm">
+                    <div className="flex justify-between items-center mb-2 pb-1 border-b border-amber-200">
+                      <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs">
+                        <Flame size={14} className="text-amber-600" />
+                        <span>Active Furnace Heat Allocation (Foundry Mandatory) *</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        {onNavigate && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowModal(false);
+                              onNavigate('heat-master');
+                            }}
+                            className="text-[11px] text-blue-700 hover:text-blue-900 underline font-semibold flex items-center gap-1 bg-white px-2 py-0.5 rounded border border-blue-200"
+                            title="Open the Furnace Heat Master to register, open, or close heats"
+                          >
+                            Furnace Heat Master →
+                          </button>
+                        )}
+                        <span className="badge badge-success text-[10px]">
+                          🟢 {filteredHeats.length} Active Heat(s) Open
+                        </span>
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      list="available-heats-list"
-                      className="form-control"
-                      placeholder="e.g. 102603-3801 or H-102603-3801"
-                      value={heatRefNo}
-                      onChange={(e) => setHeatRefNo(e.target.value)}
-                      onBlur={(e) => {
-                        const val = e.target.value.trim();
-                        if (val) {
-                          setHeatRefNo(val.toUpperCase().startsWith('H-') ? val.toUpperCase() : `H-${val.toUpperCase()}`);
-                        }
-                      }}
-                    />
-                    <datalist id="available-heats-list">
-                      {availableHeats.map((h: any) => (
-                        <option 
-                          key={h.id || h.heat_number} 
-                          value={h.normalized_heat_number || (h.heat_number.startsWith('H-') ? h.heat_number : `H-${h.heat_number}`)}
-                        >
-                          Heat {h.heat_number} ({h.heat_date || ''} · {h.furnace_id || 'Furnace'})
-                        </option>
-                      ))}
-                    </datalist>
-                    <div className="text-xs text-muted mt-1">
-                      Auto-normalizes to <code>H-XXXXXX-XXXX</code>. Reflects directly into the Foundry Heat Log for 1-click crucible charge import.
+
+                    {availableHeats.length === 0 ? (
+                      <div className="p-3 bg-amber-100/80 border border-amber-300 rounded text-xs text-amber-900">
+                        <strong>⚠️ No Active Heat currently open in Foundry.</strong>
+                        <p className="mt-1 text-[11px] text-amber-800">
+                          Under VSPL Material Control governance, Stores cannot issue raw materials without an Active Heat open. Please request the Foundry Manager to open an Active Heat in the <strong>Furnace Heat Master</strong> module before creating this issue slip.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-12 gap-2">
+                          {availableHeats.length > 5 && (
+                            <div className="col-span-4">
+                              <input
+                                type="text"
+                                className="form-control text-xs"
+                                placeholder="Filter active heats..."
+                                value={heatSearchFilter}
+                                onChange={(e) => setHeatSearchFilter(e.target.value)}
+                              />
+                            </div>
+                          )}
+                          <div className={availableHeats.length > 5 ? "col-span-8" : "col-span-12"}>
+                            <select
+                              className="form-control text-xs font-mono font-medium"
+                              value={heatRefNo}
+                              onChange={(e) => setHeatRefNo(e.target.value)}
+                              required
+                            >
+                              <option value="">-- Select Active Furnace Heat ({filteredHeats.length} Active Heats) --</option>
+                              {filteredHeats.map((h: any) => {
+                                const norm = h.normalized_heat_number || (String(h.heat_number).startsWith('H-') ? h.heat_number : `H-${h.heat_number}`);
+                                return (
+                                  <option key={h.id || h.heat_number} value={norm}>
+                                    🟢 {norm} · {h.heat_date || 'Today'} (Furnace: {h.furnace_id || 'F1'}{h.shift ? ` · Shift ${h.shift}` : ''})
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                        {heatRefNo ? (
+                          <div className="space-y-1 mt-1">
+                            <div className="text-xs text-amber-900 font-medium flex items-center justify-between bg-amber-100/70 px-2 py-1 rounded">
+                              <span className="flex items-center gap-1.5">
+                                <CheckCircle size={12} className="text-emerald-600" />
+                                Allocated to Active Heat: <strong className="font-mono text-emerald-800">{heatRefNo}</strong>
+                              </span>
+                              {issues.filter(i => (i.heat_reference_number || '').trim().toLowerCase() === heatRefNo.trim().toLowerCase()).length > 0 && (
+                                <span className="badge badge-info text-[10px]">
+                                  {issues.filter(i => (i.heat_reference_number || '').trim().toLowerCase() === heatRefNo.trim().toLowerCase()).length} Prior Issue(s) on this Heat
+                                </span>
+                              )}
+                            </div>
+                            {issues.filter(i => (i.heat_reference_number || '').trim().toLowerCase() === heatRefNo.trim().toLowerCase()).length > 0 && (
+                              <div className="text-[11px] text-blue-800 bg-blue-50/90 p-2 rounded border border-blue-200">
+                                ℹ️ <strong>Multiple Issues Supported:</strong> {issues.filter(i => (i.heat_reference_number || '').trim().toLowerCase() === heatRefNo.trim().toLowerCase()).length} prior issue slip(s) already recorded for <code>{heatRefNo}</code>. Any additional materials issued now will accumulate directly into this heat's total batch consumption and value.
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-slate-700 bg-white/80 p-2 rounded border border-amber-200 mt-1">
+                            <div className="font-semibold text-amber-900 mb-0.5 flex items-center justify-between">
+                              <span>Master Registry: <strong>Furnace Heat Log</strong></span>
+                              {onNavigate && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowModal(false);
+                                    onNavigate('heat-log');
+                                  }}
+                                  className="text-blue-600 hover:underline text-[10px]"
+                                >
+                                  Go to Master →
+                                </button>
+                              )}
+                            </div>
+                            Select the active furnace heat being charged. Active heats originate in the <strong>Furnace Heat Log</strong> master where the Foundry Manager opens and closes heats. Only active heats appear here so Stores cannot mistype a heat number.
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-2.5 pt-2 border-t border-amber-200/60">
+                      <label className="form-label text-xs">Notes / Issue Justification</label>
+                      <input
+                        type="text"
+                        className="form-control text-xs"
+                        placeholder="Furnace charge, alloy adjustment, etc."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                      />
                     </div>
                   </div>
-                  <div>
-                    <label className="form-label">Notes / Justification</label>
+                ) : (
+                  <div className="mb-4">
+                    <label className="form-label">Notes / Issue Justification</label>
                     <input
                       type="text"
-                      className="form-control"
-                      placeholder="Furnace charge, maintenance work order, etc."
+                      className="form-control text-xs"
+                      placeholder="Work order reference, departmental requisition, or maintenance memo..."
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                     />
                   </div>
-                </div>
+                )}
 
-                {/* Lines */}
+                {/* Lines with live Search Filter */}
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold text-sm">Issued Items</h4>
-                    <button type="button" className="erp-btn btn-sm btn-secondary" onClick={handleAddLine}>
-                      <Plus size={12} /> Add Item
-                    </button>
+                    <h4 className="font-semibold text-sm">Issued Items ({lines.length})</h4>
+                    <div className="flex items-center gap-2">
+                      <div style={{ position: 'relative', width: '220px' }}>
+                        <Search size={12} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <input
+                          type="text"
+                          className="form-control text-xs"
+                          style={{ paddingLeft: '26px', height: '28px' }}
+                          placeholder={`Filter ${items.length} materials...`}
+                          value={itemSearchFilter}
+                          onChange={(e) => setItemSearchFilter(e.target.value)}
+                        />
+                      </div>
+                      <button type="button" className="erp-btn btn-sm btn-secondary" onClick={handleAddLine}>
+                        <Plus size={12} /> Add Item
+                      </button>
+                    </div>
                   </div>
 
                   {lines.map((l, idx) => (
@@ -493,7 +664,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                           required
                         >
                           <option value="">{refs.placeholder('items', '-- Select Material Item --')}</option>
-                          {items.map((it) => (
+                          {filteredItems.map((it) => (
                             <option key={it.id} value={it.id}>{it.item_code} - {it.name}</option>
                           ))}
                         </select>
@@ -530,6 +701,7 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                             type="button"
                             className="erp-btn btn-sm btn-danger p-1"
                             onClick={() => handleRemoveLine(idx)}
+                            title="Remove Line"
                           >
                             <X size={14} />
                           </button>
@@ -543,8 +715,8 @@ export const MaterialIssueView: React.FC<MaterialIssueViewProps> = () => {
                 <button type="button" className="erp-btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="erp-btn btn-primary" disabled={submitting || refs.unavailable}>
-                  {submitting ? 'Creating...' : 'Create Draft Issue Slip'}
+                <button type="submit" className="erp-btn btn-primary font-semibold" disabled={submitting || refs.unavailable}>
+                  {submitting ? 'Issuing Materials...' : '⚡ Issue Materials (Direct to Stock Ledger)'}
                 </button>
               </div>
             </form>

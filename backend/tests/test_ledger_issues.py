@@ -1269,6 +1269,6 @@ def test_postgres_live_migration_006_append_only_triggers_enforce_immutability(p
 
 
 @pytest.fixture(autouse=True)
-def _authenticate_as_admin(client: TestClient, admin_headers: dict):
+def _authenticate_as_stores(client: TestClient, stores_headers: dict):
     """Workflow tests exercise domain rules as Admin; RBAC itself is covered by test_security_routes.py."""
-    client.headers.update(admin_headers)
+    client.headers.update(stores_headers)
