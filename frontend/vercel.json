@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
   "headers": [
     {
       "source": "/work-instruction(.*)",
@@ -22,12 +21,16 @@
   ],
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://ranging-encroach-payback.ngrok-free.dev/api/$1"
+    },
+    {
       "source": "/work-instruction",
       "destination": "/work-instruction.html"
     },
     {
-      "source": "/((?!work-instruction).*)",
-      "destination": "/"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

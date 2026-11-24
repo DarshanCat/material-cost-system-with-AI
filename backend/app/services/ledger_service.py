@@ -7,7 +7,7 @@ and compensating reversals.
 from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import List, Optional, Tuple, Dict, Any
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, func, and_, desc
 from fastapi import HTTPException, status
 
@@ -125,6 +125,108 @@ def get_batch_material_stock_balances(
                 results[item_id] = (Decimal("0.0000"), False, None, 0)
 
     return results
+
+
+def get_stock_summary_by_uom(
+    db: Session,
+    as_of_date: Optional[date] = None,
+    department_id: Optional[int] = None,
+    include_zero_items: bool = False,
+) -> List[Dict[str, Any]]:
+    """
+    Computes total inventory stock balances strictly grouped by Unit of Measure (UOM).
+    Prevents invalid mathematical summation of heterogeneous units (e.g. KG + LTR + NOS + SET).
+    Preserves exact Decimal precision (NUMERIC 15,4).
+    """
+    query = (
+        select(MaterialItem)
+        .options(
+            joinedload(MaterialItem.department),
+            joinedload(MaterialItem.base_uom),
+        )
+        .where(MaterialItem.is_active == True)
+    )
+    if department_id:
+        query = query.where(MaterialItem.department_id == department_id)
+
+    items = db.execute(query).scalars().all()
+    if not items:
+        if include_zero_items:
+            all_uoms = db.execute(select(UOM).where(UOM.is_active == True).order_by(UOM.code)).scalars().all()
+            return [
+                {
+                    "uom_id": u.id,
+                    "uom_code": u.code,
+                    "uom_name": u.name,
+                    "decimal_precision": u.decimal_precision,
+                    "total_quantity": Decimal("0.0000"),
+                    "item_count": 0,
+                    "in_stock_items_count": 0,
+                    "zero_stock_items_count": 0,
+                    "negative_stock_items_count": 0,
+                    "movement_count": 0,
+                }
+                for u in all_uoms
+            ]
+        return []
+
+    item_ids = [item.id for item in items]
+    balances_map = get_batch_material_stock_balances(
+        db, material_item_ids=item_ids, as_of_date=as_of_date
+    )
+
+    uom_map: Dict[str, Dict[str, Any]] = {}
+    for item in items:
+        bal, is_init, _, move_count = balances_map.get(
+            item.id, (Decimal("0.0000"), False, None, 0)
+        )
+        uom = item.base_uom
+        if not uom:
+            continue
+
+        if uom.code not in uom_map:
+            uom_map[uom.code] = {
+                "uom_id": uom.id,
+                "uom_code": uom.code,
+                "uom_name": uom.name,
+                "decimal_precision": uom.decimal_precision,
+                "total_quantity": Decimal("0.0000"),
+                "item_count": 0,
+                "in_stock_items_count": 0,
+                "zero_stock_items_count": 0,
+                "negative_stock_items_count": 0,
+                "movement_count": 0,
+            }
+
+        rec = uom_map[uom.code]
+        rec["item_count"] += 1
+        rec["total_quantity"] += bal
+        rec["movement_count"] += move_count
+        if bal > Decimal("0.0000"):
+            rec["in_stock_items_count"] += 1
+        elif is_init and bal == Decimal("0.0000"):
+            rec["zero_stock_items_count"] += 1
+        elif is_init and bal < Decimal("0.0000"):
+            rec["negative_stock_items_count"] += 1
+
+    if include_zero_items:
+        all_uoms = db.execute(select(UOM).where(UOM.is_active == True).order_by(UOM.code)).scalars().all()
+        for u in all_uoms:
+            if u.code not in uom_map:
+                uom_map[u.code] = {
+                    "uom_id": u.id,
+                    "uom_code": u.code,
+                    "uom_name": u.name,
+                    "decimal_precision": u.decimal_precision,
+                    "total_quantity": Decimal("0.0000"),
+                    "item_count": 0,
+                    "in_stock_items_count": 0,
+                    "zero_stock_items_count": 0,
+                    "negative_stock_items_count": 0,
+                    "movement_count": 0,
+                }
+
+    return [uom_map[code] for code in sorted(uom_map.keys())]
 
 
 def post_grn_to_ledger(

@@ -17,12 +17,14 @@ from app.models.uom import UOM
 from app.schemas.ledger import (
     StockLedgerEntryResponse,
     StockBalanceResponse,
+    UOMStockSummaryResponse,
     LedgerReversalRequest,
     PaginatedLedgerEntriesResponse,
 )
 from app.services.ledger_service import (
     get_material_stock_balance,
     get_batch_material_stock_balances,
+    get_stock_summary_by_uom,
     reverse_stock_ledger_entry,
 )
 
@@ -171,6 +173,23 @@ def get_single_item_stock_balance(
     )
 
 
+@router.get("/summary-by-uom", response_model=List[UOMStockSummaryResponse])
+def get_inventory_summary_by_uom(
+    as_of_date: Optional[date] = Query(None, description="Point-in-time date for stock calculation"),
+    department_id: Optional[int] = Query(None, description="Filter items by department"),
+    include_zero_items: bool = Query(False, description="Include active UOMs with zero assigned items"),
+    db: Session = Depends(get_db),
+    _user: AuthenticatedUser = Depends(require_permission(Permission.LEDGER_READ)),
+):
+    """
+    Computes total inventory stock balances strictly grouped by Unit of Measure (UOM).
+    Never combines heterogeneous units (KG, LTR, NOS, SET) into a single mass.
+    """
+    return get_stock_summary_by_uom(
+        db, as_of_date=as_of_date, department_id=department_id, include_zero_items=include_zero_items
+    )
+
+
 @router.get("/entries", response_model=PaginatedLedgerEntriesResponse)
 def list_stock_ledger_entries(
     material_item_id: Optional[int] = Query(None),
@@ -186,7 +205,14 @@ def list_stock_ledger_entries(
     """
     Paginated access to immutable movement history journal.
     """
-    query = select(StockLedgerEntry).order_by(desc(StockLedgerEntry.transaction_date), desc(StockLedgerEntry.id))
+    query = (
+        select(StockLedgerEntry)
+        .options(
+            joinedload(StockLedgerEntry.material_item),
+            joinedload(StockLedgerEntry.uom),
+        )
+        .order_by(desc(StockLedgerEntry.transaction_date), desc(StockLedgerEntry.id))
+    )
     
     if material_item_id:
         query = query.where(StockLedgerEntry.material_item_id == material_item_id)
@@ -202,7 +228,7 @@ def list_stock_ledger_entries(
     from sqlalchemy import func
     total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
     
-    entries = db.execute(query.offset((page - 1) * size).limit(size)).scalars().all()
+    entries = db.execute(query.offset((page - 1) * size).limit(size)).scalars().unique().all()
     return PaginatedLedgerEntriesResponse(
         items=[_serialize_ledger_entry(e) for e in entries],
         total=total,

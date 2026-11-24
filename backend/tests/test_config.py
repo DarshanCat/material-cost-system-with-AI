@@ -26,6 +26,8 @@ def test_rbac_matrix_definitions():
         UserRole.PURCHASE,
         UserRole.MANAGEMENT,
         UserRole.ADMIN,
+        UserRole.QUALITY,
+        UserRole.ACCOUNTS,
     }
     assert set(UserRole) == expected_roles
 

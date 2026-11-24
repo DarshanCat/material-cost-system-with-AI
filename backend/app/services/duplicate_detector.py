@@ -4,7 +4,7 @@ Enforces hard database uniqueness and soft audit warnings for potential double e
 """
 
 from datetime import date
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
 

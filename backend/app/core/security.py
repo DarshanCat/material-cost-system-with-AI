@@ -33,6 +33,8 @@ class UserRole(str, Enum):
     PURCHASE = "Purchase"
     MANAGEMENT = "Management"
     ADMIN = "Admin"
+    QUALITY = "Quality"
+    ACCOUNTS = "Accounts"
 
 
 class Permission(str, Enum):
@@ -40,6 +42,8 @@ class Permission(str, Enum):
     RECEIPT_CREATE = "receipt:create"
     RECEIPT_READ = "receipt:read"
     RECEIPT_APPROVE = "receipt:approve"
+    RECEIPT_QUALITY = "receipt:quality"   # QA inspection of a submitted GRN (Quality role only)
+    PAYMENT_RECORD = "payment:record"     # settle an approved GRN (Accounts role only)
     ISSUE_CREATE = "issue:create"
     ISSUE_READ = "issue:read"
     ISSUE_APPROVE = "issue:approve"
@@ -61,7 +65,9 @@ class Permission(str, Enum):
     VENDOR_READ = "vendor:read"
     VENDOR_MANAGE = "vendor:manage"
     DEPARTMENT_READ = "department:read"
+    DEPARTMENT_MANAGE = "department:manage"
     UOM_READ = "uom:read"
+    UOM_MANAGE = "uom:manage"
     ALIAS_CREATE = "alias:create"
     ALIAS_APPROVE = "alias:approve"
     ALIAS_DEACTIVATE = "alias:deactivate"
@@ -93,7 +99,7 @@ class Permission(str, Enum):
 # opening-balance / import grants below were not defined in the repository's business rules.
 # They follow the only stated rules (Rule L8: physical-audit approval by Management or Admin;
 # Rule L5: reversal by an "authorized supervisor") and otherwise keep the narrowest role set
-# that still lets each module work. Admin holds every permission.
+# that still lets each module work. Admin holds only administrative and read-only inspection permissions.
 ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
     UserRole.STORES: {
         Permission.RECEIPT_CREATE,
@@ -145,6 +151,23 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.DEPARTMENT_READ,
         Permission.UOM_READ,
     },
+    UserRole.QUALITY: {
+        Permission.RECEIPT_READ,
+        Permission.RECEIPT_QUALITY,
+        Permission.ITEM_READ,
+        Permission.VENDOR_READ,
+        Permission.DEPARTMENT_READ,
+        Permission.UOM_READ,
+    },
+    UserRole.ACCOUNTS: {
+        Permission.RECEIPT_READ,
+        Permission.PAYMENT_RECORD,
+        Permission.ITEM_READ,
+        Permission.VENDOR_READ,
+        Permission.DEPARTMENT_READ,
+        Permission.UOM_READ,
+        Permission.LEDGER_READ,
+    },
     UserRole.MANAGEMENT: {
         Permission.RECEIPT_READ,
         Permission.RECEIPT_APPROVE,
@@ -155,6 +178,7 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.LEDGER_READ,
         Permission.LEDGER_REVERSE,
         Permission.STOCK_AUDIT_APPROVE,
+        Permission.OPENING_BALANCE_POST,
         Permission.HEAT_LOG_CREATE,
         Permission.HEAT_LOG_READ,
         Permission.HEAT_RECONCILE,
@@ -172,12 +196,44 @@ ROLE_PERMISSIONS: dict[UserRole, Set[Permission]] = {
         Permission.ITEM_REQUEST_READ,
         Permission.VENDOR_READ,
         Permission.DEPARTMENT_READ,
+        Permission.DEPARTMENT_MANAGE,
         Permission.UOM_READ,
+        Permission.UOM_MANAGE,
         Permission.ALIAS_CREATE,
         Permission.ALIAS_APPROVE,
         Permission.ALIAS_DEACTIVATE,
     },
-    UserRole.ADMIN: set(Permission),  # All permissions
+    UserRole.ADMIN: {
+        # System & Audit Administration
+        Permission.USER_MANAGE,
+        Permission.AUDIT_READ,
+        # Master Data Management & Approvals
+        Permission.ITEM_READ,
+        Permission.ITEM_CREATE,
+        Permission.ITEM_UPDATE,
+        Permission.ITEM_REQUEST_READ,
+        Permission.ITEM_REQUEST_CREATE,
+        Permission.ITEM_REQUEST_SUBMIT,
+        Permission.ITEM_REQUEST_CANCEL,
+        Permission.ITEM_APPROVE,
+        Permission.ITEM_REJECT,
+        Permission.VENDOR_READ,
+        Permission.VENDOR_MANAGE,
+        Permission.DEPARTMENT_READ,
+        Permission.DEPARTMENT_MANAGE,
+        Permission.UOM_READ,
+        Permission.UOM_MANAGE,
+        Permission.ALIAS_CREATE,
+        Permission.ALIAS_APPROVE,
+        Permission.ALIAS_DEACTIVATE,
+        # Ledger & Module Visibility
+        Permission.LEDGER_READ,
+        Permission.RECEIPT_READ,
+        Permission.ISSUE_READ,
+        Permission.WASTE_READ,
+        Permission.HEAT_LOG_READ,
+        Permission.COSTING_READ,
+    },
 }
 
 
@@ -217,11 +273,15 @@ def get_current_user_context(request: Request) -> AuthenticatedUser:
     return user
 
 
-def require_permission(required_permission: Permission):
+def require_permission(required_permission: Permission, admin_bypass: bool = True):
     """
     Dependency generator enforcing authentication (401) and granular authorization (403).
+    Superuser rule: Admin holds universal authority to inspect, create, and audit all data.
+    `admin_bypass=False` is for segregation-of-duty steps (QA sign-off, payment) that even Admin may not perform.
     """
     def permission_checker(user: AuthenticatedUser = Depends(get_current_user_context)) -> AuthenticatedUser:
+        if admin_bypass and user.role == UserRole.ADMIN:
+            return user
         user_permissions = ROLE_PERMISSIONS.get(user.role, set())
         if required_permission not in user_permissions:
             raise HTTPException(

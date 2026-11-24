@@ -17,6 +17,7 @@ class ItemCategoryRead(BaseModel):
 class MaterialItemUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=255)
     subcategory: Optional[str] = Field(None, max_length=50)
+    reconciliation_category: Optional[str] = Field(None, max_length=30)
     description: Optional[str] = None
     is_active: Optional[bool] = None
     # Required when renaming (description correction) or retiring / reactivating; recorded in item history.
@@ -67,6 +68,7 @@ class MaterialItemRead(BaseModel):
     department_id: int
     category: str
     subcategory: Optional[str] = None
+    reconciliation_category: Optional[str] = None
     base_uom_id: int
     description: Optional[str] = None
     is_active: bool

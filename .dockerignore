@@ -1,0 +1,11 @@
+frontend/node_modules
+frontend/dist
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+.env
+.env.*
+*.log
+backend/local_dev.db
+backend/local_attachments
+

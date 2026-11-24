@@ -14,13 +14,16 @@ import type { WasteDisposition, UserRole } from '../types';
 import { apiFetch, readApiError } from '../api/client';
 import { useReferenceData } from '../hooks/useReferenceData';
 import { ReferenceDataNotice } from './ReferenceDataNotice';
+import { hasPermission } from '../auth/permissions';
 
 interface WasteDispositionViewProps {
   currentRole: UserRole;
   currentUserId: string;
 }
 
-export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
+export const WasteDispositionView: React.FC<WasteDispositionViewProps> = ({ currentRole }) => {
+  const canLogWaste = hasPermission(currentRole, 'waste:log');
+  const canApproveWaste = hasPermission(currentRole, 'waste:approve');
   const [actionError, setActionError] = useState<string | null>(null);
   const [wastes, setWastes] = useState<WasteDisposition[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -221,9 +224,11 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
           <button className="erp-btn btn-secondary" onClick={fetchWastes}>
             <RefreshCw size={14} className="btn-icon" /> Refresh
           </button>
-          <button className="erp-btn btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={14} className="btn-icon" /> New Waste Entry
-          </button>
+          {canLogWaste && (
+            <button className="erp-btn btn-primary" onClick={() => setShowModal(true)}>
+              <Plus size={14} className="btn-icon" /> New Waste Entry
+            </button>
+          )}
         </div>
       </div>
 
@@ -302,7 +307,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                   </td>
                   <td onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
-                      {waste.status === 'DRAFT' && (
+                      {waste.status === 'DRAFT' && canLogWaste && (
                         <button
                           className="erp-btn btn-sm btn-outline"
                           onClick={() => handleAction(waste.id, 'submit')}
@@ -310,7 +315,7 @@ export const WasteDispositionView: React.FC<WasteDispositionViewProps> = () => {
                           <Send size={12} /> Submit
                         </button>
                       )}
-                      {waste.status === 'SUBMITTED' && (
+                      {waste.status === 'SUBMITTED' && canApproveWaste && (
                         <>
                           <button
                             className="erp-btn btn-sm btn-success flex items-center gap-1"

@@ -17,12 +17,29 @@ const TOKEN_STORAGE_KEY = 'vspl.accessToken';
 export interface AuthStatus {
   provider: string;
   login_available: boolean;
+  /** Public web API key of the Google Identity Platform project (provider "identity" only). */
+  identity_api_key?: string;
+  /** True when the administrator has switched on Microsoft sign-in (provider "identity" only). */
+  microsoft_enabled?: boolean;
 }
 
 export interface AuthUser {
   user_id: string;
   role: UserRole;
   department: string;
+  status?: string;
+  must_change_password?: boolean;
+  display_name?: string;
+}
+
+/**
+ * Optional hook run before every request that carries a bearer token. The identity provider registers one
+ * so that an id token close to expiry is renewed first (set here to avoid a circular import).
+ */
+let tokenRefresher: (() => Promise<void>) | null = null;
+
+export function setTokenRefresher(fn: (() => Promise<void>) | null): void {
+  tokenRefresher = fn;
 }
 
 let accessToken: string | null = null;
@@ -46,76 +63,231 @@ export function hasAccessToken(): boolean {
   return accessToken !== null;
 }
 
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 export const UNAUTHORIZED_EVENT = 'vspl:unauthorized';
 
-/** fetch() wrapper that attaches the bearer credential and falls back to demo data if the server is unreachable. */
+// In-memory response cache for high-frequency reference & catalog endpoints
+interface CacheEntry {
+  body: string;
+  headers: [string, string][];
+  status: number;
+  timestamp: number;
+}
+const apiCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 120_000; // 2 minutes
+
+export function clearApiCache(): void {
+  apiCache.clear();
+}
+
+const CACHEABLE_PREFIXES = [
+  '/api/v1/departments',
+  '/api/v1/uoms',
+  '/api/v1/items/categories',
+  '/api/v1/vendors',
+  '/api/v1/items',
+  '/api/v1/auth/status',
+];
+
+function isCacheable(url: string, method?: string): boolean {
+  if (method && method.toUpperCase() !== 'GET') return false;
+  return CACHEABLE_PREFIXES.some(prefix => url.startsWith(prefix));
+}
+
+function isAuthEndpoint(input: string): boolean {
+  return input.startsWith('/api/v1/auth/') || input.includes('/api/v1/auth/');
+}
+
+/** fetch() wrapper that attaches the bearer credential and falls back to demo data if the server is unreachable (never for auth routes). */
 export async function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  const method = (init.method || 'GET').toUpperCase();
+
+  // If a mutation happens (POST, PUT, DELETE, PATCH), invalidate reference cache
+  if (method !== 'GET') {
+    apiCache.clear();
+  }
+
+  // Check in-memory cache for safe GET endpoints
+  if (isCacheable(input, method)) {
+    const cached = apiCache.get(input);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return new Response(cached.body, {
+        status: cached.status,
+        headers: new Headers(cached.headers),
+      });
+    }
+  }
+
   const headers = new Headers(init.headers);
+  if (!headers.has('bypass-tunnel-reminder')) {
+    headers.set('bypass-tunnel-reminder', 'true');
+  }
+  if (!headers.has('ngrok-skip-browser-warning')) {
+    headers.set('ngrok-skip-browser-warning', '1');
+  }
+  if (accessToken && tokenRefresher && !headers.has('Authorization')) {
+    try {
+      await tokenRefresher();
+    } catch {
+      /* a failed renewal is not fatal here: the request goes out and the server answers 401 if needed */
+    }
+  }
   if (accessToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
+  const isAuth = isAuthEndpoint(input);
+
   try {
     const response = await fetch(input, { ...init, headers });
-    if (response.status === 401 && accessToken) {
+    if (response.status === 401) {
       setAccessToken(null);
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }
+
+    // Cache successful GET responses for reference endpoints
+    if (response.ok && isCacheable(input, method)) {
+      const cloned = response.clone();
+      cloned.text().then((text) => {
+        const headerPairs: [string, string][] = [];
+        response.headers.forEach((val, key) => headerPairs.push([key, val]));
+        apiCache.set(input, {
+          body: text,
+          headers: headerPairs,
+          status: response.status,
+          timestamp: Date.now(),
+        });
+      }).catch(() => {});
+    }
+
     const contentType = response.headers.get('content-type') || '';
-    // If backend responded with HTML (e.g. Vercel SPA routing returning index.html) or error status (e.g. 404, 405 on static POST, 5xx), use mock fallback:
-    if (contentType.includes('text/html') || response.status === 404 || response.status === 405 || response.status >= 500) {
+    // Mock fallback is strictly prohibited in production builds and NEVER allowed for auth routes:
+    if (
+      !import.meta.env?.PROD &&
+      !isAuth &&
+      (contentType.includes('text/html') || response.status === 404 || response.status === 405 || response.status >= 500)
+    ) {
       const mockRes = handleMockRequest(input, init);
       if (mockRes) return mockRes;
     }
     return response;
   } catch (err) {
-    // If network fetch failed entirely (e.g. backend offline / cloud static deployment)
-    const mockRes = handleMockRequest(input, init);
-    if (mockRes) return mockRes;
+    // In production or for auth routes, network errors must never silently degrade into fake identity/data:
+    if (!import.meta.env?.PROD && !isAuth) {
+      const mockRes = handleMockRequest(input, init);
+      if (mockRes) return mockRes;
+    }
     throw err;
   }
+}
+
+/** Provider reported by the backend (for example "iap" behind Google Identity-Aware Proxy). */
+let authProvider = 'none';
+
+export function getAuthProvider(): string {
+  return authProvider;
 }
 
 export async function getAuthStatus(): Promise<AuthStatus> {
   try {
     const res = await apiFetch('/api/v1/auth/status');
-    if (res.ok) return res.json();
+    if (res.ok) {
+      const status: AuthStatus = await res.json();
+      authProvider = status.provider;
+      return status;
+    }
   } catch {}
-  return { provider: 'dev', login_available: true };
+  authProvider = 'none';
+  return { provider: 'none', login_available: false };
 }
 
-/** Returns the verified identity for the stored credential, or default demo admin user. */
-export async function fetchCurrentUser(): Promise<AuthUser | null> {
+/** Returns the verified identity for the stored credential, or null if unauthenticated. */
+export async function fetchCurrentUser(options: { withoutToken?: boolean } = {}): Promise<AuthUser | null> {
   try {
-    const res = await apiFetch('/api/v1/auth/me');
-    if (res.ok) return res.json();
+    // Behind Google Identity-Aware Proxy the browser holds no bearer token: the proxy supplies the identity.
+    if (accessToken || options.withoutToken) {
+      const res = await apiFetch('/api/v1/auth/me');
+      if (res.ok) return res.json();
+    }
   } catch {}
-  return { user_id: 'usr_admin_01', role: 'Admin', department: 'Admin' };
+  return null;
 }
 
 /**
- * Development / Demo sign-in: maps role to server account or demo mock user.
+ * Development sign-in: requests a server-issued signed token for the selected dev role.
+ * Never fabricates client-side identities or demo tokens when the backend rejects or is unavailable.
  */
 export async function devLogin(role: UserRole): Promise<AuthUser> {
-  try {
-    const res = await apiFetch('/api/v1/auth/dev-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setAccessToken(data.access_token);
-      return data.user as AuthUser;
-    }
-  } catch {}
-  const mockUser: AuthUser = { user_id: `usr_${role.toLowerCase()}_01`, role, department: role };
-  setAccessToken('demo_token_' + Date.now());
-  return mockUser;
+  if (import.meta.env?.PROD) {
+    throw new Error('Development sign-in is disabled in production builds.');
+  }
+  const res = await apiFetch('/api/v1/auth/dev-login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) {
+    throw new Error(await readApiError(res, 'Development sign-in failed'));
+  }
+  const data = await res.json();
+  if (!data?.access_token || !data?.user?.user_id || !data?.user?.role) {
+    throw new Error('Invalid authentication response from server.');
+  }
+  setAccessToken(data.access_token);
+  return data.user as AuthUser;
 }
 
-export function signOut(): void {
+/**
+ * Credential sign-in: sends entered credentials to the backend without simulating authentication.
+ */
+export async function loginWithCredentials(username: string, password: string): Promise<AuthUser> {
+  const res = await apiFetch('/api/v1/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      await readApiError(res, 'Credential login is not available on this backend')
+    );
+  }
+  const data = await res.json();
+  if (!data?.access_token || !data?.user?.user_id || !data?.user?.role) {
+    throw new Error('Invalid authentication response from server.');
+  }
+  setAccessToken(data.access_token);
+  return data.user as AuthUser;
+}
+
+/**
+ * Revokes the current bearer token on the server (when present) and clears local auth state.
+ */
+export async function signOut(): Promise<void> {
+  const token = accessToken;
   setAccessToken(null);
+  if (!token) {
+    signOutOfProxy();
+    return;
+  }
+  try {
+    await fetch('/api/v1/auth/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    /* local token already cleared; server unavailability does not keep client signed in */
+  }
+  signOutOfProxy();
+}
+
+/** Ends a Google Identity-Aware Proxy session (the proxy, not this app, owns that session). */
+export function signOutOfProxy(): void {
+  if (authProvider === 'iap' && typeof window !== 'undefined' && window.location) {
+    window.location.assign('/_gcp_iap/clear_login_cookie');
+  }
 }
 
 /**

@@ -93,27 +93,33 @@ def _balance(client: TestClient, item_id: int, headers: dict) -> Decimal:
 
 
 @pytest.mark.parametrize("kind", list(DOCS))
-def test_creator_cannot_approve_own_document(anon_client, db_session, world, admin_headers, kind):
-    doc_id = _create_submitted(anon_client, world, kind, admin_headers)  # Admin holds every permission
-    before_ledger, before_bal = _ledger_count(db_session), _balance(anon_client, world["item"].id, admin_headers)
+def test_creator_cannot_approve_own_document(anon_client, db_session, world, stores_headers, management_headers, kind):
+    doc_id = _create_submitted(anon_client, world, kind, stores_headers)
+    doc = db_session.get(DOCS[kind][1], doc_id)
+    doc.created_by = "usr_mgmt_01"
+    db_session.commit()
+    before_ledger, before_bal = _ledger_count(db_session), _balance(anon_client, world["item"].id, management_headers)
 
-    resp = anon_client.post(f"{DOCS[kind][0]}/{doc_id}/approve", json={"comments": "self approval"}, headers=admin_headers)
+    resp = anon_client.post(f"{DOCS[kind][0]}/{doc_id}/approve", json={"comments": "self approval"}, headers=management_headers)
 
     assert resp.status_code == 403, resp.text
     assert "Maker-checker" in resp.json()["detail"]
     db_session.expire_all()
     assert db_session.get(DOCS[kind][1], doc_id).status == "SUBMITTED"
     assert _ledger_count(db_session) == before_ledger
-    assert _balance(anon_client, world["item"].id, admin_headers) == before_bal
+    assert _balance(anon_client, world["item"].id, management_headers) == before_bal
 
 
 @pytest.mark.parametrize("kind", list(DOCS))
-def test_spoofed_request_user_ids_cannot_bypass_maker_checker(anon_client, db_session, world, admin_headers, kind):
-    doc_id = _create_submitted(anon_client, world, kind, admin_headers)
+def test_spoofed_request_user_ids_cannot_bypass_maker_checker(anon_client, db_session, world, stores_headers, management_headers, kind):
+    doc_id = _create_submitted(anon_client, world, kind, stores_headers)
+    doc = db_session.get(DOCS[kind][1], doc_id)
+    doc.created_by = "usr_mgmt_01"
+    db_session.commit()
     resp = anon_client.post(
         f"{DOCS[kind][0]}/{doc_id}/approve?actor_id=someone_else&approver_id=someone_else&created_by=x",
         json={"comments": "x", "actor_id": "someone_else", "approver_id": "someone_else", "created_by": "x"},
-        headers={**admin_headers, "X-User-Id": "someone_else", "X-User-Role": "Management"},
+        headers={**management_headers, "X-User-Id": "someone_else", "X-User-Role": "Management"},
     )
     assert resp.status_code == 403
     db_session.expire_all()
@@ -154,7 +160,7 @@ def test_repeated_approval_is_rejected_and_posts_once(anon_client, db_session, w
     assert anon_client.post(f"{DOCS[kind][0]}/{doc_id}/approve", json={}, headers=management_headers).status_code == 200
     after_first = _ledger_count(db_session)
     bal = _balance(anon_client, world["item"].id, admin_headers)
-    for headers in (management_headers, admin_headers):
+    for headers in (management_headers,):
         again = anon_client.post(f"{DOCS[kind][0]}/{doc_id}/approve", json={}, headers=headers)
         assert again.status_code == 400, again.text
     assert _ledger_count(db_session) == after_first
@@ -198,6 +204,8 @@ def test_concurrent_approval_conflict_is_reported_as_409_and_posts_nothing(anon_
     assert db_session.get(GRNHeader, doc_id).status == "SUBMITTED"
     assert _ledger_count(db_session) == before
     monkeypatch.undo()
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "GRN_QA_REQUIRED", False)  # undo() also reverted the suite-wide QA-gate-off fixture
     assert anon_client.post(f"/api/v1/grn/{doc_id}/approve", json={}, headers=management_headers).status_code == 200
 
 
@@ -231,10 +239,13 @@ def test_service_layer_enforces_regardless_of_the_endpoint():
     enforce_maker_checker("GRN", "usr_stores_01", "usr_mgmt_01", "GRN-X")  # different person passes
 
 
-def test_policy_is_configurable_without_code_change(anon_client, db_session, world, admin_headers, monkeypatch):
+def test_policy_is_configurable_without_code_change(anon_client, db_session, world, stores_headers, management_headers, monkeypatch):
     monkeypatch.setattr(settings, "MAKER_CHECKER_DOCUMENTS", "")
-    doc_id = _create_submitted(anon_client, world, "grn", admin_headers)
-    assert anon_client.post(f"/api/v1/grn/{doc_id}/approve", json={}, headers=admin_headers).status_code == 200
+    doc_id = _create_submitted(anon_client, world, "grn", stores_headers)
+    doc = db_session.get(DOCS["grn"][1], doc_id)
+    doc.created_by = "usr_mgmt_01"
+    db_session.commit()
+    assert anon_client.post(f"/api/v1/grn/{doc_id}/approve", json={}, headers=management_headers).status_code == 200
 
 
 def test_alias_maker_checker_is_available_but_off_by_default(anon_client, db_session, world, management_headers, monkeypatch):

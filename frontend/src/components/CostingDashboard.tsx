@@ -10,6 +10,7 @@ import type {
   CostingExceptionsReport,
 } from '../types';
 import { apiFetch, readApiError } from '../api/client';
+import { hasPermission } from '../auth/permissions';
 
 interface CostingDashboardProps {
   currentRole: UserRole;
@@ -45,14 +46,14 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
 
   const [exceptions, setExceptions] = useState<CostingExceptionsReport | null>(null);
 
-  // Configurable Heat Costing & Yield Policy
+  // Configurable Heat Costing & Yield Policy (FIN-DEC-04 & FIN-DEC-05)
   const [heatPowerTariff, setHeatPowerTariff] = useState<number>(8.50);
   const [heatConsumableOverheadPerMt, setHeatConsumableOverheadPerMt] = useState<number>(1200.00);
-  const [heatWarningMeltLossPct, setHeatWarningMeltLossPct] = useState<number>(6.5);
-  const [heatCriticalMeltLossPct, setHeatCriticalMeltLossPct] = useState<number>(8.0);
+  const [heatWarningMeltLossPct, setHeatWarningMeltLossPct] = useState<number>(3.5); // FIN-DEC-04 standard normal threshold
+  const [heatCriticalMeltLossPct, setHeatCriticalMeltLossPct] = useState<number>(5.0);
   const [showHeatConfig, setShowHeatConfig] = useState<boolean>(false);
 
-  const canRunCosting = currentRole === 'Management' || currentRole === 'Admin';
+  const canRunCosting = hasPermission(currentRole, 'costing:calculate');
 
   // 1. Fetch Inventory Valuation Report
   const fetchValuation = async (dateStr: string) => {
@@ -686,6 +687,16 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
             </div>
           )}
 
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '10px 16px', marginBottom: '14px', fontSize: '12px', color: '#1e40af', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <div>
+              <strong>Authoritative Costing Policy (Phase 2B-2C):</strong> Standard 3-Measure Model active. Raw material cost separated from conversion costs per FIN-DEC-05. Normal melt-loss threshold: <strong>3.5%</strong> (FIN-DEC-04).
+            </div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <span className="badge badge-secondary" style={{ fontSize: '11px' }}>Scope: MATERIAL_ONLY</span>
+              <span className="badge badge-warning" style={{ fontSize: '11px' }}>Conversion Cost: NOT_AVAILABLE</span>
+            </div>
+          </div>
+
           <div className="erp-table-container">
             <table className="erp-table">
               <thead>
@@ -693,13 +704,14 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                   <th>Heat No.</th>
                   <th>Heat Date</th>
                   <th>Furnace</th>
-                  <th>Charged Qty (kg)</th>
-                  <th>Metal Tapped (kg)</th>
-                  <th>Melt Loss / Yield</th>
-                  <th>Material Cost (₹)</th>
-                  <th>Melting Power (₹)</th>
-                  <th>Overhead (₹)</th>
-                  <th>Net Cost / kg</th>
+                  <th>Charged (kg)</th>
+                  <th>Tapped (kg)</th>
+                  <th>Melt Loss % (≤3.5%)</th>
+                  <th>Charge Cost (₹)</th>
+                  <th>Measure A (Charge RM/kg)</th>
+                  <th>Measure B (Tapped Liquid/kg)</th>
+                  <th>Measure C (Good Casting RM/kg)</th>
+                  <th>Costing Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -710,14 +722,7 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                   const meltLossKg = (grossCharged > 0 && metalTapped > 0) ? Math.max(0, grossCharged - metalTapped) : 0;
                   const meltLossPct = grossCharged > 0 ? (meltLossKg / grossCharged) * 100 : null;
                   const yieldPct = meltLossPct !== null ? 100 - meltLossPct : null;
-                  
-                  // Power & Overhead based on policy
-                  const estKwh = (metalTapped / 1000) * 550;
-                  const powerCost = estKwh * heatPowerTariff;
-                  const overheadCost = (metalTapped / 1000) * heatConsumableOverheadPerMt;
                   const materialCost = Number(h.total_material_cost) || 0;
-                  const totalDirectCost = materialCost + powerCost + overheadCost;
-                  const netCostPerKg = metalTapped > 0 ? (totalDirectCost / metalTapped) : (h.cost_per_kg ? Number(h.cost_per_kg) : null);
 
                   const isCritical = meltLossPct !== null && meltLossPct > heatCriticalMeltLossPct;
                   const isWarning = meltLossPct !== null && meltLossPct > heatWarningMeltLossPct;
@@ -726,6 +731,11 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                     <tr key={h.heat_id}>
                       <td>
                         <strong>{h.heat_number}</strong>
+                        {h.is_historical_exception && (
+                          <span style={{ display: 'block', fontSize: '9px', color: '#7c3aed', fontWeight: 700 }}>
+                            PROVISIONAL_HISTORICAL
+                          </span>
+                        )}
                       </td>
                       <td>{h.heat_date}</td>
                       <td>{h.furnace_id ?? '—'}</td>
@@ -748,20 +758,38 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                       <td className="text-right">
                         ₹{materialCost.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="text-right">
-                        ₹{powerCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="text-right">
-                        ₹{overheadCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                      </td>
-                      <td className="text-right font-bold">
-                        {netCostPerKg !== null ? (
-                          <span style={{ color: '#065f46', fontSize: '13px' }}>
-                            ₹{netCostPerKg.toFixed(2)} / kg
-                          </span>
+                      <td className="text-right font-medium">
+                        {h.measure_a_cost_per_kg ? (
+                          <span>₹{Number(h.measure_a_cost_per_kg).toFixed(2)}</span>
                         ) : (
-                          '—'
+                          <span className="text-muted">—</span>
                         )}
+                      </td>
+                      <td className="text-right font-medium" style={{ color: '#0369a1' }}>
+                        {h.measure_b_cost_per_kg ? (
+                          <span>₹{Number(h.measure_b_cost_per_kg).toFixed(2)}</span>
+                        ) : h.cost_per_kg ? (
+                          <span>₹{Number(h.cost_per_kg).toFixed(2)}</span>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="text-right font-bold" style={{ color: '#065f46' }}>
+                        {h.measure_c_cost_per_kg ? (
+                          <span>₹{Number(h.measure_c_cost_per_kg).toFixed(2)}</span>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`badge ${
+                          h.status === 'FINAL' ? 'badge-success' :
+                          h.status === 'PROVISIONAL_HISTORICAL' ? 'badge-warning' :
+                          h.status === 'PROVISIONAL' ? 'badge-warning' :
+                          'badge-danger'
+                        }`} style={{ fontSize: '10px', fontWeight: 700 }}>
+                          {h.status}
+                        </span>
                       </td>
                       <td>
                         <button
@@ -780,9 +808,9 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
 
           {selectedHeat && (
             <div className="erp-modal-overlay">
-              <div className="erp-modal">
+              <div className="erp-modal" style={{ maxWidth: '900px' }}>
                 <div className="erp-modal-header">
-                  <h3>Heat {selectedHeat.heat_number} — Charge Materials Breakdown</h3>
+                  <h3>Heat {selectedHeat.heat_number} — Authoritative Costing Breakdown</h3>
                   <button
                     className="erp-close-btn"
                     onClick={() => setSelectedHeat(null)}
@@ -797,55 +825,124 @@ export const CostingDashboard: React.FC<CostingDashboardProps> = ({
                     const meltLossKg = (grossCharged > 0 && metalTapped > 0) ? Math.max(0, grossCharged - metalTapped) : 0;
                     const meltLossPct = grossCharged > 0 ? (meltLossKg / grossCharged) * 100 : null;
                     const yieldPct = meltLossPct !== null ? 100 - meltLossPct : null;
-                    const estKwh = (metalTapped / 1000) * 550;
-                    const powerCost = estKwh * heatPowerTariff;
-                    const overheadCost = (metalTapped / 1000) * heatConsumableOverheadPerMt;
                     const materialCost = Number(selectedHeat.total_material_cost) || 0;
-                    const totalDirectCost = materialCost + powerCost + overheadCost;
-                    const netCostPerKg = metalTapped > 0 ? (totalDirectCost / metalTapped) : (selectedHeat.cost_per_kg ? Number(selectedHeat.cost_per_kg) : null);
 
                     return (
-                      <div style={{
-                        background: '#f8fafc',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '8px',
-                        padding: '12px 16px',
-                        marginBottom: '16px'
-                      }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-                          <div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>Charged Weight</div>
-                            <div style={{ fontSize: '14px', fontWeight: 700 }}>{grossCharged.toLocaleString()} kg</div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>Liquid Metal Tapped</div>
-                            <div style={{ fontSize: '14px', fontWeight: 700 }}>{metalTapped > 0 ? `${metalTapped.toLocaleString()} kg` : '—'}</div>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>Melt Loss (%)</div>
-                            <div style={{ fontSize: '14px', fontWeight: 700, color: meltLossPct && meltLossPct > heatWarningMeltLossPct ? '#d97706' : '#059669' }}>
-                              {meltLossPct !== null ? `${meltLossPct.toFixed(2)}% (${yieldPct?.toFixed(1)}% Yield)` : '—'}
+                      <div>
+                        {/* Three Authoritative Measures Banner */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                          {/* Measure A */}
+                          <div style={{ background: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: '8px', padding: '12px' }}>
+                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Measure A (Charge RM / kg)</div>
+                            <div style={{ fontSize: '20px', fontWeight: 800, color: '#1e293b', marginTop: '4px' }}>
+                              {selectedHeat.measure_a_cost_per_kg ? `₹${Number(selectedHeat.measure_a_cost_per_kg).toFixed(2)}` : '—'}
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px' }}>
+                              Formula: Total Charge Cost / Solid Charge Weight
+                            </div>
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#475569', marginTop: '2px' }}>
+                              Status: {selectedHeat.measure_a_status || 'VALUED'}
                             </div>
                           </div>
-                          <div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>Power Cost (@₹{heatPowerTariff}/KWH)</div>
-                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>
-                              ₹{powerCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+
+                          {/* Measure B */}
+                          <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: '8px', padding: '12px' }}>
+                            <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>Measure B (Tapped Liquid / kg)</div>
+                            <div style={{ fontSize: '20px', fontWeight: 800, color: '#0369a1', marginTop: '4px' }}>
+                              {selectedHeat.measure_b_cost_per_kg ? `₹${Number(selectedHeat.measure_b_cost_per_kg).toFixed(2)}` : (selectedHeat.cost_per_kg ? `₹${Number(selectedHeat.cost_per_kg).toFixed(2)}` : '—')}
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#0369a1', marginTop: '4px' }}>
+                              Formula: (Op Heel Val + Charge Cost) / Accounted Liquid
+                            </div>
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#0284c7', marginTop: '2px' }}>
+                              Status: {selectedHeat.measure_b_status || 'VALUED'}
                             </div>
                           </div>
-                          <div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>Consumables Overhead</div>
-                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#475569' }}>
-                              ₹{overheadCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+
+                          {/* Measure C */}
+                          <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: '8px', padding: '12px' }}>
+                            <div style={{ fontSize: '11px', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Measure C (Good Casting RM / kg)</div>
+                            <div style={{ fontSize: '20px', fontWeight: 800, color: '#166534', marginTop: '4px' }}>
+                              {selectedHeat.measure_c_cost_per_kg ? `₹${Number(selectedHeat.measure_c_cost_per_kg).toFixed(2)}` : '—'}
                             </div>
-                          </div>
-                          <div style={{ background: '#ecfdf5', padding: '6px 10px', borderRadius: '4px', border: '1px solid #a7f3d0' }}>
-                            <div style={{ fontSize: '11px', color: '#065f46', fontWeight: 700 }}>Net Cost / Kg</div>
-                            <div style={{ fontSize: '15px', fontWeight: 800, color: '#065f46' }}>
-                              {netCostPerKg ? `₹${netCostPerKg.toFixed(2)} / kg` : '—'}
+                            <div style={{ fontSize: '10px', color: '#166534', marginTop: '4px' }}>
+                              Basis: FG Capitalization (FIN-DEC-01) less Scrap Credit
+                            </div>
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#15803d', marginTop: '2px' }}>
+                              Status: {selectedHeat.measure_c_status || 'VALUED'}
                             </div>
                           </div>
                         </div>
+
+                        {/* Physical Mass Balance & Liquid Heel Grid */}
+                        <div style={{
+                          background: '#f8fafc',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '8px',
+                          padding: '12px 16px',
+                          marginBottom: '16px'
+                        }}>
+                          <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                            Mass Balance, Liquid Heel & Return Scrap
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Charged Weight</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700 }}>{grossCharged.toLocaleString()} kg</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Charge Cost</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700 }}>₹{materialCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Liquid Metal Tapped</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700 }}>{metalTapped > 0 ? `${metalTapped.toLocaleString()} kg` : '—'}</div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Melt Loss (%)</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700, color: meltLossPct && meltLossPct > heatWarningMeltLossPct ? '#d97706' : '#059669' }}>
+                                {meltLossPct !== null ? `${meltLossPct.toFixed(2)}% (${yieldPct?.toFixed(1)}% Yield)` : '—'}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Opening Heel</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700 }}>
+                                {selectedHeat.opening_liquid_heel_kg ? `${selectedHeat.opening_liquid_heel_kg} kg` : '0 kg (Cold Start)'}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Closing Heel</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700 }}>
+                                {selectedHeat.closing_liquid_heel_kg ? `${selectedHeat.closing_liquid_heel_kg} kg` : '0 kg'}
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '11px', color: '#64748b' }}>Scrap Credit (FIN-DEC-03)</div>
+                              <div style={{ fontSize: '14px', fontWeight: 700, color: selectedHeat.approved_scrap_credit ? '#047857' : '#64748b' }}>
+                                {selectedHeat.approved_scrap_credit ? `₹${Number(selectedHeat.approved_scrap_credit).toFixed(2)}` : 'None'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Conversion Cost Notice (FIN-DEC-05) */}
+                        <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', fontSize: '11px', color: '#92400e' }}>
+                          ⚡ <strong>Conversion Costs Separated (FIN-DEC-05):</strong> Melting power and consumable overhead are excluded from raw material unit rates. Display status: <strong>NOT_AVAILABLE</strong> pending calibrated furnace sub-meters and approved commercial tariffs.
+                        </div>
+
+                        {/* Anomalies Alert Box if any */}
+                        {selectedHeat.anomalies && selectedHeat.anomalies.length > 0 && (
+                          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b', marginBottom: '4px' }}>
+                              ⚠️ Costing & Mass-Balance Anomaly Flags:
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11px', color: '#b91c1c' }}>
+                              {selectedHeat.anomalies.map((ano, idx) => (
+                                <li key={idx}>{ano}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}

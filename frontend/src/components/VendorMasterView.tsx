@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { Vendor, UserRole } from '../types';
 import { apiFetch } from '../api/client';
+import { hasPermission } from '../auth/permissions';
 
 interface VendorMasterViewProps {
   currentRole: UserRole;
@@ -50,7 +51,7 @@ export const VendorMasterView: React.FC<VendorMasterViewProps> = ({ currentRole 
   const [editSubmitting, setEditSubmitting] = useState<boolean>(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
-  const canManageVendor = currentRole === 'Stores' || currentRole === 'Purchase' || currentRole === 'Management' || currentRole === 'Admin';
+  const canManageVendor = hasPermission(currentRole, 'vendor:manage');
 
   const openEditVendor = (v: Vendor) => {
     setEditVendorId(v.id);

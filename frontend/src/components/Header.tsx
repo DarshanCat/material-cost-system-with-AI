@@ -3,11 +3,11 @@ import { Activity, Calendar, User, ShieldCheck, Key } from 'lucide-react';
 import type { UserRole, SystemHealthData } from '../types';
 
 interface HeaderProps {
-  currentRole: UserRole;
+  currentRole?: UserRole | null;
   onRoleChange: (role: UserRole) => void;
   /** True only when the backend offers development sign-in; otherwise no role can be chosen client-side. */
   roleSelectorEnabled: boolean;
-  signedInAs?: string;
+  signedInAs?: string | null;
   health: SystemHealthData | null;
   loadingHealth: boolean;
   onRefreshHealth: () => void;
@@ -70,16 +70,25 @@ export const Header: React.FC<HeaderProps> = ({
               <User size={15} style={{ color: '#94a3b8' }} />
             )}
             <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
-              {signedInAs || `usr_${currentRole.toLowerCase()}_01`}
+              {signedInAs || (currentRole ? `usr_${currentRole.toLowerCase()}_01` : 'Not signed in')}
             </span>
           </div>
 
-          <span 
-            className="pill p-steel" 
-            style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 600 }}
-          >
-            {currentRole}
-          </span>
+          {currentRole ? (
+            <span 
+              className="pill p-steel" 
+              style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 600 }}
+            >
+              {currentRole}
+            </span>
+          ) : (
+            <span 
+              className="pill p-amber" 
+              style={{ fontSize: '11px', padding: '2px 8px', fontWeight: 600 }}
+            >
+              Guest
+            </span>
+          )}
 
           <button
             type="button"
@@ -97,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
               if (onOpenSignInModal) onOpenSignInModal();
             }}
           >
-            <Key size={11} style={{ marginRight: '3px' }} /> Auth
+            <Key size={11} style={{ marginRight: '3px' }} /> {signedInAs ? 'Auth' : 'Sign In'}
           </button>
         </div>
       </div>

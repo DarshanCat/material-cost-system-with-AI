@@ -1,0 +1,40 @@
+# TEMPLATE for Google Cloud Build. Not run. Review each substitution first and clear the checklist blockers.
+# Run from the repository root, after the one-time setup in DEPLOYMENT_CHECKLIST.md:
+#   gcloud builds submit --config deploy/google-cloud/cloudbuild.yaml \
+#     --substitutions _REGION=asia-south1,_REPO=vspl-mms,_SERVICE=vspl-mms,_SQL_INSTANCE=<project>:asia-south1:vspl-mms-db
+substitutions:
+  _REGION: asia-south1
+  _REPO: vspl-mms
+  _SERVICE: vspl-mms
+  _SQL_INSTANCE: ""   # PROJECT:REGION:INSTANCE of the Cloud SQL database
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "deploy/google-cloud/Dockerfile", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/app:$BUILD_ID", "."]
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/app:$BUILD_ID"]
+
+  # Identity-Aware Proxy (--iap) puts a Google sign-in in front of every request, including the API, and the
+  # service stays closed to anyone IAP does not let through (--no-allow-unauthenticated). All secrets come from
+  # Secret Manager. IAP_AUDIENCE needs the project number and is set in the checklist step after the first deploy.
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - beta
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/app:$BUILD_ID
+      - --region=${_REGION}
+      - --no-iap
+      - --allow-unauthenticated
+      - --max-instances=1
+      - --add-cloudsql-instances=${_SQL_INSTANCE}
+      - --set-env-vars=ENVIRONMENT=production,AUTH_PROVIDER=identity,IDENTITY_PROJECT_ID=$PROJECT_ID,MICROSOFT_SIGNIN_ENABLED=false,ATTACHMENT_STORAGE=gcs,ATTACHMENT_BUCKET=vspl-mms-prod-attachments
+      - --set-secrets=SECRET_KEY=vspl-secret-key:latest,DATABASE_URL=vspl-database-url:latest,ALLOWED_ORIGINS=vspl-allowed-origins:latest,IDENTITY_API_KEY=vspl-identity-api-key:latest,BOOTSTRAP_ADMIN_EMAILS=vspl-bootstrap-admins:latest
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/app:$BUILD_ID

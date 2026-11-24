@@ -9,7 +9,7 @@ from app.models.item import MaterialItem
 from app.models.vendor import Vendor
 from app.models.item_request import ItemRequest, ItemRequestAuditLog, RequestStatus
 from app.models.item_code import ItemCodeSequence, ItemCodeRegistry, ItemMasterAuditLog
-from app.models.grn import GRNHeader, GRNLineItem, GRNAuditLog, GRNSourceType, GRNStatus
+from app.models.grn import GRNHeader, GRNLineItem, GRNAuditLog, GRNAttachment, GRNSourceType, GRNStatus
 from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueAuditLog, IssueStatus
 from app.models.waste import (
     WasteDispositionHeader,
@@ -68,8 +68,32 @@ from app.models.costing import (
     PartCostStatus,
     CostingRunStatus,
 )
+from app.models.purchase_request import (
+    PRHeader,
+    PRLineItem,
+    PRAuditLog,
+    PRStatus,
+)
+from app.models.purchase_order import (
+    POHeader,
+    POLineItem,
+    POAuditLog,
+    POStatus,
+)
+from app.models.material_return import (
+    MaterialReturnHeader,
+    MaterialReturnLineItem,
+    MaterialReturnAuditLog,
+    ReturnCondition,
+    ReturnStatus,
+)
+
+from app.models.app_user import AppUser, AppUserAuditLog, UserStatus  # noqa: E402
 
 __all__ = [
+    "AppUser",
+    "AppUserAuditLog",
+    "UserStatus",
     "Base",
     "Department",
     "UOM",
@@ -84,6 +108,7 @@ __all__ = [
     "GRNHeader",
     "GRNLineItem",
     "GRNAuditLog",
+    "GRNAttachment",
     "GRNSourceType",
     "GRNStatus",
     "MaterialIssueHeader",

@@ -29,6 +29,82 @@ ITEM_CODE_PATTERN = re.compile(r"^([A-Z]{3})-([A-Z]{2})-([0-9]{3})$")
 MIN_SERIAL = 1
 MAX_SERIAL = 999
 
+# Reconciliation Classification Categories (Phase 5 Step 3)
+RECON_HEAT_TRACEABLE = "HEAT_TRACEABLE"
+RECON_NON_HEAT_SPECIFIC = "NON_HEAT_SPECIFIC"
+RECON_REVIEW_REQUIRED = "REVIEW_REQUIRED"
+RECONCILIATION_CATEGORIES = frozenset({
+    RECON_HEAT_TRACEABLE,
+    RECON_NON_HEAT_SPECIFIC,
+    RECON_REVIEW_REQUIRED,
+})
+
+# Approved item-level overrides (e.g. Slax FDY-RM-021)
+KNOWN_ITEM_RECONCILIATION_OVERRIDES: dict[str, str] = {
+    "FDY-RM-021": RECON_NON_HEAT_SPECIFIC,
+}
+
+
+def get_default_reconciliation_category(department_code: str, category_code: str) -> str:
+    """
+    Derives default reconciliation category from Nomenclature Standard v1.0.
+    - Non-Foundry materials are never furnace heat charges -> NON_HEAT_SPECIFIC
+    - Foundry Raw Material (RM) -> HEAT_TRACEABLE
+    - Foundry Lining, Moulding, Consumables, Paints (LN, MD, CN, PT) -> NON_HEAT_SPECIFIC
+    - Unmapped or ambiguous -> REVIEW_REQUIRED
+    """
+    if department_code != "FDY":
+        return RECON_NON_HEAT_SPECIFIC
+    if category_code == "RM":
+        return RECON_HEAT_TRACEABLE
+    if category_code in ("LN", "MD", "CN", "PT"):
+        return RECON_NON_HEAT_SPECIFIC
+    return RECON_REVIEW_REQUIRED
+
+
+def resolve_effective_reconciliation_category(
+    item_code: Optional[str],
+    category_text: Optional[str] = None,
+    explicit_category: Optional[str] = None,
+) -> str:
+    """
+    Resolves effective reconciliation category using two-tier hierarchy:
+    1. Explicit item override takes precedence.
+    2. Known approved static override (e.g. Slax FDY-RM-021) takes precedence over nomenclature code.
+    3. Item code prefix (e.g. FDY-RM-###) derives from Nomenclature Standard v1.0.
+    4. Stored category text fallback.
+    5. Fallback to REVIEW_REQUIRED.
+    """
+    if explicit_category and explicit_category in RECONCILIATION_CATEGORIES:
+        return explicit_category
+
+    code = (item_code or "").strip().upper()
+    if code in KNOWN_ITEM_RECONCILIATION_OVERRIDES:
+        return KNOWN_ITEM_RECONCILIATION_OVERRIDES[code]
+
+    m = ITEM_CODE_PATTERN.match(code)
+    if m:
+        dept, cat = m.group(1), m.group(2)
+        return get_default_reconciliation_category(dept, cat)
+
+    cat_upper = (category_text or "").strip().upper()
+    if cat_upper in ("RAW MATERIAL", "RAW_MATERIAL", "ALLOY", "FERRO ALLOY", "RM"):
+        return RECON_HEAT_TRACEABLE
+    if cat_upper in (
+        "MOULDING MATERIAL",
+        "LINING MATERIAL",
+        "CONSUMABLES",
+        "CONSUMABLE",
+        "PAINTS & COATINGS",
+        "MD",
+        "LN",
+        "CN",
+        "PT",
+    ):
+        return RECON_NON_HEAT_SPECIFIC
+
+    return RECON_REVIEW_REQUIRED
+
 # Section 3: Departments (owning department, first part of the code).
 DEPARTMENTS: dict[str, str] = {
     "FDY": "Foundry",

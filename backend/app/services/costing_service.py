@@ -9,9 +9,10 @@ Implements:
 Strictly uses Python Decimal and database NUMERIC types.
 """
 
+from collections import defaultdict
 from datetime import date, datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any, Set
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func, and_, desc, or_
 from fastapi import HTTPException, status
@@ -20,8 +21,10 @@ from app.core.config import settings
 from app.models.ledger import StockLedgerEntry, MovementType
 from app.models.item import MaterialItem
 from app.models.uom import UOM
-from app.models.grn import GRNLineItem, GRNHeader
+from app.models.grn import GRNLineItem, GRNHeader, GRNStatus, GRNSourceType
 from app.models.heat import HeatHeader, HeatChargeLine, HeatPartsProduced, CastingClassification
+from app.models.issue import MaterialIssueHeader, MaterialIssueLineItem, IssueStatus
+from app.services.heat_calculations import calculate_heat_costing_measures, HeatCostingMeasures
 from app.models.material_alias import MaterialAlias
 from app.services.material_alias_service import resolve_material_by_description
 from app.models.costing import (
@@ -48,6 +51,16 @@ from app.services.document_number_service import (
 RATE_PRECISION = Decimal("0.0001")
 VALUE_PRECISION = Decimal("0.01")
 COSTING_CUTOFF_DATE = date.fromisoformat(settings.COSTING_START_DATE)
+
+HISTORICAL_UNSUPPORTED_HEATS = {
+    "H-20261015-0001",
+    "H-20261016-0001",
+    "H-20261022-0001",
+    "102603-3801",
+    "102603-3802",
+    "102603-4901",
+    "102603-4902",
+}
 
 
 def movement_sort_priority(movement_type: str, quantity_delta: Decimal) -> int:
@@ -222,10 +235,43 @@ def reconstruct_item_rate_evolution(
             step_status = "AUDIT_ADJUSTMENT"
 
         elif m_type == MovementType.REVERSAL.value:
-            # Reversal delta restores or cancels quantity
-            applied_rate = running_avg_rate
-            running_qty += delta
-            step_status = "REVERSAL"
+            # Reversal delta restores or cancels quantity and historical valuation
+            reversed_entry = db.get(StockLedgerEntry, entry.reversal_of_entry_id) if entry.reversal_of_entry_id else None
+            if reversed_entry and reversed_entry.movement_type == MovementType.INWARD_RECEIPT.value:
+                # Reversing an inward receipt: subtract original receipt value
+                orig_grn_line = db.get(GRNLineItem, reversed_entry.source_line_id)
+                if orig_grn_line and orig_grn_line.rate_ex_gst:
+                    orig_rate = orig_grn_line.rate_ex_gst.quantize(RATE_PRECISION, rounding=ROUND_HALF_UP)
+                    applied_rate = orig_rate
+                    extended_val = (delta * orig_rate).quantize(VALUE_PRECISION, rounding=ROUND_HALF_UP)
+                    new_qty = running_qty + delta
+                    if new_qty > Decimal("0.0000"):
+                        # Look up prior running value or back out receipt value
+                        prior_total_val = (running_qty * (running_avg_rate or Decimal("0.0000"))) + (delta * orig_rate)
+                        running_avg_rate = (prior_total_val / new_qty).quantize(RATE_PRECISION, rounding=ROUND_HALF_UP)
+                    elif new_qty == Decimal("0.0000"):
+                        running_avg_rate = None
+                    running_qty = new_qty
+                    step_status = "RECEIPT_REVERSED"
+                    notes = f"Reversal of inward receipt {reversed_entry.source_document_number} backed out at original rate Rs {orig_rate}"
+                else:
+                    running_qty += delta
+                    applied_rate = running_avg_rate
+                    step_status = "REVERSAL"
+            elif reversed_entry and reversed_entry.movement_type in (MovementType.OUTWARD_ISSUE.value, MovementType.SCRAP_OUTWARD.value):
+                # Reversing an outward issue: restore quantity at original issue rate
+                orig_step = next((s for s in journal_steps if s["stock_ledger_entry_id"] == reversed_entry.id), None)
+                orig_rate = orig_step.get("applied_rate") if orig_step else running_avg_rate
+                applied_rate = orig_rate
+                if orig_rate:
+                    extended_val = (delta * orig_rate).quantize(VALUE_PRECISION, rounding=ROUND_HALF_UP)
+                running_qty += delta
+                step_status = "ISSUE_REVERSED"
+                notes = f"Reversal of outward issue {reversed_entry.source_document_number} restored at original rate Rs {orig_rate}"
+            else:
+                applied_rate = running_avg_rate
+                running_qty += delta
+                step_status = "REVERSAL"
 
         elif m_type == MovementType.INTERNAL_RECOVERY.value:
             step_status = "INTERNAL_RECOVERY_POLICY_PENDING"
@@ -288,6 +334,313 @@ def get_item_rate_as_of_date(
     if val_status in (ValuationStatus.VALUED.value, ValuationStatus.ZERO_STOCK.value, ValuationStatus.NEGATIVE_STOCK_FLAG.value):
         return rate
     return None
+
+
+def reconcile_heat_stores_issue_backing(
+    db: Session,
+    heat: HeatHeader,
+) -> Dict[str, Any]:
+    """
+    AUD-2B2D-001: Item-level Stores Issue Backing & Reconciliation.
+    Verifies that every charged material line is backed by approved Stores issue quantities.
+    Enforces:
+    - Stable material_item_id matching.
+    - Exclusion of DRAFT, SUBMITTED, CANCELLED, or REVERSED issue slips.
+    - Aggregation of approved issue quantities across multiple slips referencing the heat.
+    - Cross-heat duplicate allocation prevention: ensures issue quantity consumed by other
+      heats does not double-count for this heat.
+    - UOM compatibility checks (e.g. standard foundry mass units KG / MT).
+    - Line-level shortfall detection with detailed exception structures.
+    """
+    clean_heat_num = heat.heat_number.replace("H-", "") if heat.heat_number else ""
+    heat_refs = {heat.heat_number, clean_heat_num, f"H-{clean_heat_num}"} - {""}
+
+    approved_issues = db.execute(
+        select(MaterialIssueHeader).where(
+            MaterialIssueHeader.heat_reference_number.in_(heat_refs),
+            MaterialIssueHeader.status == IssueStatus.APPROVED.value,
+        ).order_by(MaterialIssueHeader.id)
+    ).scalars().all()
+
+    # Track other heats referencing the same issue references to prevent double-consumption
+    competing_heats = db.execute(
+        select(HeatHeader).where(
+            HeatHeader.heat_number.in_(heat_refs),
+            HeatHeader.id != heat.id,
+        )
+    ).scalars().all()
+
+    consumed_by_other_heats: Dict[int, Decimal] = defaultdict(lambda: Decimal("0.0000"))
+    competing_heat_numbers: List[str] = []
+    for other_heat in competing_heats:
+        if other_heat.heat_date < heat.heat_date or (other_heat.heat_date == heat.heat_date and other_heat.id < heat.id):
+            competing_heat_numbers.append(other_heat.heat_number)
+            for c_line in other_heat.charge_lines:
+                mat_id = c_line.material_item_id
+                if not mat_id and c_line.original_material_description:
+                    res = resolve_material_by_description(db, c_line.original_material_description)
+                    mat_id = res.id if res else None
+                if mat_id:
+                    consumed_by_other_heats[mat_id] += c_line.charged_quantity
+
+    issued_by_item: Dict[int, Decimal] = defaultdict(lambda: Decimal("0.0000"))
+    issue_slips_by_item: Dict[int, List[str]] = defaultdict(list)
+    issue_uoms_by_item: Dict[int, Set[int]] = defaultdict(set)
+    all_issue_slip_numbers: List[str] = []
+
+    for issue in approved_issues:
+        all_issue_slip_numbers.append(issue.issue_slip_number)
+        for i_line in issue.lines:
+            issued_by_item[i_line.material_item_id] += i_line.quantity
+            issue_slips_by_item[i_line.material_item_id].append(issue.issue_slip_number)
+            issue_uoms_by_item[i_line.material_item_id].add(i_line.uom_id)
+
+    available_issued_by_item: Dict[int, Decimal] = {}
+    for mat_id, tot_issued in issued_by_item.items():
+        prior_used = consumed_by_other_heats.get(mat_id, Decimal("0.0000"))
+        available_issued_by_item[mat_id] = max(Decimal("0.0000"), tot_issued - prior_used)
+
+    charged_by_item: Dict[int, Decimal] = defaultdict(lambda: Decimal("0.0000"))
+    charge_uoms_by_item: Dict[int, Set[int]] = defaultdict(set)
+    unresolved_charge_lines: List[HeatChargeLine] = []
+
+    for c_line in heat.charge_lines:
+        mat_id = c_line.material_item_id
+        if not mat_id and c_line.original_material_description:
+            res = resolve_material_by_description(db, c_line.original_material_description)
+            mat_id = res.id if res else None
+
+        if not mat_id:
+            unresolved_charge_lines.append(c_line)
+        else:
+            charged_by_item[mat_id] += c_line.charged_quantity
+            charge_uoms_by_item[mat_id].add(c_line.uom_id)
+
+    shortfalls: List[Dict[str, Any]] = []
+    line_reconciliation: List[Dict[str, Any]] = []
+    anomalies: List[str] = []
+
+    for un_line in unresolved_charge_lines:
+        anomalies.append(
+            f"UNBACKED_CHARGE_ITEM: Material '{un_line.original_material_description}' "
+            f"charged {un_line.charged_quantity} kg cannot be resolved to an item code and has zero issue backing."
+        )
+
+    for mat_id, charged_qty in charged_by_item.items():
+        item = db.get(MaterialItem, mat_id)
+        item_code = item.item_code if item else f"ITEM-{mat_id}"
+        item_name = item.name if item else "Unknown"
+
+        available_issued = available_issued_by_item.get(mat_id, Decimal("0.0000"))
+        shortfall = max(Decimal("0.0000"), charged_qty - available_issued)
+
+        charge_uom_ids = charge_uoms_by_item.get(mat_id, set())
+        issue_uom_ids = issue_uoms_by_item.get(mat_id, set())
+        uom_compatible = True
+        if charge_uom_ids and issue_uom_ids:
+            if charge_uom_ids != issue_uom_ids:
+                c_uoms = {(getattr(u, "code", None) or getattr(u, "uom_code", "")).upper() for u in db.execute(select(UOM).where(UOM.id.in_(charge_uom_ids))).scalars().all()}
+                i_uoms = {(getattr(u, "code", None) or getattr(u, "uom_code", "")).upper() for u in db.execute(select(UOM).where(UOM.id.in_(issue_uom_ids))).scalars().all()}
+                mass_units = {"KG", "KGS", "KILOGRAM", "MT", "TONNE", "TONNES"}
+                if not (c_uoms.issubset(mass_units) and i_uoms.issubset(mass_units)):
+                    uom_compatible = False
+                    anomalies.append(
+                        f"INCOMPATIBLE_ISSUE_UOM: Item {item_code} charged in UOM {c_uoms} but issued in {i_uoms}."
+                    )
+
+        if shortfall > Decimal("0.0000"):
+            shortfalls.append({
+                "material_item_id": mat_id,
+                "item_code": item_code,
+                "item_name": item_name,
+                "charged_quantity_kg": charged_qty,
+                "approved_issued_quantity_kg": available_issued,
+                "shortfall_quantity_kg": shortfall,
+                "status": "DEFICIT",
+                "uom_compatible": uom_compatible,
+            })
+            if available_issued == Decimal("0.0000"):
+                anomalies.append(
+                    f"ZERO_ISSUE_BACKING: Item {item_code} charged {charged_qty} kg has 0 approved Stores issue quantity."
+                )
+            else:
+                anomalies.append(
+                    f"INSUFFICIENT_ISSUE_QUANTITY: Item {item_code} charged {charged_qty} kg but approved issues cover only {available_issued} kg (shortfall: {shortfall} kg)."
+                )
+        else:
+            line_reconciliation.append({
+                "material_item_id": mat_id,
+                "item_code": item_code,
+                "item_name": item_name,
+                "charged_quantity_kg": charged_qty,
+                "approved_issued_quantity_kg": available_issued,
+                "shortfall_quantity_kg": Decimal("0.0000"),
+                "status": "COVERED",
+                "uom_compatible": uom_compatible,
+            })
+
+    for mat_id, prior_used in consumed_by_other_heats.items():
+        if prior_used > Decimal("0.0000") and mat_id in charged_by_item:
+            tot = issued_by_item.get(mat_id, Decimal("0.0000"))
+            if tot < (prior_used + charged_by_item[mat_id]):
+                item = db.get(MaterialItem, mat_id)
+                ic = item.item_code if item else f"ITEM-{mat_id}"
+                anomalies.append(
+                    f"CROSS_HEAT_OVERCONSUMPTION: Issue quantity for {ic} ({tot} kg) was partially or fully consumed by prior heats {competing_heat_numbers} ({prior_used} kg used)."
+                )
+
+    non_approved_issues = db.execute(
+        select(MaterialIssueHeader).where(
+            MaterialIssueHeader.heat_reference_number.in_(heat_refs),
+            MaterialIssueHeader.status != IssueStatus.APPROVED.value,
+        )
+    ).scalars().all()
+    for na_issue in non_approved_issues:
+        anomalies.append(
+            f"UNAPPROVED_ISSUE_SLIP: Issue slip {na_issue.issue_slip_number} for heat {heat.heat_number} "
+            f"has status '{na_issue.status}' and does not provide valid costing backing."
+        )
+
+    is_fully_backed = (
+        len(approved_issues) > 0
+        and len(shortfalls) == 0
+        and len(unresolved_charge_lines) == 0
+        and len(charged_by_item) > 0
+        and all(item.get("uom_compatible", True) for item in line_reconciliation)
+    )
+
+    return {
+        "is_fully_backed": is_fully_backed,
+        "approved_issue_slip_numbers": list(set(all_issue_slip_numbers)),
+        "shortfalls": shortfalls,
+        "line_reconciliation": line_reconciliation,
+        "anomalies": anomalies,
+    }
+
+
+def aggregate_heat_return_scrap_grns(
+    db: Session,
+    heat: HeatHeader,
+) -> Tuple[Optional[Decimal], List[str], List[Dict[str, Any]]]:
+    """
+    AUD-2B2D-002: Multi-GRN Return Scrap Aggregation & Authoritative WAC Valuation.
+    Aggregates all eligible approved internal return GRNs referencing this heat.
+    Enforces:
+    - Dynamic resolution of canonical return scrap item 'FDY-RM-003'.
+    - Actual moving WAC lookup via get_item_rate_as_of_date.
+    - Zero hardcoded rates (never falls back to ₹38/kg).
+    - Returns PENDING_REVIEW if moving WAC is missing or scrap classification is ambiguous.
+    - Aggregates multiple approved return GRNs.
+    - Excludes DRAFT, SUBMITTED, CANCELLED, or REVERSED GRNs.
+    - Prevents duplicate GRN credit and cross-heat double-allocation.
+    """
+    clean_heat_num = heat.heat_number.replace("H-", "") if heat.heat_number else ""
+    heat_refs = {heat.heat_number, clean_heat_num, f"H-{clean_heat_num}"} - {""}
+
+    anomalies: List[str] = []
+    grn_details: List[Dict[str, Any]] = []
+
+    scrap_item = db.execute(
+        select(MaterialItem).where(MaterialItem.item_code == "FDY-RM-003")
+    ).scalars().first()
+    scrap_item_id = scrap_item.id if scrap_item else None
+
+    scrap_rate: Optional[Decimal] = None
+    if scrap_item_id:
+        scrap_rate = get_item_rate_as_of_date(db, scrap_item_id, heat.heat_date)
+
+    non_approved_grns = db.execute(
+        select(GRNHeader).where(
+            GRNHeader.source_type == GRNSourceType.INTERNAL_VSPL.value,
+            GRNHeader.reference_document.in_(heat_refs),
+            GRNHeader.status != GRNStatus.APPROVED.value,
+        )
+    ).scalars().all()
+    for na_grn in non_approved_grns:
+        anomalies.append(
+            f"EXCLUDED_GRN: Internal return GRN {na_grn.grn_number} for heat {heat.heat_number} "
+            f"has status '{na_grn.status}' and is excluded from scrap credit."
+        )
+
+    approved_grns = db.execute(
+        select(GRNHeader).where(
+            GRNHeader.source_type == GRNSourceType.INTERNAL_VSPL.value,
+            GRNHeader.reference_document.in_(heat_refs),
+            GRNHeader.status == GRNStatus.APPROVED.value,
+        ).order_by(GRNHeader.id)
+    ).scalars().all()
+
+    if not approved_grns:
+        return None, anomalies, grn_details
+
+    seen_grn_ids: Set[int] = set()
+    total_scrap_qty = Decimal("0.0000")
+    total_scrap_credit = Decimal("0.00")
+    has_unvalued_scrap = False
+
+    for grn in approved_grns:
+        if grn.id in seen_grn_ids:
+            continue
+        seen_grn_ids.add(grn.id)
+
+        grn_ref = (grn.reference_document or "").strip().upper()
+        if grn_ref not in {r.upper() for r in heat_refs}:
+            continue
+
+        for g_line in grn.lines:
+            is_scrap = False
+            if scrap_item_id and g_line.material_item_id == scrap_item_id:
+                is_scrap = True
+            elif "RETURN" in (g_line.remarks or "").upper() or "RUNNER" in (g_line.remarks or "").upper():
+                is_scrap = True
+            elif g_line.material_item and "RETURN" in g_line.material_item.name.upper():
+                is_scrap = True
+
+            if not is_scrap:
+                continue
+
+            line_qty = getattr(g_line, "accepted_quantity", getattr(g_line, "quantity", Decimal("0.0000")))
+            if line_qty <= Decimal("0.0000"):
+                continue
+
+            total_scrap_qty += line_qty
+
+            if scrap_rate is not None:
+                line_credit = (line_qty * scrap_rate).quantize(VALUE_PRECISION, rounding=ROUND_HALF_UP)
+                total_scrap_credit += line_credit
+                grn_details.append({
+                    "grn_number": grn.grn_number,
+                    "line_number": g_line.line_number,
+                    "material_item_id": g_line.material_item_id,
+                    "quantity_kg": line_qty,
+                    "unit_rate": scrap_rate,
+                    "credit_value": line_credit,
+                    "status": "CREDITED",
+                })
+            else:
+                has_unvalued_scrap = True
+                grn_details.append({
+                    "grn_number": grn.grn_number,
+                    "line_number": g_line.line_number,
+                    "material_item_id": g_line.material_item_id,
+                    "quantity_kg": line_qty,
+                    "unit_rate": None,
+                    "credit_value": None,
+                    "status": "PENDING_REVIEW",
+                })
+
+    if total_scrap_qty > Decimal("0.0000"):
+        if has_unvalued_scrap or scrap_rate is None:
+            anomalies.append(
+                f"PENDING_REVIEW: Approved return scrap GRN exists for heat {heat.heat_number} "
+                f"({total_scrap_qty} kg), but moving WAC for canonical scrap item (FDY-RM-003) "
+                f"is unavailable as of {heat.heat_date}. No arbitrary rate applied."
+            )
+            return None, anomalies, grn_details
+        else:
+            return total_scrap_credit, anomalies, grn_details
+
+    return None, anomalies, grn_details
 
 
 def calculate_heat_cost_detail(
@@ -382,36 +735,95 @@ def calculate_heat_cost_detail(
 
     # Overall heat costing status
     total_lines = len(heat.charge_lines)
-    if total_lines == 0:
-        heat_status = HeatCostStatus.INSUFFICIENT_COST_DATA.value
-    elif valued_count == total_lines:
-        heat_status = HeatCostStatus.COMPLETE.value
-    elif valued_count > 0:
-        heat_status = HeatCostStatus.PARTIAL_COST.value
-    else:
-        heat_status = HeatCostStatus.INSUFFICIENT_COST_DATA.value
+    
+    # -------------------------------------------------------------
+    # Authoritative 3-Measure Calculation (Phase 2B-2B & Phase 2B-2C)
+    # -------------------------------------------------------------
+    is_historical_exception = (
+        heat.heat_number in HISTORICAL_UNSUPPORTED_HEATS
+        or (heat.heat_number and heat.heat_number.startswith("102603-"))
+    )
 
-    # Denominator & Cost per kg calculation
+    # AUD-2B2D-001: Reconcile Stores Issue Backing at Item Level
+    issue_reconciliation = reconcile_heat_stores_issue_backing(db, heat)
+    is_charge_fully_backed_by_issues = issue_reconciliation["is_fully_backed"]
+    issue_backing_anomalies = issue_reconciliation["anomalies"]
+
+    # Sum good casting weight
+    good_wt = Decimal("0.0000")
+    for p in heat.parts_produced:
+        if p.classification == CastingClassification.GOOD.value and p.unit_cast_weight:
+            good_wt += p.quantity_produced * p.unit_cast_weight
+    good_castings_kg = good_wt if good_wt > Decimal("0.0000") else None
+
+    # Liquid heel continuity (FIN-DEC-02)
+    opening_heel_kg = getattr(heat, "opening_liquid_heel_kg", None)
+    closing_heel_kg = getattr(heat, "closing_liquid_heel_kg", None)
+    has_unverified_heel = False
+    opening_heel_value = Decimal("0.00")
+
+    if opening_heel_kg is not None and opening_heel_kg > Decimal("0.0000"):
+        # Look up prior heat on same furnace
+        prior_heat = db.execute(
+            select(HeatHeader).where(
+                HeatHeader.furnace_id == heat.furnace_id,
+                HeatHeader.heat_date <= heat.heat_date,
+                HeatHeader.id < heat.id,
+            ).order_by(desc(HeatHeader.heat_date), desc(HeatHeader.id))
+        ).scalars().first()
+
+        if prior_heat:
+            prior_detail = calculate_heat_cost_detail(
+                db, prior_heat, item_rates_cache=item_rates_cache, denominator_policy=DenominatorPolicy.METAL_TAPPED.value
+            )
+            prior_rate = prior_detail.get("measure_b_cost_per_kg")
+            prior_verified = getattr(prior_heat, "heel_verification_status", None) == "VERIFIED"
+            if prior_rate is not None and (prior_verified or prior_detail.get("status") in ("FINAL", "PROVISIONAL")):
+                opening_heel_value = (opening_heel_kg * prior_rate).quantize(VALUE_PRECISION, rounding=ROUND_HALF_UP)
+            else:
+                has_unverified_heel = True
+        else:
+            if not getattr(heat, "is_cold_start", False):
+                has_unverified_heel = True
+
+    # AUD-2B2D-002: Multi-GRN Return Scrap Aggregation & Authoritative WAC
+    approved_scrap_credit, scrap_anomalies, scrap_grn_details = aggregate_heat_return_scrap_grns(db, heat)
+
+    costing_measures = calculate_heat_costing_measures(
+        total_charged_kg=total_charged_qty,
+        total_charged_material_cost=total_material_cost if valued_count == total_lines and total_lines > 0 else None,
+        metal_tapped_kg=heat.metal_tapped_weight,
+        good_castings_kg=good_castings_kg,
+        opening_liquid_heel_kg=opening_heel_kg,
+        opening_liquid_heel_value=opening_heel_value,
+        closing_liquid_heel_kg=closing_heel_kg,
+        has_unverified_heel=has_unverified_heel,
+        is_charge_fully_backed_by_issues=is_charge_fully_backed_by_issues,
+        approved_scrap_credit=approved_scrap_credit,
+        is_historical_exception=is_historical_exception,
+        normal_melt_loss_threshold_pct=Decimal("3.5000"),
+    )
+
     cost_denominator_value: Optional[Decimal] = None
     cost_per_kg: Optional[Decimal] = None
 
     if denominator_policy == DenominatorPolicy.METAL_TAPPED.value:
         cost_denominator_value = heat.metal_tapped_weight
+        cost_per_kg = costing_measures.cost_per_kg_metal_tapped
     elif denominator_policy == DenominatorPolicy.GOOD_CASTING_KG.value:
-        # Sum of good castings weight
-        good_wt = Decimal("0.0000")
-        for p in heat.parts_produced:
-            if p.classification == CastingClassification.GOOD.value and p.unit_cast_weight:
-                good_wt += p.quantity_produced * p.unit_cast_weight
-        cost_denominator_value = good_wt if good_wt > Decimal("0.0000") else None
+        cost_denominator_value = good_castings_kg
+        cost_per_kg = costing_measures.raw_material_cost_per_kg_good_casting
+    else:  # SOLID_CHARGE
+        cost_denominator_value = total_charged_qty if total_charged_qty > Decimal("0.0000") else None
+        cost_per_kg = costing_measures.cost_per_kg_solid_charge
 
-    if cost_denominator_value and cost_denominator_value > Decimal("0.0000"):
-        if total_material_cost > Decimal("0.00"):
-            cost_per_kg = (total_material_cost / cost_denominator_value).quantize(RATE_PRECISION, rounding=ROUND_HALF_UP)
+    # Determine status
+    if total_lines == 0 or valued_count == 0:
+        heat_status = HeatCostStatus.INSUFFICIENT_COST_DATA.value
+    elif valued_count < total_lines:
+        heat_status = HeatCostStatus.PARTIAL_COST.value
     else:
-        # Denominator missing or zero
-        if heat_status == HeatCostStatus.COMPLETE.value:
-            heat_status = HeatCostStatus.DENOMINATOR_UNAVAILABLE.value
+        heat_status = costing_measures.costing_status
 
     return {
         "heat_id": heat.id,
@@ -429,6 +841,28 @@ def calculate_heat_cost_detail(
         "valued_lines": valued_count,
         "unvalued_lines": unvalued_count,
         "lines": line_details,
+        # Authoritative Measures A, B, C & details
+        "measure_a_cost_per_kg": costing_measures.cost_per_kg_solid_charge,
+        "measure_a_status": costing_measures.measure_a_status,
+        "measure_b_cost_per_kg": costing_measures.cost_per_kg_metal_tapped,
+        "measure_b_status": costing_measures.measure_b_status,
+        "measure_c_cost_per_kg": costing_measures.raw_material_cost_per_kg_good_casting,
+        "measure_c_status": costing_measures.measure_c_status,
+        "opening_liquid_heel_kg": costing_measures.opening_liquid_heel_kg,
+        "opening_liquid_heel_value": costing_measures.opening_liquid_heel_value,
+        "closing_liquid_heel_kg": costing_measures.closing_liquid_heel_kg,
+        "closing_liquid_heel_value": costing_measures.closing_liquid_heel_value,
+        "approved_scrap_credit": costing_measures.approved_scrap_credit,
+        "true_melt_loss_kg": costing_measures.true_melt_loss_kg,
+        "true_melt_loss_pct": costing_measures.true_melt_loss_pct,
+        "melting_recovery_pct": costing_measures.mass_balance_recovery_pct,
+        "casting_yield_pct": costing_measures.casting_yield_pct,
+        "conversion_cost_status": "NOT_AVAILABLE",
+        "is_historical_exception": is_historical_exception,
+        "is_charge_fully_backed_by_issues": is_charge_fully_backed_by_issues,
+        "issue_backing_details": issue_reconciliation,
+        "scrap_grn_details": scrap_grn_details,
+        "anomalies": list(costing_measures.anomalies) + issue_backing_anomalies + scrap_anomalies,
     }
 
 
@@ -463,7 +897,7 @@ def calculate_part_cost_detail(
             "notes": "Unit cast weight not logged; cannot compute part material cost",
         }
 
-    if heat_cost_per_kg is None or heat_cost_status != HeatCostStatus.COMPLETE.value:
+    if heat_cost_per_kg is None or heat_cost_status not in (HeatCostStatus.COMPLETE.value, "FINAL", "PROVISIONAL", "PROVISIONAL_HISTORICAL"):
         return {
             "heat_parts_produced_id": part.id,
             "part_number": part_num,

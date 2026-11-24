@@ -10,12 +10,19 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 
 # Engine configuration with pool_pre_ping to proactively verify connection health
-engine = create_engine(
-    settings.sync_database_url,
-    pool_pre_ping=True,
-    echo=False,
-    connect_args={"connect_timeout": 3},
-)
+if settings.sync_database_url.startswith("sqlite"):
+    # Local single-user testing database (scripts/dev_local.py): no connection pool settings apply.
+    engine = create_engine(settings.sync_database_url, echo=False, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(
+        settings.sync_database_url,
+        pool_pre_ping=True,
+        pool_size=15,
+        max_overflow=20,
+        pool_recycle=300,
+        echo=False,
+        connect_args={"connect_timeout": 5},
+    )
 
 SessionLocal = sessionmaker(
     autocommit=False,

@@ -145,7 +145,28 @@
   flex-direction: column;
   flex-shrink: 0;
   border-right: 1px solid #1e293b;
-  min-height: calc(100vh - 64px);
+  height: calc(100vh - 64px);
+  position: sticky;
+  top: 64px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.erp-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.erp-sidebar::-webkit-scrollbar-track {
+  background: #090d16;
+}
+
+.erp-sidebar::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+.erp-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 .sidebar-section-title {
@@ -586,12 +607,14 @@
   transform: translateY(-1px);
 }
 
-.phase-card.current-phase {
+.phase-card.current-phase,
+.phase-card.completed {
   border-color: #86efac;
   background-color: #f0fdf4;
 }
 
-.phase-card.next-phase {
+.phase-card.next-phase,
+.phase-card.active-gate {
   border-color: #fde68a;
   background-color: #fffbeb;
 }
@@ -647,6 +670,36 @@
 .phase-status.queued {
   background-color: #e2e8f0;
   color: #64748b;
+}
+
+.phase-status.blue {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.phase-status-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  margin-top: auto;
+  padding-top: 0.45rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+}
+
+.phase-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.phase-gate-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 /* Module Placeholder / Empty State */

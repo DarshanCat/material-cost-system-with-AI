@@ -40,6 +40,7 @@ def create_material_issue(
     data: MaterialIssueCreate,
     created_by: str,
     auto_commit: bool = True,
+    direct_issue: bool = False,
 ) -> Tuple[MaterialIssueHeader, List[str]]:
     warnings: List[str] = []
 
@@ -90,6 +91,8 @@ def create_material_issue(
     warnings.extend(check_duplicate_line_items(data.lines, item_labels))
 
     # 3. Create document using bounded savepoint retry for collision safety
+    initial_status = IssueStatus.APPROVED.value if direct_issue else IssueStatus.DRAFT.value
+
     def _create(slip_number: str) -> MaterialIssueHeader:
         header = MaterialIssueHeader(
             issue_slip_number=slip_number,
@@ -98,7 +101,7 @@ def create_material_issue(
             receiving_department_id=data.receiving_department_id,
             heat_reference_number=data.heat_reference_number,
             notes=data.notes,
-            status=IssueStatus.DRAFT.value,
+            status=initial_status,
             created_by=created_by,
         )
         db.add(header)
@@ -117,11 +120,15 @@ def create_material_issue(
 
         audit = IssueAuditLog(
             issue_id=header.id,
-            action="CREATED",
+            action="APPROVED" if direct_issue else "CREATED",
             from_status=None,
-            to_status=IssueStatus.DRAFT.value,
+            to_status=initial_status,
             actor_id=created_by,
-            comments="Material issue slip created in draft status.",
+            comments=(
+                "Direct material issue by Stores. Posted outward entries to stock ledger."
+                if direct_issue
+                else "Material issue slip created in draft status."
+            ),
         )
         db.add(audit)
         return header
@@ -132,6 +139,12 @@ def create_material_issue(
         create_fn=_create,
         target_date=data.issue_date,
     )
+
+    if direct_issue:
+        from app.services.ledger_service import post_issue_to_ledger
+        with ledger_write_guard(db):
+            post_issue_to_ledger(db, header, created_by)
+
     if auto_commit:
         db.commit()
         db.refresh(header)
@@ -176,10 +189,10 @@ def _approve_material_issue(db: Session, issue_id: int, actor_id: str, comments:
     if not issue:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Issue slip not found.")
     enforce_maker_checker(ISSUE, issue.created_by, actor_id, f"issue slip {issue.issue_slip_number}")
-    if issue.status != IssueStatus.SUBMITTED.value:
+    if issue.status not in (IssueStatus.SUBMITTED.value, IssueStatus.DRAFT.value):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot approve issue slip in status '{issue.status}'. Must be SUBMITTED first.",
+            detail=f"Cannot approve issue slip in status '{issue.status}'. Must be DRAFT or SUBMITTED.",
         )
 
     prev_status = issue.status
@@ -202,6 +215,41 @@ def _approve_material_issue(db: Session, issue_id: int, actor_id: str, comments:
     db.commit()
     db.refresh(issue)
     return issue
+
+
+def direct_issue_slip(db: Session, issue_id: int, actor_id: str, comments: Optional[str] = None) -> MaterialIssueHeader:
+    """Stores direct issue: issues draft or submitted slip directly to stock ledger without approval blocker."""
+    with ledger_write_guard(db):
+        issue = db.get(MaterialIssueHeader, issue_id, with_for_update=True)
+        if not issue:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Issue slip not found.")
+        if issue.status == IssueStatus.APPROVED.value:
+            return issue
+        if issue.status not in (IssueStatus.DRAFT.value, IssueStatus.SUBMITTED.value):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot issue slip in status '{issue.status}'. Must be DRAFT or SUBMITTED.",
+            )
+
+        prev_status = issue.status
+        issue.status = IssueStatus.APPROVED.value
+        audit = IssueAuditLog(
+            issue_id=issue.id,
+            action="APPROVED",
+            from_status=prev_status,
+            to_status=issue.status,
+            actor_id=actor_id,
+            comments=comments or "Direct material issue by Stores. Posted outward entries to stock ledger.",
+        )
+        db.add(audit)
+        db.flush()
+
+        from app.services.ledger_service import post_issue_to_ledger
+        post_issue_to_ledger(db, issue, actor_id)
+
+        db.commit()
+        db.refresh(issue)
+        return issue
 
 
 def cancel_material_issue(db: Session, issue_id: int, actor_id: str, comments: Optional[str] = None) -> MaterialIssueHeader:
